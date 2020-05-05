@@ -3,16 +3,19 @@ package main
 import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
+	"github.com/mattn/go-shellwords"
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 )
 
-const (
-	channelShowcase = "635625917623828520"
-	emojiYes = "yes:655917631043272727"
-	emojiNo = "no:655917606586286091"
+var (
+	prefix = "."
+	channelShowcase = os.Getenv("CHANNEL_SHOWCASE")
+	roleMod = os.Getenv("ROLE_MOD")
+	shell = shellwords.NewParser()
 )
 
 func main() {
@@ -42,14 +45,54 @@ func main() {
 
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.ChannelID == channelShowcase {
-		err := s.MessageReactionAdd(m.ChannelID, m.ID, emojiYes)
+		err := s.MessageReactionAdd(m.ChannelID, m.ID, "❤")
 		if err != nil {
-			log.Printf("Error on adding reaction Yes to new showcase message(%s): %s\n", m.ID, err)
+			log.Printf("Error on adding reaction ❤ to new showcase message(%s): %s\n", m.ID, err)
 			return
 		}
-		err = s.MessageReactionAdd(m.ChannelID, m.ID, emojiNo)
+	}
+
+	if strings.HasPrefix(m.Content, prefix) {
+		args, err := shell.Parse(m.Content[len(prefix):])
 		if err != nil {
-			log.Printf("Error on adding reaction No to new showcase message(%s) : %s\n", m.ID, err)
+			s.ChannelMessageSend(m.ChannelID, m.Author.Mention() + " There was an error while parsing your command: " + err.Error())
+			return
+		}
+
+		switch args[0] {
+		case "modping":
+			reason := strings.Join(args[1:], " ")
+
+			mods := []string{}
+			g, err := s.State.Guild(m.GuildID)
+			if err != nil {
+				log.Printf("Failed to fetch guild %s; Error: %s\n", m.GuildID, err)
+				return;
+			}
+			for _, mem := range g.Members {
+				for _, r := range mem.Roles {
+					if r == roleMod {
+						p, err := s.State.Presence(m.GuildID, mem.User.ID)
+						if err != nil {
+							log.Printf("Failed to fetch presence, guild: %s, user: %s; Error: %s\n", m.GuildID, m.Author.ID, err)
+							break;
+						}
+						if p.Status == discordgo.StatusOnline {
+							mods = append(mods, mem.Mention())
+						}
+						break
+					}
+				}
+			}
+			if len(mods) == 0 {
+				mods = []string{"<@&" + roleMod + ">"}
+			}
+
+			reasonText := ""
+			if reason != "" {
+				reasonText = " for reason: " + reason
+			}
+			s.ChannelMessageSend(m.ChannelID, m.Author.Mention() + " pinged moderators " + strings.Join(mods, " ") + reasonText)
 		}
 	}
 }
