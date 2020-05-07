@@ -9,12 +9,15 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"trup/command"
 )
 
 var (
 	prefix = "."
-	channelShowcase = os.Getenv("CHANNEL_SHOWCASE")
-	roleMod = os.Getenv("ROLE_MOD")
+	env    = command.Env{
+		RoleMod:         os.Getenv("ROLE_MOD"),
+		ChannelShowcase: os.Getenv("CHANNEL_SHOWCASE"),
+	}
 	shell = shellwords.NewParser()
 )
 
@@ -44,7 +47,7 @@ func main() {
 }
 
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
-	if m.ChannelID == channelShowcase {
+	if m.ChannelID == env.ChannelShowcase {
 		err := s.MessageReactionAdd(m.ChannelID, m.ID, "❤")
 		if err != nil {
 			log.Printf("Error on adding reaction ❤ to new showcase message(%s): %s\n", m.ID, err)
@@ -55,44 +58,32 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if strings.HasPrefix(m.Content, prefix) {
 		args, err := shell.Parse(m.Content[len(prefix):])
 		if err != nil {
-			s.ChannelMessageSend(m.ChannelID, m.Author.Mention() + " There was an error while parsing your command: " + err.Error())
+			log.Printf("Failed to parse command %s; Error: %s\n", m.Content, err)
+			s.ChannelMessageSend(m.ChannelID, m.Author.Mention()+" There was an error while parsing your command: "+err.Error())
+			return
+		}
+		context := command.Context{
+			Env:     &env,
+			Session: s,
+			Message: m.Message,
+		}
+
+		if args[0] == "help" {
+			command.Help(&context, args)
 			return
 		}
 
-		switch args[0] {
-		case "modping":
-			reason := strings.Join(args[1:], " ")
-
-			mods := []string{}
-			g, err := s.State.Guild(m.GuildID)
-			if err != nil {
-				log.Printf("Failed to fetch guild %s; Error: %s\n", m.GuildID, err)
-				return;
+		var found bool
+		allKeys := make([]string, 0, len(command.Commands))
+		for name, cmd := range command.Commands {
+			allKeys = append(allKeys, name)
+			if !found && args[0] == name {
+				found = true
+				cmd.Exec(&context, args)
 			}
-			for _, mem := range g.Members {
-				for _, r := range mem.Roles {
-					if r == roleMod {
-						p, err := s.State.Presence(m.GuildID, mem.User.ID)
-						if err != nil {
-							log.Printf("Failed to fetch presence, guild: %s, user: %s; Error: %s\n", m.GuildID, m.Author.ID, err)
-							break;
-						}
-						if p.Status == discordgo.StatusOnline {
-							mods = append(mods, mem.Mention())
-						}
-						break
-					}
-				}
-			}
-			if len(mods) == 0 {
-				mods = []string{"<@&" + roleMod + ">"}
-			}
-
-			reasonText := ""
-			if reason != "" {
-				reasonText = " for reason: " + reason
-			}
-			s.ChannelMessageSend(m.ChannelID, m.Author.Mention() + " pinged moderators " + strings.Join(mods, " ") + reasonText)
+		}
+		if !found {
+			s.ChannelMessageSend(m.ChannelID, m.Author.Mention()+" command not found. Available commands: "+strings.Join(allKeys, ", "))
 		}
 	}
 }
