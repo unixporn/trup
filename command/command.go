@@ -25,6 +25,10 @@ var Commands = map[string]Command{
 		Exec:  setFetch,
 		Usage: setFetchUsage,
 	},
+	"repo": Command{
+		Exec: repo,
+		Help: "Sends a link to the bot's repository.",
+	},
 	"note": moderatorOnly(Command{
 		Exec:  note,
 		Usage: noteUsage,
