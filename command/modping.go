@@ -25,7 +25,7 @@ func modping(context *Context, args []string) {
 					log.Printf("Failed to fetch presence, guild: %s, user: %s; Error: %s\n", context.Message.GuildID, context.Message.Author.ID, err)
 					break
 				}
-				if p.Status == discordgo.StatusOnline {
+				if p.Status != discordgo.StatusOffline {
 					mods = append(mods, mem.Mention())
 				}
 				break
