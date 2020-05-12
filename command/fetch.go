@@ -83,8 +83,16 @@ func fetch(ctx *Context, args []string) {
 
 	info, err := db.GetSysinfo(user.ID)
 	if err != nil {
-		if err == pgx.ErrNoRows {
-			ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" that user hasn't set their fetch information. You can ask them to run .setfetch")
+		// err == pgx.ErrNoRows doesn't work, not sure why
+		if err.Error() == pgx.ErrNoRows.Error() {
+			message := ctx.Message.Author.Mention()
+			if user == ctx.Message.Author {
+				message += " you first need to set your information with .setfetch"
+			} else {
+				message += " that user hasn't set their fetch information. You can ask them to run .setfetch"
+			}
+
+			ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, message)
 			return
 		}
 
