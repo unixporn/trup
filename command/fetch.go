@@ -8,7 +8,7 @@ import (
 	"trup/db"
 )
 
-const setFetchUsage = "Run without arguments to see instructions"
+const setFetchHelp = "Run without arguments to see instructions"
 
 func setFetch(ctx *Context, args []string) {
 	lines := strings.Split(ctx.Message.Content, "\n")
@@ -69,11 +69,11 @@ func setFetch(ctx *Context, args []string) {
 const fetchUsage = "fetch [@user]"
 
 func fetch(ctx *Context, args []string) {
-	var user *discordgo.User
+	var user *discordgo.Member
 	if len(args) < 2 {
-		user = ctx.Message.Author
+		user = ctx.Message.Member
 	} else {
-		usr, err := ctx.Session.User(parseMention(args[1]))
+		usr, err := ctx.userFromString(strings.Join(args[1:], " "))
 		if err != nil {
 			ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" failed to find the user. Error: "+err.Error())
 			return
@@ -81,12 +81,12 @@ func fetch(ctx *Context, args []string) {
 		user = usr
 	}
 
-	info, err := db.GetSysinfo(user.ID)
+	info, err := db.GetSysinfo(user.User.ID)
 	if err != nil {
 		// err == pgx.ErrNoRows doesn't work, not sure why
 		if err.Error() == pgx.ErrNoRows.Error() {
 			message := ctx.Message.Author.Mention()
-			if user == ctx.Message.Author {
+			if user.User.ID == ctx.Message.Author.ID {
 				message += " you first need to set your information with .setfetch"
 			} else {
 				message += " that user hasn't set their fetch information. You can ask them to run .setfetch"
@@ -102,7 +102,7 @@ func fetch(ctx *Context, args []string) {
 
 	const inline = true
 	embed := discordgo.MessageEmbed{
-		Title: "Fetch " + user.Username + "#" + user.Discriminator,
+		Title: "Fetch " + user.User.Username + "#" + user.User.Discriminator,
 		Thumbnail: &discordgo.MessageEmbedThumbnail{
 			URL: getDistroImage(info.Info.Distro),
 		},

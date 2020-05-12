@@ -1,6 +1,8 @@
 package command
 
 import (
+	"errors"
+	"github.com/bwmarrin/discordgo"
 	"regexp"
 )
 
@@ -22,8 +24,8 @@ var Commands = map[string]Command{
 		Usage: fetchUsage,
 	},
 	"setfetch": Command{
-		Exec:  setFetch,
-		Usage: setFetchUsage,
+		Exec: setFetch,
+		Help: setFetchHelp,
 	},
 	"repo": Command{
 		Exec: repo,
@@ -48,6 +50,28 @@ func parseMention(mention string) string {
 		return ""
 	}
 	return res[1]
+}
+
+var userNotFound = errors.New("User not found")
+
+func (ctx *Context) userFromString(str string) (*discordgo.Member, error) {
+	if m := parseMention(str); m != "" {
+		mem, err := ctx.Session.GuildMember(ctx.Message.GuildID, m)
+		return mem, err
+	}
+
+	guild, err := ctx.Session.State.Guild(ctx.Message.GuildID)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, m := range guild.Members {
+		if str == m.User.Username || str == m.Nick {
+			return m, nil
+		}
+	}
+
+	return nil, userNotFound
 }
 
 func moderatorOnly(cmd Command) Command {
