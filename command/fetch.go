@@ -1,0 +1,253 @@
+package command
+
+import (
+	"github.com/bwmarrin/discordgo"
+	"github.com/dustin/go-humanize"
+	"strings"
+	"trup/db"
+)
+
+const setFetchUsage = "Run without arguments to see instructions"
+
+func setFetch(ctx *Context, args []string) {
+	lines := strings.Split(ctx.Message.Content, "\n")
+	if len(lines) < 2 {
+		ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" run this: `curl https://raw.githubusercontent.com/unixporn/trup/master/fetcher.sh | sh` and follow the instructions.")
+		return
+	}
+
+	data := db.SysinfoData{}
+	m := map[string]*string{
+		"CPU":              &data.Cpu,
+		"Kernel":           &data.Kernel,
+		"Distro":           &data.Distro,
+		"DE/WM":            &data.DeWm,
+		"Display protocol": &data.DisplayProtocol,
+		"GTK3 Theme":       &data.Gtk3Theme,
+		"GTK Icon Theme":   &data.GtkIconTheme,
+		"Terminal":         &data.Terminal,
+		"Editor":           &data.Editor,
+	}
+	for i := 1; i < len(lines); i++ {
+		kI := strings.Index(lines[i], ":")
+		if kI == -1 {
+			continue
+		}
+
+		key := lines[i][:kI]
+		value := strings.TrimSpace(lines[i][kI+1:])
+
+		if addr, found := m[key]; found {
+			*addr = value
+			continue
+		}
+
+		switch key {
+		case "Memory":
+			b, err := humanize.ParseBytes(value)
+			if err != nil {
+				ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" Failed to parse Max RAM")
+				return
+			}
+			data.Memory = b
+		default:
+			ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" key '"+key+"' is not valid")
+			return
+		}
+	}
+
+	info := db.NewSysinfo(ctx.Message.Author.ID, data)
+	err := info.Save()
+	if err != nil {
+		ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" Failed to save. Error: "+err.Error())
+		return
+	}
+	ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" success. You can now run .fetch")
+}
+
+const fetchUsage = "fetch [@user]"
+
+func fetch(ctx *Context, args []string) {
+	var user *discordgo.User
+	if len(args) < 2 {
+		user = ctx.Message.Author
+	} else {
+		usr, err := ctx.Session.User(parseMention(args[1]))
+		if err != nil {
+			ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" failed to find the user. Error: "+err.Error())
+			return
+		}
+		user = usr
+	}
+
+	info, err := db.GetSysinfo(user.ID)
+	if err != nil {
+		ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" failed to find the user's info. Error: "+err.Error())
+		return
+	}
+
+	const inline = true
+	embed := discordgo.MessageEmbed{
+		Title: "Fetch " + user.Username + "#" + user.Discriminator,
+		Thumbnail: &discordgo.MessageEmbedThumbnail{
+			URL: getDistroImage(info.Info.Distro),
+		},
+		Fields: []*discordgo.MessageEmbedField{},
+	}
+	if info.Info.Kernel != "" {
+		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
+			"Kernel",
+			info.Info.Kernel,
+			inline,
+		})
+	}
+	if info.Info.Distro != "" {
+		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
+			"Distro",
+			info.Info.Distro,
+			inline,
+		})
+	}
+	if info.Info.DeWm != "" {
+		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
+			"DE/WM",
+			info.Info.DeWm,
+			inline,
+		})
+	}
+	if info.Info.Gtk3Theme != "" {
+		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
+			"GTK3 Theme",
+			info.Info.Gtk3Theme,
+			inline,
+		})
+	}
+	if info.Info.GtkIconTheme != "" {
+		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
+			"GTK Icon Theme",
+			info.Info.GtkIconTheme,
+			inline,
+		})
+	}
+	if info.Info.Editor != "" {
+		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
+			"Editor",
+			info.Info.Editor,
+			inline,
+		})
+	}
+	if info.Info.DisplayProtocol != "" {
+		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
+			"Display Protocol",
+			info.Info.DisplayProtocol,
+			inline,
+		})
+	}
+	if info.Info.Cpu != "" {
+		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
+			"CPU",
+			info.Info.Cpu,
+			inline,
+		})
+	}
+	if info.Info.Memory != 0 {
+		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
+			"Memory",
+			humanize.IBytes(info.Info.Memory),
+			inline,
+		})
+	}
+
+	ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed)
+}
+
+func getDistroImage(name string) string {
+	name = strings.ToLower(name)
+	for _, d := range distroImages {
+		if strings.HasPrefix(name, d.name) {
+			return d.image
+		}
+	}
+	return ""
+}
+
+var distroImages = []struct {
+	name  string
+	image string
+}{
+	{name: "nixos", image: "https://nixos.org/logo/nixos-hires.png"},
+	{name: "arch", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Arch_Linux_logo.svg/250px-Arch_Linux_logo.svg.png"},
+	{name: "alpine", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Alpine_Linux.svg/250px-Alpine_Linux.svg.png"},
+	{name: "alt", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/AltLinux500Desktop.png/250px-AltLinux500Desktop.png"},
+	{name: "antergos", image: "https://upload.wikimedia.org/wikipedia/en/thumb/9/93/Antergos_logo_github.png/150px-Antergos_logo_github.png"},
+	{name: "archbang", image: "https://upload.wikimedia.org/wikipedia/commons/2/2c/ArchBangLogo.png"},
+	{name: "archlabs", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Default_desktop.png/300px-Default_desktop.png"},
+	{name: "backbox", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/BackBox_4.4_Screenshot.png/250px-BackBox_4.4_Screenshot.png"},
+	{name: "boss", image: "https://upload.wikimedia.org/wikipedia/en/f/f2/Bharat_Operating_System_Solutions_logo%2C_Sept_2015.png"},
+	{name: "bodhi", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Bodhi_Linux_Logo.png/250px-Bodhi_Linux_Logo.png"},
+	{name: "calculate", image: "https://upload.wikimedia.org/wikipedia/commons/3/3a/CalculateLinux-transparent-90x52.png"},
+	{name: "caos", image: "https://upload.wikimedia.org/wikipedia/en/4/4b/CAos_Linux_logo.png"},
+	{name: "centos", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Centos-logo-light.svg/300px-Centos-logo-light.svg.png"},
+	{name: "cub", image: "https://upload.wikimedia.org/wikipedia/commons/d/d8/CubLinux100.png"},
+	{name: "debian", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Debian-OpenLogo.svg/100px-Debian-OpenLogo.svg.png"},
+	{name: "deepin", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Deepin_logo.svg/60px-Deepin_logo.svg.png"},
+	{name: "elementary", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Elementary_OS_logo.svg/300px-Elementary_OS_logo.svg.png"},
+	{name: "emmabuntüs", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Emmabuntus_DE3_En.png/150px-Emmabuntus_DE3_En.png"},
+	{name: "engarde", image: "https://upload.wikimedia.org/wikipedia/en/7/74/Engarde_Logo.png"},
+	{name: "euleros", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Operating_system_placement.svg/24px-Operating_system_placement.svg.png"},
+	{name: "fedora", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Fedora_logo_and_wordmark.svg/250px-Fedora_logo_and_wordmark.svg.png"},
+	{name: "fermi", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Fermi_Linux_logo.svg/80px-Fermi_Linux_logo.svg.png"},
+	{name: "finnix", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Finnix-72pt-72dpi.png/100px-Finnix-72pt-72dpi.png"},
+	{name: "foresight", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Foresight_Linux_Logo_2.png/200px-Foresight_Linux_Logo_2.png"},
+	{name: "frugalware", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Frugalware_linux_logo.svg/250px-Frugalware_linux_logo.svg.png"},
+	{name: "fuduntu", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Fuduntu-logo.png/100px-Fuduntu-logo.png"},
+	{name: "geckolinux", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Tux.svg/35px-Tux.svg.png"},
+	{name: "gentoo", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Gentoo_Linux_logo_matte.svg/100px-Gentoo_Linux_logo_matte.svg.png"},
+	{name: "kali", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Kali_Linux_2.0_wordmark.svg/131px-Kali_Linux_2.0_wordmark.svg.png"},
+	{name: "kanotix", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Kanotix-hellfire.png/300px-Kanotix-hellfire.png"},
+	{name: "kaos", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/KaOS_201603.png/300px-KaOS_201603.png"},
+	{name: "kde neon", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Neon-logo.svg/100px-Neon-logo.svg.png"},
+	{name: "kororā", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Korora_logo.png/250px-Korora_logo.png"},
+	{name: "kubuntu", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/76/Kubuntu_logo_and_wordmark.svg/250px-Kubuntu_logo_and_wordmark.svg.png"},
+	{name: "kwort", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/2019-11-24-121414_1280x1024_scrot.png/300px-2019-11-24-121414_1280x1024_scrot.png"},
+	{name: "linux lite", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/79/Linux_Lite_Simple_Fast_Free_logo.png/250px-Linux_Lite_Simple_Fast_Free_logo.png"},
+	{name: "linux mint", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Linux_Mint_Official_Logo.svg/250px-Linux_Mint_Official_Logo.svg.png"},
+	{name: "lunar linux", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Lunar_Linux_logo.png/200px-Lunar_Linux_logo.png"},
+	{name: "mageia", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Mageia_logo.svg/250px-Mageia_logo.svg.png"},
+	{name: "mandriva", image: "https://upload.wikimedia.org/wikipedia/en/thumb/3/34/Mandriva-Logo.svg/200px-Mandriva-Logo.svg.png"},
+	{name: "manjaro", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Manjaro_logo_text.png/250px-Manjaro_logo_text.png"},
+	{name: "simplymepis", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/MEPIS_logo.svg/100px-MEPIS_logo.svg.png"},
+	{name: "mx linux", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/MX_Linux_logo.svg/100px-MX_Linux_logo.svg.png"},
+	{name: "openmandriva lx", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Oma-logo-22042013_300pp.png/70px-Oma-logo-22042013_300pp.png"},
+	{name: "opensuse", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/OpenSUSE_Logo.svg/128px-OpenSUSE_Logo.svg.png"},
+	{name: "oracle", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Oracle_logo.svg/200px-Oracle_logo.svg.png"},
+	{name: "parted magic", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Parted_Magic_2014_04_28.png/300px-Parted_Magic_2014_04_28.png"},
+	{name: "pclinuxos", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/PCLinuxOS_logo.svg/80px-PCLinuxOS_logo.svg.png"},
+	{name: "pinguy os", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/Pinguy-os-desktop-12-04.png/300px-Pinguy-os-desktop-12-04.png"},
+	{name: "pop!_os", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Pop_OS-Logo-nobg.png/125px-Pop_OS-Logo-nobg.png"},
+	{name: "qubes os", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/Qubes_OS_Logo.svg/120px-Qubes_OS_Logo.svg.png"},
+	{name: "red flag", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/RedFlag_Linux-Logo.jpg/180px-RedFlag_Linux-Logo.jpg"},
+	{name: "red hat enterprise", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/RHEL_8_Desktop.png/300px-RHEL_8_Desktop.png"},
+	{name: "rosa linux", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Logo_ROSA.jpg/250px-Logo_ROSA.jpg"},
+	{name: "russian fedora remix project", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Rfremix_Logo9.png/300px-Rfremix_Logo9.png"},
+	{name: "sabayon", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Sabayon_5.4_logo.svg/70px-Sabayon_5.4_logo.svg.png"},
+	{name: "sailfish os", image: "https://upload.wikimedia.org/wikipedia/en/thumb/d/d3/Sailfish_logo.svg/250px-Sailfish_logo.svg.png"},
+	{name: "scientific", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Scientific_Linux_logo_and_wordmark.svg/80px-Scientific_Linux_logo_and_wordmark.svg.png"},
+	{name: "slackware", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Slackware_logo_from_the_official_Slackware_site.svg/250px-Slackware_logo_from_the_official_Slackware_site.svg.png"},
+	{name: "solus", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/Solus.svg/100px-Solus.svg.png"},
+	{name: "solydxk", image: "https://upload.wikimedia.org/wikipedia/en/d/df/SolydXK_logo_small.png"},
+	{name: "sparkylinux", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/SparkyLinux-logo-200px.png/110px-SparkyLinux-logo-200px.png"},
+	{name: "suse linux enterprise desktop", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/SLED_15_Default_Desktop.png/300px-SLED_15_Default_Desktop.png"},
+	{name: "suse linux enterprise server", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/SUSE_Linux_Enterprise_Server_11_installation_DVD_20100429.jpg/300px-SUSE_Linux_Enterprise_Server_11_installation_DVD_20100429.jpg"},
+	{name: "turbolinux", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Turbolinux.png/250px-Turbolinux.png"},
+	{name: "turnkey linux virtual appliance library", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Screenshot-webmin3.png/300px-Screenshot-webmin3.png"},
+	{name: "ubuntu budgie", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/UbuntuBudgie-Wordmark.svg/250px-UbuntuBudgie-Wordmark.svg.png"},
+	{name: "ubuntu gnome", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Ubuntu_GNOME_logo.svg/250px-Ubuntu_GNOME_logo.svg.png"},
+	{name: "ubuntu mate", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Ubuntu_MATE_logo.svg/250px-Ubuntu_MATE_logo.svg.png"},
+	{name: "ubuntu", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Logo-ubuntu_no%28r%29-black_orange-hex.svg/250px-Logo-ubuntu_no%28r%29-black_orange-hex.svg.png"},
+	{name: "univention corporate server", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/Univention_Corporate_Server_Logo.png/250px-Univention_Corporate_Server_Logo.png"},
+	{name: "uruk", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Logo_of_Uruk_Project.svg/250px-Logo_of_Uruk_Project.svg.png"},
+	{name: "vine", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Tux.svg/35px-Tux.svg.png"},
+	{name: "whonix", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Whonix_Logo.png/200px-Whonix_Logo.png"},
+	{name: "xubuntu", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Xubuntu_logo_and_wordmark.svg/200px-Xubuntu_logo_and_wordmark.svg.png"},
+}

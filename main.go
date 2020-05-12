@@ -56,16 +56,15 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	if strings.HasPrefix(m.Content, prefix) {
-		args, err := shell.Parse(m.Content[len(prefix):])
-		if err != nil {
-			log.Printf("Failed to parse command %s; Error: %s\n", m.Content, err)
-			s.ChannelMessageSend(m.ChannelID, m.Author.Mention()+" There was an error while parsing your command: "+err.Error())
-			return
-		}
+		args := strings.Fields(m.Content[len(prefix):])
 		context := command.Context{
 			Env:     &env,
 			Session: s,
 			Message: m.Message,
+		}
+
+		if len(args) == 0 {
+			return
 		}
 
 		if args[0] == "help" {

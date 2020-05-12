@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-const modpingUsage = "Usage: modping [reason]"
+const modpingUsage = "modping [reason]"
 
 func modping(context *Context, args []string) {
 	reason := strings.Join(args[1:], " ")
