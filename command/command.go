@@ -5,14 +5,17 @@ import (
 )
 
 type Command struct {
-	Exec  func(*Context, []string)
-	Usage string
+	Exec          func(*Context, []string)
+	Usage         string
+	Help          string
+	ModeratorOnly bool
 }
 
 var Commands = map[string]Command{
 	"modping": Command{
 		Exec:  modping,
 		Usage: modpingUsage,
+		Help:  "Pings online mods. Don't abuse.",
 	},
 	"fetch": Command{
 		Exec:  fetch,
@@ -55,6 +58,16 @@ func moderatorOnly(cmd Command) Command {
 
 			ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" this command is only for moderators.")
 		},
-		Usage: cmd.Usage + " - Moderator only.",
+		Usage:         cmd.Usage,
+		ModeratorOnly: true,
 	}
+}
+
+func isModerator(ctx *Context) bool {
+	for _, r := range ctx.Message.Member.Roles {
+		if r == ctx.Env.RoleMod {
+			return true
+		}
+	}
+	return false
 }
