@@ -114,9 +114,6 @@ func fetch(ctx *Context, args []string) {
 		Thumbnail: &discordgo.MessageEmbedThumbnail{
 			URL: getDistroImage(info.Info.Distro),
 		},
-		Image: &discordgo.MessageEmbedImage{
-			URL: "https://media.discordapp.net/attachments/635625917623828520/709583589150294107/unknown.png",
-		},
 		Fields: []*discordgo.MessageEmbedField{},
 	}
 	if info.Info.Kernel != "" {
