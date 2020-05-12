@@ -82,7 +82,9 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			}
 		}
 		if !found {
-			s.ChannelMessageSend(m.ChannelID, m.Author.Mention()+" command not found. Available commands: "+strings.Join(allKeys, ", "))
+			// this will need to be either disabled
+			// or need a workaround for situations like "..." when PREFIX=.
+			//s.ChannelMessageSend(m.ChannelID, m.Author.Mention()+" command not found. Available commands: "+strings.Join(allKeys, ", "))
 		}
 	}
 }
