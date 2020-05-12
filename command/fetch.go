@@ -129,6 +129,13 @@ func fetch(ctx *Context, args []string) {
 			inline,
 		})
 	}
+	if info.Info.Terminal != "" {
+		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
+			"Terminal",
+			info.Info.Terminal,
+			inline,
+		})
+	}
 	if info.Info.Editor != "" {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
 			"Editor",
