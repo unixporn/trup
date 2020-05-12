@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
-	"github.com/mattn/go-shellwords"
 	"log"
 	"os"
 	"os/signal"
@@ -18,7 +17,7 @@ var (
 		RoleMod:         os.Getenv("ROLE_MOD"),
 		ChannelShowcase: os.Getenv("CHANNEL_SHOWCASE"),
 	}
-	shell = shellwords.NewParser()
+	botId string
 )
 
 func main() {
@@ -31,6 +30,10 @@ func main() {
 		log.Fatalf("Failed on discordgo.New(): %s\n", err)
 	}
 
+	discord.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
+		botId = r.User.ID
+		s.UpdateStatus(0, ".help")
+	})
 	discord.AddHandler(messageCreate)
 
 	err = discord.Open()
@@ -53,6 +56,18 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			log.Printf("Error on adding reaction ❤ to new showcase message(%s): %s\n", m.ID, err)
 			return
 		}
+	}
+
+	var mentionsBot bool
+	for _, m := range m.Mentions {
+		if m.ID == botId {
+			mentionsBot = true
+			break
+		}
+	}
+	if mentionsBot {
+		s.ChannelMessageSend(m.ChannelID, m.Author.Mention()+" need help? Type `.help`")
+		return
 	}
 
 	if strings.HasPrefix(m.Content, prefix) {

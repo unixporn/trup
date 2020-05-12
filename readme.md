@@ -1,7 +1,7 @@
 # Requirements
 
 - Go
-- PostgreSQL 9.1 or up
+- PostgreSQL 11 or up
 
 # Setup
 
