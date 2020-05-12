@@ -3,6 +3,7 @@ package command
 import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/dustin/go-humanize"
+	"github.com/jackc/pgx"
 	"strings"
 	"trup/db"
 )
@@ -82,6 +83,11 @@ func fetch(ctx *Context, args []string) {
 
 	info, err := db.GetSysinfo(user.ID)
 	if err != nil {
+		if err == pgx.ErrNoRows {
+			ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" that user hasn't set their fetch information. You can ask them to run .setfetch")
+			return
+		}
+
 		ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" failed to find the user's info. Error: "+err.Error())
 		return
 	}
