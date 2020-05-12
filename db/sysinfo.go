@@ -16,6 +16,7 @@ type SysinfoData struct {
 	Terminal        string
 	Editor          string
 	Memory          uint64
+	Image           string
 }
 
 type Sysinfo struct {

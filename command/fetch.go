@@ -4,6 +4,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/dustin/go-humanize"
 	"github.com/jackc/pgx"
+	"log"
 	"strings"
 	"trup/db"
 )
@@ -57,6 +58,13 @@ func setFetch(ctx *Context, args []string) {
 		}
 	}
 
+	for _, a := range ctx.Message.Attachments {
+		if a.Width > 0 {
+			data.Image = a.URL
+			break
+		}
+	}
+
 	info := db.NewSysinfo(ctx.Message.Author.ID, data)
 	err := info.Save()
 	if err != nil {
@@ -105,6 +113,9 @@ func fetch(ctx *Context, args []string) {
 		Title: "Fetch " + user.Username + "#" + user.Discriminator,
 		Thumbnail: &discordgo.MessageEmbedThumbnail{
 			URL: getDistroImage(info.Info.Distro),
+		},
+		Image: &discordgo.MessageEmbedImage{
+			URL: "https://media.discordapp.net/attachments/635625917623828520/709583589150294107/unknown.png",
 		},
 		Fields: []*discordgo.MessageEmbedField{},
 	}
@@ -178,8 +189,35 @@ func fetch(ctx *Context, args []string) {
 			inline,
 		})
 	}
+	if info.Info.Image != "" {
+		embed.Image = &discordgo.MessageEmbedImage{
+			URL: info.Info.Image,
+		}
+	}
 
 	ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed)
+}
+
+func UpdateSysinfoImage(userId string, image string) {
+	info, err := db.GetSysinfo(userId)
+	if err != nil && err.Error() != pgx.ErrNoRows.Error() {
+		log.Printf("Failed to fetch system info for %s; Error: %s\n", userId, err)
+		return
+	}
+
+	if info == nil {
+		info = db.NewSysinfo(userId, db.SysinfoData{
+			Image: image,
+		})
+	} else {
+		info.Info.Image = image
+	}
+
+	err = info.Save()
+	if err != nil {
+		log.Printf("Failed to save info %#v; Error: %s\n", info, err)
+		return
+	}
 }
 
 func getDistroImage(name string) string {
@@ -261,7 +299,7 @@ var distroImages = []struct {
 	{name: "suse linux enterprise desktop", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/SLED_15_Default_Desktop.png/300px-SLED_15_Default_Desktop.png"},
 	{name: "suse linux enterprise server", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/SUSE_Linux_Enterprise_Server_11_installation_DVD_20100429.jpg/300px-SUSE_Linux_Enterprise_Server_11_installation_DVD_20100429.jpg"},
 	{name: "turbolinux", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Turbolinux.png/250px-Turbolinux.png"},
-	{name: "turnkey linux virtual appliance library", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Screenshot-webmin3.png/300px-Screenshot-webmin3.png"},
+	{name: "turnkey linux virtual appliance library", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Image-webmin3.png/300px-Image-webmin3.png"},
 	{name: "ubuntu budgie", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/UbuntuBudgie-Wordmark.svg/250px-UbuntuBudgie-Wordmark.svg.png"},
 	{name: "ubuntu gnome", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Ubuntu_GNOME_logo.svg/250px-Ubuntu_GNOME_logo.svg.png"},
 	{name: "ubuntu mate", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Ubuntu_MATE_logo.svg/250px-Ubuntu_MATE_logo.svg.png"},

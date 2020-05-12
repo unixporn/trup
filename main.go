@@ -51,6 +51,13 @@ func main() {
 
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.ChannelID == env.ChannelShowcase {
+		for _, a := range m.Attachments {
+			if a.Width > 0 {
+				command.UpdateSysinfoImage(m.Author.ID, a.URL)
+				break
+			}
+		}
+
 		err := s.MessageReactionAdd(m.ChannelID, m.ID, "❤")
 		if err != nil {
 			log.Printf("Error on adding reaction ❤ to new showcase message(%s): %s\n", m.ID, err)
