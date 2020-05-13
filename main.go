@@ -4,18 +4,27 @@ import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"log"
+	"math"
 	"os"
 	"os/signal"
+	"sort"
 	"strings"
+	"sync"
 	"syscall"
+	"time"
 	"trup/command"
 )
 
+const (
+	prefix     = "."
+	heartEmoji = "❤️"
+)
+
 var (
-	prefix = "."
-	env    = command.Env{
-		RoleMod:         os.Getenv("ROLE_MOD"),
-		ChannelShowcase: os.Getenv("CHANNEL_SHOWCASE"),
+	env = command.Env{
+		RoleMod:           os.Getenv("ROLE_MOD"),
+		ChannelShowcase:   os.Getenv("CHANNEL_SHOWCASE"),
+		ChannelHighlights: "709939484074049658",
 	}
 	botId string
 )
@@ -30,10 +39,7 @@ func main() {
 		log.Fatalf("Failed on discordgo.New(): %s\n", err)
 	}
 
-	discord.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
-		botId = r.User.ID
-		s.UpdateStatus(0, ".help")
-	})
+	discord.AddHandler(ready)
 	discord.AddHandler(messageCreate)
 
 	err = discord.Open()
@@ -49,6 +55,92 @@ func main() {
 	discord.Close()
 }
 
+func ready(s *discordgo.Session, r *discordgo.Ready) {
+	botId = r.User.ID
+	s.UpdateStatus(0, ".help")
+	go showcaseHighlights.Do(showcaseHighlightsLoop(s))
+}
+
+var showcaseHighlights sync.Once
+
+func showcaseHighlightsLoop(s *discordgo.Session) func() {
+	return func() {
+		//for {
+		now := time.Now()
+		//tomorrow := time.Date(now.Year(), now.Month(), now.Day()+1, 0, 0, 0, 0, time.UTC)
+		today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+		//	time.Sleep(tomorrow.Sub(now))
+
+		messages, err := s.ChannelMessages(env.ChannelShowcase, 100, "", "", "")
+		if err != nil {
+			log.Printf("Failed to fetch messages for channel %s; Error: %s\n", env.ChannelShowcase, err)
+			//continue
+		}
+
+		type entry struct {
+			msg   *discordgo.Message
+			votes int
+		}
+		var topEntry entry
+		var entries []entry
+		for _, m := range messages {
+			t, err := m.Timestamp.Parse()
+			if err != nil {
+				log.Printf("Failed to parse timestamp for message %s; Error: %s\n", m.ID, err)
+				continue
+			}
+			if t.Before(today) {
+				continue
+			}
+
+			for _, r := range m.Reactions {
+				if r.Emoji.APIName() == heartEmoji {
+					entries = append(entries, entry{msg: m, votes: r.Count})
+					if r.Count > topEntry.votes {
+						topEntry = entry{msg: m, votes: r.Count}
+					}
+				}
+			}
+		}
+		min := int(math.Ceil(float64(topEntry.votes) * 0.8))
+		var qualified []entry
+		for _, r := range entries {
+			if r.votes >= min {
+				qualified = append(qualified, r)
+			}
+		}
+		sort.Slice(qualified, func(i, j int) bool {
+			return qualified[i].votes < qualified[j].votes
+		})
+
+		for i, r := range qualified {
+			embed := discordgo.MessageEmbed{
+				Title:     fmt.Sprintf("Daily Top #%d by %s%s", i+1, r.msg.Author.Username, r.msg.Author.Discriminator),
+				Timestamp: string(r.msg.Timestamp),
+			}
+
+			if r.msg.Content != "" {
+				embed.Description = `"` + r.msg.Content + `"`
+			}
+
+			for _, a := range r.msg.Attachments {
+				if a.Width > 0 {
+					embed.Image = &discordgo.MessageEmbedImage{
+						URL: a.URL,
+					}
+					break
+				}
+			}
+			_, err := s.ChannelMessageSendEmbed(env.ChannelHighlights, &embed)
+			if err != nil {
+				log.Printf("Failed to send highlights embed. Error: %s\n", err)
+			}
+		}
+
+		//}
+	}
+}
+
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.ChannelID == env.ChannelShowcase {
 		for _, a := range m.Attachments {
@@ -58,7 +150,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			}
 		}
 
-		err := s.MessageReactionAdd(m.ChannelID, m.ID, "❤")
+		err := s.MessageReactionAdd(m.ChannelID, m.ID, heartEmoji)
 		if err != nil {
 			log.Printf("Error on adding reaction ❤ to new showcase message(%s): %s\n", m.ID, err)
 			return

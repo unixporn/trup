@@ -3,8 +3,9 @@ package command
 import "github.com/bwmarrin/discordgo"
 
 type Env struct {
-	RoleMod         string
-	ChannelShowcase string
+	RoleMod           string
+	ChannelShowcase   string
+	ChannelHighlights string
 }
 
 type Context struct {

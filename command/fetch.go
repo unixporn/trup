@@ -231,6 +231,7 @@ var distroImages = []struct {
 	name  string
 	image string
 }{
+	{name: "void", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Void_Linux_logo.svg/1242px-Void_Linux_logo.svg.png"},
 	{name: "nixos", image: "https://nixos.org/logo/nixos-hires.png"},
 	{name: "arch", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Arch_Linux_logo.svg/250px-Arch_Linux_logo.svg.png"},
 	{name: "alpine", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Alpine_Linux.svg/250px-Alpine_Linux.svg.png"},
