@@ -14,7 +14,7 @@ const setFetchHelp = "Run without arguments to see instructions"
 func setFetch(ctx *Context, args []string) {
 	lines := strings.Split(ctx.Message.Content, "\n")
 	if len(lines) < 2 {
-		ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" run this: `curl https://raw.githubusercontent.com/unixporn/trup/master/fetcher.sh | sh` and follow the instructions.")
+		ctx.Reply("run this: `curl https://raw.githubusercontent.com/unixporn/trup/master/fetcher.sh | sh` and follow the instructions.")
 		return
 	}
 
@@ -48,12 +48,12 @@ func setFetch(ctx *Context, args []string) {
 		case "Memory":
 			b, err := humanize.ParseBytes(value)
 			if err != nil {
-				ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" Failed to parse Max RAM")
+				ctx.Reply("Failed to parse Max RAM")
 				return
 			}
 			data.Memory = b
 		default:
-			ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" key '"+key+"' is not valid")
+			ctx.Reply("key '" + key + "' is not valid")
 			return
 		}
 	}
@@ -68,10 +68,10 @@ func setFetch(ctx *Context, args []string) {
 	info := db.NewSysinfo(ctx.Message.Author.ID, data)
 	err := info.Save()
 	if err != nil {
-		ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" Failed to save. Error: "+err.Error())
+		ctx.Reply("Failed to save. Error: " + err.Error())
 		return
 	}
-	ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" success. You can now run .fetch")
+	ctx.Reply("success. You can now run .fetch")
 }
 
 const fetchUsage = "fetch [@user]"
@@ -83,7 +83,7 @@ func fetch(ctx *Context, args []string) {
 	} else {
 		usr, err := ctx.userFromString(strings.Join(args[1:], " "))
 		if err != nil {
-			ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" failed to find the user. Error: "+err.Error())
+			ctx.Reply("failed to find the user. Error: " + err.Error())
 			return
 		}
 		user = usr.User
@@ -93,18 +93,16 @@ func fetch(ctx *Context, args []string) {
 	if err != nil {
 		// err == pgx.ErrNoRows doesn't work, not sure why
 		if err.Error() == pgx.ErrNoRows.Error() {
-			message := ctx.Message.Author.Mention()
+			message := "that user hasn't set their fetch information. You can ask them to run .setfetch"
 			if user.ID == ctx.Message.Author.ID {
-				message += " you first need to set your information with .setfetch"
-			} else {
-				message += " that user hasn't set their fetch information. You can ask them to run .setfetch"
+				message = "you first need to set your information with .setfetch"
 			}
 
-			ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, message)
+			ctx.Reply(message)
 			return
 		}
 
-		ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" failed to find the user's info. Error: "+err.Error())
+		ctx.Reply("failed to find the user's info. Error: " + err.Error())
 		return
 	}
 

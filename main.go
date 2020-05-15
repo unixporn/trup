@@ -50,6 +50,12 @@ func main() {
 }
 
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("Recovered from panic in messageCreate. r: %#v; Message(%s): %s;\n", r, m.ID, m.Content)
+		}
+	}()
+
 	if m.ChannelID == env.ChannelShowcase {
 		for _, a := range m.Attachments {
 			if a.Width > 0 {

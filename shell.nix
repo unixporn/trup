@@ -12,6 +12,7 @@ pkgs.stdenv.mkDerivation {
 		export LOG_PATH=$PWD/postgres/LOG
 		export PGDATABASE=trup
 		export DATABASE_URL="postgresql:///postgres/?host=$PGHOST&database=$PGDATABASE"
+		. .env 2>/dev/null >/dev/null
 		if [ ! -d $PGHOST ]; then
 			mkdir -p $PGHOST
 		fi

@@ -1,16 +1,17 @@
 package command
 
 import (
-	"github.com/bwmarrin/discordgo"
 	"log"
 	"strings"
+
+	"github.com/bwmarrin/discordgo"
 )
 
 const modpingUsage = "modping <reason>"
 
 func modping(ctx *Context, args []string) {
 	if len(args) < 2 {
-		ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" Usage: "+modpingUsage)
+		ctx.Reply("Usage: " + modpingUsage)
 		return
 	}
 

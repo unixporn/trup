@@ -2,8 +2,10 @@ package command
 
 import (
 	"errors"
-	"github.com/bwmarrin/discordgo"
+	"log"
 	"regexp"
+
+	"github.com/bwmarrin/discordgo"
 )
 
 type Command struct {
@@ -74,6 +76,13 @@ func (ctx *Context) userFromString(str string) (*discordgo.Member, error) {
 	return nil, userNotFound
 }
 
+func (ctx *Context) Reply(msg string) {
+	_, err := ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" "+msg)
+	if err != nil {
+		log.Printf("Failed to reply to message %s\n", ctx.Message.ID)
+	}
+}
+
 func moderatorOnly(cmd Command) Command {
 	return Command{
 		Exec: func(ctx *Context, args []string) {
@@ -84,7 +93,7 @@ func moderatorOnly(cmd Command) Command {
 				}
 			}
 
-			ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" this command is only for moderators.")
+			ctx.Reply("this command is only for moderators.")
 		},
 		Usage:         cmd.Usage,
 		ModeratorOnly: true,
