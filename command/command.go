@@ -79,7 +79,7 @@ func (ctx *Context) userFromString(str string) (*discordgo.Member, error) {
 func (ctx *Context) Reply(msg string) {
 	_, err := ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" "+msg)
 	if err != nil {
-		log.Printf("Failed to reply to message %s\n", ctx.Message.ID)
+		log.Printf("Failed to reply to message %s; Error: %s\n", ctx.Message.ID, err)
 	}
 }
 
