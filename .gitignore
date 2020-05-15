@@ -1,3 +1,5 @@
 .idea/
 .env
 pglogs
+postgres/
+postgres_data/
