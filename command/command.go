@@ -54,7 +54,8 @@ var Commands = map[string]Command{
 	}),
 }
 
-var parseMentionRegexp = regexp.MustCompile(`<@!?(\d+)>`)
+var parseMentionRegexp = regexp.MustCompile(`<@!?(\d{1,20})>`)
+// Snowflake IDs are up to 64 bits -- a 20 digit number. Anything over the user may just forge.
 
 // parseMention takes a Discord mention string and returns the id
 func parseMention(mention string) string {
