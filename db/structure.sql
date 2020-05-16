@@ -27,6 +27,18 @@ create table if not exists sysinfo (
     primary key (usr)
 );
 
+create table if not exists mute (
+    id uuid,
+    guildid varchar not null,
+    moderator varchar not null,
+    usr varchar not null,
+    usrid varchar not null,
+    start_time timestamptz,
+    end_time timestamptz,
+    reason varchar,
+    primary key (id)
+);
+
 create or replace procedure sysinfo_set(_usr varchar, _info jsonb, _modify_date timestamptz, _create_date timestamptz)
 language plpgsql
 as $$

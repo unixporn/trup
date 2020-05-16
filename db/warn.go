@@ -2,8 +2,9 @@ package db
 
 import (
 	"context"
-	"github.com/jackc/pgx/pgtype"
 	"time"
+
+	"github.com/jackc/pgx/pgtype"
 )
 
 type Warn struct {
@@ -25,12 +26,12 @@ func NewWarn(mod, user, reason string) *Warn {
 }
 
 func (warn *Warn) Save() error {
-	_, err := db.Exec(context.Background(), "insert into warn(id, moderator, usr, reason, create_date) values(uuid_generate_v4(), $1, $2, $3, $4)", warn.Moderator, warn.User, warn.Reason, warn.CreateDate)
+	_, err := db.Exec(context.Background(), "INSERT INTO warn(id, moderator, usr, reason, create_date) values(uuid_generate_v4(), $1, $2, $3, $4)", warn.Moderator, warn.User, warn.Reason, warn.CreateDate)
 	return err
 }
 
 func GetWarns(user string) ([]Warn, error) {
-	rows, err := db.Query(context.Background(), "select id, moderator, usr, reason, create_date from warn where usr=$1", user)
+	rows, err := db.Query(context.Background(), "SELECT id, moderator, usr, reason, create_date FROM warn where usr=$1", user)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +50,7 @@ func GetWarns(user string) ([]Warn, error) {
 }
 
 func CountWarns(user string) (int, error) {
-	row := db.QueryRow(context.Background(), "select count(*) from warn where usr=$1", user)
+	row := db.QueryRow(context.Background(), "SELECT COUNT(*) FROM warn WHERE usr=$1", user)
 	var count int
 	err := row.Scan(&count)
 	if err != nil {

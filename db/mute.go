@@ -47,7 +47,7 @@ func SetMuteInactive(userid string) error {
 
 func GetExpiredMutes() ([]Mute, error) {
 
-	rows, err := db.Query(context.Background(), "SELECT * FROM mute WHERE active=true AND end < $1", time.Now())
+	rows, err := db.Query(context.Background(), "SELECT * FROM mute WHERE active=true AND end_time < $1", time.Now())
 	if err != nil {
 		return nil, err
 	}
@@ -71,6 +71,6 @@ func GetExpiredMutes() ([]Mute, error) {
 }
 
 func SetExpiredMutesInactive() error {
-	_, err := db.Exec(context.Background(), "UPDATE mute SET active=false WHERE active=true AND end < $1", time.Now())
+	_, err := db.Exec(context.Background(), "UPDATE mute SET active=false WHERE active=true AND end_time < $1", time.Now())
 	return err
 }
