@@ -102,14 +102,17 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			return
 		}
 		
-		if cmd, exists_in_map := command.Commands[args[0]]; exists_in_map {
+		if cmd, exists := command.Commands[args[0]]; exists {
 			ctx := &context
 			
-			if command.isModerator(ctx) {
-				cmd.Exec(ctx, args)
-			} else {
-				ctx.Reply("this command is only for moderators")
+			if cmd.ModeratorOnly {
+				if !ctx.isModerator() {
+					ctx.Reply("this command is only for moderators")
+					return
+				}
 			}
+			
+			cmd.Exec(ctx, args)
 		}
 		
 	}
