@@ -102,7 +102,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			return
 		}
 		
-		if ctx, exists_in_map := command.Commands[args[0]]; exists_in_map {
+		if cmd, exists_in_map := command.Commands[args[0]]; exists_in_map {
 			ctx := &context
 			
 			if command.isModerator(ctx) {
