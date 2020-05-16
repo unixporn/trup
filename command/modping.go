@@ -1,6 +1,7 @@
 package command
 
 import (
+	"fmt"
 	"log"
 	"strings"
 
@@ -20,7 +21,9 @@ func modping(ctx *Context, args []string) {
 	mods := []string{}
 	g, err := ctx.Session.State.Guild(ctx.Message.GuildID)
 	if err != nil {
-		log.Printf("Failed to fetch guild %s; Error: %s\n", ctx.Message.GuildID, err)
+		msg := fmt.Sprintf("Failed to fetch guild %s; Error: %s", ctx.Message.GuildID, err)
+		log.Println(msg)
+		ctx.Reply(msg)
 		return
 	}
 	for _, mem := range g.Members {
@@ -28,7 +31,7 @@ func modping(ctx *Context, args []string) {
 			if r == ctx.Env.RoleMod {
 				p, err := ctx.Session.State.Presence(ctx.Message.GuildID, mem.User.ID)
 				if err != nil {
-					log.Printf("Failed to fetch presence, guild: %s, user: %s; Error: %s\n", ctx.Message.GuildID, ctx.Message.Author.ID, err)
+					log.Printf("Failed to fetch presence. Error: %s\n", err)
 					break
 				}
 				if p.Status != discordgo.StatusOffline {

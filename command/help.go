@@ -5,7 +5,7 @@ import "strings"
 func Help(ctx *Context, args []string) {
 	var text strings.Builder
 
-	isCallerModerator := isModerator(ctx)
+	isCallerModerator := ctx.isModerator()
 	for name, cmd := range Commands {
 		if cmd.ModeratorOnly && !isCallerModerator {
 			continue

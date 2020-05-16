@@ -8,6 +8,17 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+type Env struct {
+	RoleMod         string
+	ChannelShowcase string
+}
+
+type Context struct {
+	Env     *Env
+	Session *discordgo.Session
+	Message *discordgo.Message
+}
+
 type Command struct {
 	Exec          func(*Context, []string)
 	Usage         string
@@ -83,6 +94,13 @@ func (ctx *Context) Reply(msg string) {
 	}
 }
 
+/*
+func (ctx *Context) ReportError(msg string) {
+	log.Printf("Error Message ID: %s; ChannelID: %s; GuildID: %s; Author ID: %s; msg: %s\n", ctx.Message.ID, ctx.Message.ChannelID, ctx.Message.GuildID, ctx.Message.Author, msg)
+	ctx.Reply(msg)
+}
+*/
+
 func moderatorOnly(cmd Command) Command {
 	return Command{
 		Exec: func(ctx *Context, args []string) {
@@ -100,7 +118,7 @@ func moderatorOnly(cmd Command) Command {
 	}
 }
 
-func isModerator(ctx *Context) bool {
+func (ctx *Context) isModerator() bool {
 	for _, r := range ctx.Message.Member.Roles {
 		if r == ctx.Env.RoleMod {
 			return true

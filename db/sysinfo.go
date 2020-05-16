@@ -2,7 +2,10 @@ package db
 
 import (
 	"context"
+	"log"
 	"time"
+
+	"github.com/jackc/pgx"
 )
 
 type SysinfoData struct {
@@ -50,4 +53,26 @@ func GetSysinfo(user string) (*Sysinfo, error) {
 	}
 
 	return &sysinfo, nil
+}
+
+func UpdateSysinfoImage(userId string, image string) {
+	info, err := GetSysinfo(userId)
+	if err != nil && err.Error() != pgx.ErrNoRows.Error() {
+		log.Printf("Failed to fetch system info for %s; Error: %s\n", userId, err)
+		return
+	}
+
+	if info == nil {
+		info = NewSysinfo(userId, SysinfoData{
+			Image: image,
+		})
+	} else {
+		info.Info.Image = image
+	}
+
+	err = info.Save()
+	if err != nil {
+		log.Printf("Failed to save info %#v; Error: %s\n", info, err)
+		return
+	}
 }

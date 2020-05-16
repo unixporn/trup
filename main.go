@@ -2,13 +2,15 @@ package main
 
 import (
 	"fmt"
-	"github.com/bwmarrin/discordgo"
 	"log"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
 	"trup/command"
+	"trup/db"
+
+	"github.com/bwmarrin/discordgo"
 )
 
 var (
@@ -59,7 +61,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.ChannelID == env.ChannelShowcase {
 		for _, a := range m.Attachments {
 			if a.Width > 0 {
-				command.UpdateSysinfoImage(m.Author.ID, a.URL)
+				db.UpdateSysinfoImage(m.Author.ID, a.URL)
 				break
 			}
 		}

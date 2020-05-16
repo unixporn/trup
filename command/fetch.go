@@ -1,12 +1,12 @@
 package command
 
 import (
+	"strings"
+	"trup/db"
+
 	"github.com/bwmarrin/discordgo"
 	"github.com/dustin/go-humanize"
 	"github.com/jackc/pgx"
-	"log"
-	"strings"
-	"trup/db"
 )
 
 const setFetchHelp = "Run without arguments to see instructions"
@@ -191,28 +191,6 @@ func fetch(ctx *Context, args []string) {
 	}
 
 	ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed)
-}
-
-func UpdateSysinfoImage(userId string, image string) {
-	info, err := db.GetSysinfo(userId)
-	if err != nil && err.Error() != pgx.ErrNoRows.Error() {
-		log.Printf("Failed to fetch system info for %s; Error: %s\n", userId, err)
-		return
-	}
-
-	if info == nil {
-		info = db.NewSysinfo(userId, db.SysinfoData{
-			Image: image,
-		})
-	} else {
-		info.Info.Image = image
-	}
-
-	err = info.Save()
-	if err != nil {
-		log.Printf("Failed to save info %#v; Error: %s\n", info, err)
-		return
-	}
 }
 
 func getDistroImage(name string) string {
