@@ -108,9 +108,16 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			allKeys = append(allKeys, name)
 			if !found && args[0] == name {
 				found = true
-				cmd.Exec(&context, args)
+				ctx := &context
+				
+				if command.isModerator(ctx) {
+					cmd.Exec(ctx, args)
+				} else {
+					ctx.Reply("this command is only for moderators.")
+				}
 			}
 		}
+		
 		if !found {
 			// this will need to be either disabled
 			// or need a workaround for situations like "..." when PREFIX=.
