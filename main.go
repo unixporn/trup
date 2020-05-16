@@ -2,13 +2,15 @@ package main
 
 import (
 	"fmt"
-	"github.com/bwmarrin/discordgo"
 	"log"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
 	"trup/command"
+	"trup/db"
+
+	"github.com/bwmarrin/discordgo"
 )
 
 var (
@@ -16,6 +18,7 @@ var (
 	env    = command.Env{
 		RoleMod:         os.Getenv("ROLE_MOD"),
 		ChannelShowcase: os.Getenv("CHANNEL_SHOWCASE"),
+		RoleMute:        os.Getenv("ROLE_MUTE"),
 	}
 	botId string
 )
@@ -33,6 +36,7 @@ func main() {
 	discord.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
 		botId = r.User.ID
 		s.UpdateStatus(0, ".help")
+		go cleanupMutes(s)
 	})
 	discord.AddHandler(messageCreate)
 
@@ -41,7 +45,7 @@ func main() {
 		log.Fatalf("Failed on discord.Open(): %s\n", err)
 	}
 
-	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
+	fmt.Println("Bot is now running.  Press CTRL-c to exit.")
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 	<-sc
@@ -107,6 +111,21 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			// this will need to be either disabled
 			// or need a workaround for situations like "..." when PREFIX=.
 			//s.ChannelMessageSend(m.ChannelID, m.Author.Mention()+" command not found. Available commands: "+strings.Join(allKeys, ", "))
+		}
+	}
+}
+
+// Run on loop, and clean up old mutes(timed out, in case of failure elsewhere)
+func cleanupMutes(s *discordgo.Session) {
+
+	for {
+		mutes, err := db.GetExpiredMutes()
+		unmuted := make([]string, 0, len(mutes))
+		for _, m := range mutes {
+			if err == nil {
+				unmuted = append(unmuted, m.UserId)
+			}
+			s.GuildMemberRoleRemove(m.GuildId, m.UserId, env.RoleMute)
 		}
 	}
 }

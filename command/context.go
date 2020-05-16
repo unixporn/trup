@@ -5,6 +5,7 @@ import "github.com/bwmarrin/discordgo"
 type Env struct {
 	RoleMod         string
 	ChannelShowcase string
+	RoleMute        string
 }
 
 type Context struct {

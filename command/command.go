@@ -2,8 +2,9 @@ package command
 
 import (
 	"errors"
-	"github.com/bwmarrin/discordgo"
 	"regexp"
+
+	"github.com/bwmarrin/discordgo"
 )
 
 type Command struct {
@@ -39,6 +40,10 @@ var Commands = map[string]Command{
 		Exec:  warn,
 		Usage: warnUsage,
 	}),
+	"mute": moderatorOnly(Command{
+		Exec:  mute,
+		Usage: muteUsage,
+	    }),
 }
 
 var parseMentionRegexp = regexp.MustCompile(`<@!?(\d+)>`)
