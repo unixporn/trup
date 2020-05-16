@@ -44,14 +44,16 @@ var Commands = map[string]Command{
 		Exec: repo,
 		Help: "Sends a link to the bot's repository.",
 	},
-	"note": moderatorOnly(Command{
+	"note": Command{
 		Exec:  note,
 		Usage: noteUsage,
-	}),
-	"warn": moderatorOnly(Command{
+		ModeratorOnly: true
+	},
+	"warn": Command{
 		Exec:  warn,
 		Usage: warnUsage,
-	}),
+		ModeratorOnly: true
+	},
 }
 
 var parseMentionRegexp = regexp.MustCompile(`<@!?(\d{1,20})>`)
@@ -101,23 +103,6 @@ func (ctx *Context) ReportError(msg string) {
 	ctx.Reply(msg)
 }
 */
-
-func moderatorOnly(cmd Command) Command {
-	return Command{
-		Exec: func(ctx *Context, args []string) {
-			for _, r := range ctx.Message.Member.Roles {
-				if r == ctx.Env.RoleMod {
-					cmd.Exec(ctx, args)
-					return
-				}
-			}
-
-			ctx.Reply("this command is only for moderators.")
-		},
-		Usage:         cmd.Usage,
-		ModeratorOnly: true,
-	}
-}
 
 func (ctx *Context) isModerator() bool {
 	for _, r := range ctx.Message.Member.Roles {
