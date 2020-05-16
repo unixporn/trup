@@ -101,27 +101,16 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			command.Help(&context, args)
 			return
 		}
-
-		allKeys := make([]string, 0, len(command.Commands))
-		for name, cmd := range command.Commands {
-			allKeys = append(allKeys, name)
-			if args[0] == name {
-				ctx := &context
-				
-				if command.isModerator(ctx) {
-					cmd.Exec(ctx, args)
-				} else {
-					ctx.Reply("this command is only for moderators.")
-				}
-				return
+		
+		if ctx, exists_in_map := command.Commands[args[0]]; exists_in_map {
+			ctx := &context
+			
+			if command.isModerator(ctx) {
+				cmd.Exec(ctx, args)
+			} else {
+				ctx.Reply("this command is only for moderators")
 			}
 		}
 		
-		// If nothing is found, the loop will just fall through to any following code here
-		
-		// possible solution: regex test against command: ((\prefix)[a-zA-Z0-9]+)
-		// this will need to be either disabled
-		// or need a workaround for situations like "..." when PREFIX=.
-		//s.ChannelMessageSend(m.ChannelID, m.Author.Mention()+" command not found. Available commands: "+strings.Join(allKeys, ", "))
 	}
 }
