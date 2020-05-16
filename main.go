@@ -7,7 +7,6 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
-	"regexp"
 	"trup/command"
 	"trup/db"
 
@@ -120,6 +119,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		
 		// If nothing is found, the loop will just fall through to any following code here
 		
+		// possible solution: regex test against command: ((\prefix)[a-zA-Z0-9]+)
 		// this will need to be either disabled
 		// or need a workaround for situations like "..." when PREFIX=.
 		//s.ChannelMessageSend(m.ChannelID, m.Author.Mention()+" command not found. Available commands: "+strings.Join(allKeys, ", "))
