@@ -11,6 +11,7 @@ import (
 	"trup/db"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/google/go-github/v31/github"
 )
 
 var (
@@ -18,6 +19,7 @@ var (
 	env    = command.Env{
 		RoleMod:         os.Getenv("ROLE_MOD"),
 		ChannelShowcase: os.Getenv("CHANNEL_SHOWCASE"),
+		ChannelBot:      os.Getenv("CHANNEL_BOT"),
 	}
 	botId string
 )
@@ -35,6 +37,8 @@ func main() {
 	discord.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
 		botId = r.User.ID
 		s.UpdateStatus(0, ".help")
+		go githubLoop(s)
+		go githubIssueLoop(s, github.NewClient(nil))
 	})
 	discord.AddHandler(messageCreate)
 
