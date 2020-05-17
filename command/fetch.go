@@ -14,7 +14,7 @@ const setFetchHelp = "Run without arguments to see instructions"
 func setFetch(ctx *Context, args []string) {
 	lines := strings.Split(ctx.Message.Content, "\n")
 	if len(lines) < 2 {
-		ctx.Reply("run this: `curl https://raw.githubusercontent.com/unixporn/trup/master/fetcher.sh | sh` and follow the instructions.")
+		ctx.Reply("read the script first, then run this: `curl https://raw.githubusercontent.com/unixporn/trup/master/fetcher.sh | sh` and follow the instructions.")
 		return
 	}
 
