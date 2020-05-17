@@ -24,9 +24,7 @@ func warn(ctx *Context, args []string) {
 	w := db.NewWarn(ctx.Message.Author.ID, user, reason)
 	err := w.Save()
 	if err != nil {
-		msg := fmt.Sprintf("Failed to save your warning. Error: %s", err)
-		log.Println(msg)
-		ctx.Reply(msg)
+		ctx.ReportError("Failed to save your warning", err)
 		return
 	}
 

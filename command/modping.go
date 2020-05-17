@@ -1,7 +1,6 @@
 package command
 
 import (
-	"fmt"
 	"log"
 	"strings"
 
@@ -21,9 +20,7 @@ func modping(ctx *Context, args []string) {
 	mods := []string{}
 	g, err := ctx.Session.State.Guild(ctx.Message.GuildID)
 	if err != nil {
-		msg := fmt.Sprintf("Failed to fetch guild %s; Error: %s", ctx.Message.GuildID, err)
-		log.Println(msg)
-		ctx.Reply(msg)
+		ctx.ReportError("Failed to fetch guild "+ctx.Message.GuildID, err)
 		return
 	}
 	for _, mem := range g.Members {

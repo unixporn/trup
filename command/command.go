@@ -94,12 +94,10 @@ func (ctx *Context) Reply(msg string) {
 	}
 }
 
-/*
-func (ctx *Context) ReportError(msg string) {
-	log.Printf("Error Message ID: %s; ChannelID: %s; GuildID: %s; Author ID: %s; msg: %s\n", ctx.Message.ID, ctx.Message.ChannelID, ctx.Message.GuildID, ctx.Message.Author, msg)
+func (ctx *Context) ReportError(msg string, err error) {
+	log.Printf("Error Message ID: %s; ChannelID: %s; GuildID: %s; Author ID: %s; msg: %s; error: %s\n", ctx.Message.ID, ctx.Message.ChannelID, ctx.Message.GuildID, ctx.Message.Author, msg, err)
 	ctx.Reply(msg)
 }
-*/
 
 func moderatorOnly(cmd Command) Command {
 	return Command{

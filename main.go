@@ -102,19 +102,11 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			return
 		}
 
-		var found bool
-		allKeys := make([]string, 0, len(command.Commands))
-		for name, cmd := range command.Commands {
-			allKeys = append(allKeys, name)
-			if !found && args[0] == name {
-				found = true
-				cmd.Exec(&context, args)
-			}
+		cmd, exists := command.Commands[args[0]]
+		if !exists {
+			return
 		}
-		if !found {
-			// this will need to be either disabled
-			// or need a workaround for situations like "..." when PREFIX=.
-			//s.ChannelMessageSend(m.ChannelID, m.Author.Mention()+" command not found. Available commands: "+strings.Join(allKeys, ", "))
-		}
+
+		cmd.Exec(&context, args)
 	}
 }
