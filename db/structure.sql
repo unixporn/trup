@@ -43,3 +43,12 @@ BEGIN
 exception when unique_violation then
 	update sysinfo set info = _info, modify_date = _modify_date where usr = _usr;
 END $$;
+
+create or replace procedure profile_set(_usr varchar, _git varchar, _dots varchar, _descr varchar)
+language plpgsql
+as $$
+BEGIN
+	insert into profile(usr, git, dots, descr) values(_usr, _git, _dots, _descr);
+exception when unique_violation then
+	update profile set usr = _usr, git = _git, dots = _dots, descr = _descr where usr = _usr;
+END $$;
