@@ -27,6 +27,14 @@ create table if not exists sysinfo (
     primary key (usr)
 );
 
+create table if not exists profile (
+    usr varchar,
+    git varchar,
+    dots varchar,
+    descr varchar,
+    primary key (usr)
+);
+
 create or replace procedure sysinfo_set(_usr varchar, _info jsonb, _modify_date timestamptz, _create_date timestamptz)
 language plpgsql
 as $$
