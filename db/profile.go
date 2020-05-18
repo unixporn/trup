@@ -6,15 +6,15 @@ import (
 
 type Profile struct {
 	User string
-	Git string
+	Git  string
 	Dots string
 	Desc string
 }
 
 func NewProfile(user string) *Profile {
 	return &Profile{
-		User:       user,
-		Git: "",
+		User: user,
+		Git:  "",
 		Dots: "",
 		Desc: "",
 	}
