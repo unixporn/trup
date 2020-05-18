@@ -4,7 +4,7 @@ import (
 	"trup/db"
 )
 
-const descUsage = "desc <256_char_max_text | clear>"
+const descUsage = "desc <max_256_chars | clear>"
 
 func desc(ctx *Context, args []string) {
 	if len(args) < 2 {
