@@ -2,10 +2,7 @@ package db
 
 import (
 	"context"
-	"log"
 	"time"
-
-	"github.com/jackc/pgx"
 )
 
 type Profile struct {
