@@ -27,22 +27,26 @@ type Command struct {
 }
 
 var Commands = map[string]Command{
-	"modping": Command{
+	"modping": {
 		Exec:  modping,
 		Usage: modpingUsage,
 		Help:  "Pings online mods. Don't abuse.",
 	},
-	"fetch": Command{
+	"fetch": {
 		Exec:  fetch,
 		Usage: fetchUsage,
 	},
-	"setfetch": Command{
+	"setfetch": {
 		Exec: setFetch,
 		Help: setFetchHelp,
 	},
-	"repo": Command{
+	"repo": {
 		Exec: repo,
 		Help: "Sends a link to the bot's repository.",
+	},
+	"move": {
+		Exec: move,
+		Help: moveUsage,
 	},
 	"note": moderatorOnly(Command{
 		Exec:  note,
@@ -59,6 +63,16 @@ var parseMentionRegexp = regexp.MustCompile(`<@!?(\d+)>`)
 // parseMention takes a Discord mention string and returns the id
 func parseMention(mention string) string {
 	res := parseMentionRegexp.FindStringSubmatch(mention)
+	if len(res) < 2 {
+		return ""
+	}
+	return res[1]
+}
+
+var parseChannelMentionRegexp = regexp.MustCompile(`<#(\d+)>`)
+
+func parseChannelMention(mention string) string {
+	res := parseChannelMentionRegexp.FindStringSubmatch(mention)
 	if len(res) < 2 {
 		return ""
 	}
