@@ -63,6 +63,11 @@ var Commands = map[string]Command{
 		Usage: dotfilesUsage,
 		Help: "Adds a dotfiles link to your profile, see with fetch",
 	},
+	"desc": Command{
+		Exec:  desc,
+		Usage: descUsage,
+		Help: "Sets or clears your description, see with fetch",
+	},
 }
 
 var parseMentionRegexp = regexp.MustCompile(`<@!?(\d+)>`)
