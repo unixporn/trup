@@ -11,6 +11,7 @@ import (
 type Env struct {
 	RoleMod         string
 	ChannelShowcase string
+	ChannelBotlog   string
 }
 
 type Context struct {

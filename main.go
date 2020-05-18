@@ -18,6 +18,7 @@ var (
 	env    = command.Env{
 		RoleMod:         os.Getenv("ROLE_MOD"),
 		ChannelShowcase: os.Getenv("CHANNEL_SHOWCASE"),
+		ChannelBotlog:   os.Getenv("CHANNEL_BOTLOG"),
 	}
 	botId string
 )
@@ -36,6 +37,7 @@ func main() {
 		botId = r.User.ID
 		s.UpdateStatus(0, ".help")
 	})
+	discord.AddHandler(memberJoin)
 	discord.AddHandler(messageCreate)
 
 	err = discord.Open()
@@ -108,5 +110,27 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 
 		cmd.Exec(&context, args)
+	}
+}
+
+func memberJoin(s *discordgo.Session, m *discordgo.GuildMemberAdd) {
+	accountCreateDate, _ := discordgo.SnowflakeTimestamp(m.User.ID)
+	embed := discordgo.MessageEmbed{
+		Author: &discordgo.MessageEmbedAuthor{
+			IconURL: m.User.AvatarURL("64"),
+			Name:    "Member Join",
+		},
+		Title: fmt.Sprintf("%s#%s(%s)", m.User.Username, m.User.Discriminator, m.User.ID),
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:  "Account Creation Date",
+				Value: accountCreateDate.UTC().Format("2006-01-02 15:04"),
+			},
+		},
+	}
+
+	_, err := s.ChannelMessageSendEmbed(env.ChannelBotlog, &embed)
+	if err != nil {
+		log.Printf("Failed to send embed to channel %s of user(%s) join. Error: %s\n", env.ChannelBotlog, m.User.ID, err)
 	}
 }
