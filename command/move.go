@@ -21,8 +21,7 @@ func move(ctx *Context, args []string) {
 
 	var mentions []string
 	for _, a := range args[2:] {
-		mention := parseMention(a)
-		if mention != "" {
+		if mention := parseMention(a); mention != "" {
 			mentions = append(mentions, fmt.Sprintf("<@!%s>", mention))
 		}
 	}
