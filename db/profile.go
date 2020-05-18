@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"time"
 )
 
 type Profile struct {
@@ -13,7 +12,6 @@ type Profile struct {
 }
 
 func NewProfile(user string) *Profile {
-	now := time.Now()
 	return &Profile{
 		User:       user,
 		Git: "",
