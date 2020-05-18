@@ -48,10 +48,10 @@ var Commands = map[string]Command{
 		Exec: move,
 		Help: moveUsage,
 	},
-	"remove": {
+	"remove": moderatorOnly(Command{
 		Exec: remove,
 		Help: removeUsage,
-	},
+	}),
 	"note": moderatorOnly(Command{
 		Exec:  note,
 		Usage: noteUsage,
