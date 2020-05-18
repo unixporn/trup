@@ -27,24 +27,24 @@ type Command struct {
 }
 
 var Commands = map[string]Command{
-	"modping": Command{
+	"modping": {
 		Exec:  modping,
 		Usage: modpingUsage,
 		Help:  "Pings online mods. Don't abuse.",
 	},
-	"fetch": Command{
+	"fetch": {
 		Exec:  fetch,
 		Usage: fetchUsage,
 	},
-	"setfetch": Command{
+	"setfetch": {
 		Exec: setFetch,
 		Help: setFetchHelp,
 	},
-	"repo": Command{
+	"repo": {
 		Exec: repo,
 		Help: "Sends a link to the bot's repository.",
 	},
-	"move": Command{
+	"move": {
 		Exec: move,
 		Help: moveUsage,
 	},
