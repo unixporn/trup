@@ -130,7 +130,7 @@ func fetch(ctx *Context, args []string) {
 		if profile.Dots != "" {
 			embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
 				"Dotfiles",
-				profile.Dotfiles,
+				profile.Dots,
 				inline,
 			})
 		}
