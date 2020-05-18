@@ -4,11 +4,11 @@ import (
 	"trup/db"
 )
 
-const gitUsage = "git <url>"
+const dotfilesUsage = "dotfiles <url>"
 
-func git(ctx *Context, args []string) {
+func dotfiles(ctx *Context, args []string) {
 	if len(args) < 2 {
-		ctx.Reply("provide a url to set for your git")
+		ctx.Reply("provide a url to set for your dotfiles")
 		return
 	}
 
@@ -25,13 +25,13 @@ func git(ctx *Context, args []string) {
 		profile = db.NewProfile(user)
 	}
 
-	profile.Git = args[1]
+	profile.Dots = args[1]
 	err = profile.Save()
 
 	if err != nil {
-		ctx.Reply("failed to save git url")
+		ctx.Reply("failed to save dotfiles url")
 		return
 	}
 
-	ctx.Reply("set your git url to " + args[1])
+	ctx.Reply("set your dotfiles url to " + args[1])
 }
