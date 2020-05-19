@@ -58,6 +58,10 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 	}()
 
+	if m.Author.Bot {
+		return
+	}
+
 	if m.ChannelID == env.ChannelShowcase {
 		for _, a := range m.Attachments {
 			if a.Width > 0 {

@@ -3,6 +3,7 @@ package command
 import (
 	"errors"
 	"log"
+	"net/url"
 	"regexp"
 
 	"github.com/bwmarrin/discordgo"
@@ -47,6 +48,21 @@ var Commands = map[string]Command{
 	"move": {
 		Exec: move,
 		Help: moveUsage,
+	},
+	"git": {
+		Exec:  git,
+		Usage: gitUsage,
+		Help:  "Adds a git link to your fetch",
+	},
+	"dotfiles": {
+		Exec:  dotfiles,
+		Usage: dotfilesUsage,
+		Help:  "Adds a dotfiles link to your fetch",
+	},
+	"desc": {
+		Exec:  desc,
+		Usage: descUsage,
+		Help:  "Sets or clears your description, displays it with fetch",
 	},
 	"remove": moderatorOnly(Command{
 		Exec: remove,
@@ -113,7 +129,7 @@ func (ctx *Context) Reply(msg string) {
 }
 
 func (ctx *Context) ReportError(msg string, err error) {
-	log.Printf("Error Message ID: %s; ChannelID: %s; GuildID: %s; Author ID: %s; msg: %s; error: %s\n", ctx.Message.ID, ctx.Message.ChannelID, ctx.Message.GuildID, ctx.Message.Author, msg, err)
+	log.Printf("Error Message ID: %s; ChannelID: %s; GuildID: %s; Author ID: %s; msg: %s; error: %s\n", ctx.Message.ID, ctx.Message.ChannelID, ctx.Message.GuildID, ctx.Message.Author.ID, msg, err)
 	ctx.Reply(msg)
 }
 
@@ -141,4 +157,9 @@ func (ctx *Context) isModerator() bool {
 		}
 	}
 	return false
+}
+
+func isValidUrl(toTest string) bool {
+	u, err := url.Parse(toTest)
+	return err == nil && u.Scheme != "" && u.Host != ""
 }
