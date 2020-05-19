@@ -120,12 +120,20 @@ func cleanupMutes(s *discordgo.Session) {
 
 	for {
 		mutes, err := db.GetExpiredMutes()
+		if err != nil {
+			log.Printf("Error getting expired mutes %s", err)
+			return
+		}
 		unmuted := make([]string, 0, len(mutes))
 		for _, m := range mutes {
-			if err == nil {
-				unmuted = append(unmuted, m.UserId)
+			unmuted = append(unmuted, m.UserId)
+
+			err = s.GuildMemberRoleRemove(m.GuildId, m.UserId, env.RoleMute)
+
+			if err != nil {
+				log.Printf("Failed to remove role %s", err)
+				return
 			}
-			s.GuildMemberRoleRemove(m.GuildId, m.UserId, env.RoleMute)
 		}
 	}
 }
