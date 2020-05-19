@@ -114,6 +114,28 @@ func fetch(ctx *Context, args []string) {
 		},
 		Fields: []*discordgo.MessageEmbedField{},
 	}
+
+	profile, err := db.GetProfile(user.ID)
+	if err == nil {
+		if profile.Desc != "" {
+			embed.Description = profile.Desc
+		}
+		if profile.Git != "" {
+			embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
+				"Git",
+				profile.Git,
+				inline,
+			})
+		}
+		if profile.Dots != "" {
+			embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
+				"Dotfiles",
+				profile.Dots,
+				inline,
+			})
+		}
+	}
+
 	if info.Info.Kernel != "" {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
 			"Kernel",

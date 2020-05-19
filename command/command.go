@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log"
 	"regexp"
+	"net/url"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -56,6 +57,21 @@ var Commands = map[string]Command{
 		Exec:  warn,
 		Usage: warnUsage,
 	}),
+	"git": Command{
+		Exec:  git,
+		Usage: gitUsage,
+		Help: "Adds a git link to your profile, see with fetch",
+	},
+	"dotfiles": Command{
+		Exec:  dotfiles,
+		Usage: dotfilesUsage,
+		Help: "Adds a dotfiles link to your profile, see with fetch",
+	},
+	"desc": Command{
+		Exec:  desc,
+		Usage: descUsage,
+		Help: "Sets or clears your description, see with fetch",
+	},
 }
 
 var parseMentionRegexp = regexp.MustCompile(`<@!?(\d+)>`)
@@ -137,4 +153,18 @@ func (ctx *Context) isModerator() bool {
 		}
 	}
 	return false
+}
+
+func isValidUrl(toTest string) bool {
+	_, err := url.ParseRequestURI(toTest)
+	if err != nil {
+		return false
+	}
+
+	u, err := url.Parse(toTest)
+	if err != nil || u.Scheme == "" || u.Host == "" {
+		return false
+	}
+
+	return true
 }
