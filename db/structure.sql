@@ -30,8 +30,8 @@ create table if not exists sysinfo (
 create table if not exists profile (
     usr varchar,
     git varchar,
-    dots varchar,
-    descr varchar,
+    dotfiles varchar,
+    description varchar,
     primary key (usr)
 );
 
@@ -44,11 +44,11 @@ exception when unique_violation then
 	update sysinfo set info = _info, modify_date = _modify_date where usr = _usr;
 END $$;
 
-create or replace procedure profile_set(_usr varchar, _git varchar, _dots varchar, _descr varchar)
+create or replace procedure profile_set(_usr varchar, _git varchar, _dotfiles varchar, _description varchar)
 language plpgsql
 as $$
 BEGIN
-	insert into profile(usr, git, dots, descr) values(_usr, _git, _dots, _descr);
+	insert into profile(usr, git, dotfiles, description) values(_usr, _git, _dotfiles, _description);
 exception when unique_violation then
-	update profile set usr = _usr, git = _git, dots = _dots, descr = _descr where usr = _usr;
+	update profile set git = _git, dotfiles = _dotfiles, description = _description where usr = _usr;
 END $$;

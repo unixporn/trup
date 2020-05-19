@@ -3,8 +3,8 @@ package command
 import (
 	"errors"
 	"log"
-	"regexp"
 	"net/url"
+	"regexp"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -49,6 +49,21 @@ var Commands = map[string]Command{
 		Exec: move,
 		Help: moveUsage,
 	},
+	"git": {
+		Exec:  git,
+		Usage: gitUsage,
+		Help:  "Adds a git link to your fetch",
+	},
+	"dotfiles": {
+		Exec:  dotfiles,
+		Usage: dotfilesUsage,
+		Help:  "Adds a dotfiles link to your fetch",
+	},
+	"desc": {
+		Exec:  desc,
+		Usage: descUsage,
+		Help:  "Sets or clears your description, displays it with fetch",
+	},
 	"note": moderatorOnly(Command{
 		Exec:  note,
 		Usage: noteUsage,
@@ -57,21 +72,6 @@ var Commands = map[string]Command{
 		Exec:  warn,
 		Usage: warnUsage,
 	}),
-	"git": Command{
-		Exec:  git,
-		Usage: gitUsage,
-		Help: "Adds a git link to your profile, see with fetch",
-	},
-	"dotfiles": Command{
-		Exec:  dotfiles,
-		Usage: dotfilesUsage,
-		Help: "Adds a dotfiles link to your profile, see with fetch",
-	},
-	"desc": Command{
-		Exec:  desc,
-		Usage: descUsage,
-		Help: "Sets or clears your description, see with fetch",
-	},
 }
 
 var parseMentionRegexp = regexp.MustCompile(`<@!?(\d+)>`)
@@ -125,7 +125,7 @@ func (ctx *Context) Reply(msg string) {
 }
 
 func (ctx *Context) ReportError(msg string, err error) {
-	log.Printf("Error Message ID: %s; ChannelID: %s; GuildID: %s; Author ID: %s; msg: %s; error: %s\n", ctx.Message.ID, ctx.Message.ChannelID, ctx.Message.GuildID, ctx.Message.Author, msg, err)
+	log.Printf("Error Message ID: %s; ChannelID: %s; GuildID: %s; Author ID: %s; msg: %s; error: %s\n", ctx.Message.ID, ctx.Message.ChannelID, ctx.Message.GuildID, ctx.Message.Author.ID, msg, err)
 	ctx.Reply(msg)
 }
 
@@ -156,15 +156,6 @@ func (ctx *Context) isModerator() bool {
 }
 
 func isValidUrl(toTest string) bool {
-	_, err := url.ParseRequestURI(toTest)
-	if err != nil {
-		return false
-	}
-
 	u, err := url.Parse(toTest)
-	if err != nil || u.Scheme == "" || u.Host == "" {
-		return false
-	}
-
-	return true
+	return err == nil && u.Scheme != "" && u.Host != ""
 }

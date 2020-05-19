@@ -1,46 +1,56 @@
 package command
 
 import (
+	"strings"
 	"trup/db"
+
+	"github.com/jackc/pgx"
 )
 
-const descUsage = "desc <max_256_chars | clear>"
+const descUsage = "desc <text> OR desc clear"
 
 func desc(ctx *Context, args []string) {
 	if len(args) < 2 {
-		ctx.Reply("provide some text for your description")
+		ctx.Reply("Usage: " + descUsage)
 		return
 	}
 
-	if args[1] == "clear" {
-		args[1] = ""
-	} else {
-		if len(args[1]) > 256 {
-			ctx.Reply("your description cannot be longer than 256 characters")
-			return
-		}
+	var (
+		desc = strings.Join(args[1:], " ")
+		user = ctx.Message.Author.ID
+	)
+
+	if len(desc) > 256 {
+		ctx.Reply("your description cannot be longer than 256 characters")
+		return
 	}
 
-	user := ctx.Message.Author.ID
+	if desc == "clear" {
+		desc = ""
+	}
 
 	profile, err := db.GetProfile(user)
-
 	if err != nil {
-		profile = db.NewProfile(user)
+		if err.Error() == pgx.ErrNoRows.Error() {
+			profile = db.NewProfile(user, "", "", desc)
+		} else {
+			ctx.ReportError("failed to fetch your profile", err)
+			return
+		}
+	} else {
+		profile.Description = desc
 	}
 
-	profile.Desc = args[1]
 	err = profile.Save()
-
 	if err != nil {
-		ctx.Reply("failed to save description")
+		ctx.ReportError("failed to save description", err)
 		return
 	}
 
-	if args[1] == "" {
+	if desc == "" {
 		ctx.Reply("cleared your description")
 		return
 	}
 
-	ctx.Reply("set your description to: " + args[1])
+	ctx.Reply("Your description has been set successfully.")
 }

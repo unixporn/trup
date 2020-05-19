@@ -74,7 +74,7 @@ func setFetch(ctx *Context, args []string) {
 	ctx.Reply("success. You can now run .fetch")
 }
 
-const fetchUsage = "fetch [@user]"
+const fetchUsage = "fetch [user]"
 
 func fetch(ctx *Context, args []string) {
 	var user *discordgo.User
@@ -89,10 +89,51 @@ func fetch(ctx *Context, args []string) {
 		user = usr.User
 	}
 
+	const inline = true
+	embed := discordgo.MessageEmbed{
+		Title:  "Fetch " + user.Username + "#" + user.Discriminator,
+		Fields: []*discordgo.MessageEmbedField{},
+	}
+
+	profile, err := db.GetProfile(user.ID)
+	if err != nil && err.Error() != pgx.ErrNoRows.Error() {
+		whose := "your"
+		if user.ID != ctx.Message.Author.ID {
+			whose = "the user's"
+		}
+		ctx.ReportError("Failed to fetch "+whose+" profile.", err)
+	}
+	profileFields := []*discordgo.MessageEmbedField{}
+	if err == nil {
+		if profile.Description != "" {
+			embed.Description = profile.Description
+		}
+		if profile.Git != "" {
+			profileFields = append(profileFields, &discordgo.MessageEmbedField{
+				"Git",
+				profile.Git,
+				inline,
+			})
+		}
+		if profile.Dotfiles != "" {
+			profileFields = append(profileFields, &discordgo.MessageEmbedField{
+				"Dotfiles",
+				profile.Dotfiles,
+				inline,
+			})
+		}
+	}
+
+	somethingToPost := len(embed.Fields) > 0 || len(profileFields) > 0 || embed.Description != ""
+
 	info, err := db.GetSysinfo(user.ID)
 	if err != nil {
 		// err == pgx.ErrNoRows doesn't work, not sure why
 		if err.Error() == pgx.ErrNoRows.Error() {
+			if somethingToPost {
+				goto sysinfoEnd
+			}
+
 			message := "that user hasn't set their fetch information. You can ask them to run .setfetch"
 			if user.ID == ctx.Message.Author.ID {
 				message = "you first need to set your information with .setfetch"
@@ -106,33 +147,9 @@ func fetch(ctx *Context, args []string) {
 		return
 	}
 
-	const inline = true
-	embed := discordgo.MessageEmbed{
-		Title: "Fetch " + user.Username + "#" + user.Discriminator,
-		Thumbnail: &discordgo.MessageEmbedThumbnail{
+	if info.Info.Distro != "" {
+		embed.Thumbnail = &discordgo.MessageEmbedThumbnail{
 			URL: getDistroImage(info.Info.Distro),
-		},
-		Fields: []*discordgo.MessageEmbedField{},
-	}
-
-	profile, err := db.GetProfile(user.ID)
-	if err == nil {
-		if profile.Desc != "" {
-			embed.Description = profile.Desc
-		}
-		if profile.Git != "" {
-			embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-				"Git",
-				profile.Git,
-				inline,
-			})
-		}
-		if profile.Dots != "" {
-			embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-				"Dotfiles",
-				profile.Dots,
-				inline,
-			})
 		}
 	}
 
@@ -211,6 +228,9 @@ func fetch(ctx *Context, args []string) {
 			URL: info.Info.Image,
 		}
 	}
+
+sysinfoEnd:
+	embed.Fields = append(embed.Fields, profileFields...)
 
 	ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed)
 }
