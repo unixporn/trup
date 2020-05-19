@@ -33,8 +33,8 @@ func remove(ctx *Context, args []string) {
 
 	var toDelete []string
 	before := ctx.Message.ID
-	breakFromOuter := false
-	tooOldThreshold := int64(1000*60*60*24*14 - 10)
+	tooOldThreshold := time.Hour * 24 * 14
+Outer:
 	for i := 1; i < 10; i++ {
 		messages, err := ctx.Session.ChannelMessages(ctx.Message.ChannelID, 100, before, "", "")
 		if err != nil {
@@ -43,21 +43,19 @@ func remove(ctx *Context, args []string) {
 		}
 		for _, message := range messages {
 			created, _ := discordgo.SnowflakeTimestamp(message.ID)
-			now := time.Now()
-			duration := now.Sub(created)
-			if duration.Milliseconds() > tooOldThreshold {
-				breakFromOuter = true
-				break
+			duration := time.Now().Sub(created)
+			if duration > tooOldThreshold {
+				break Outer
 			}
 			if message.Author.ID == from {
 				toDelete = append(toDelete, message.ID)
 			}
 			if len(toDelete) >= number {
-				break
+				break Outer
 			}
 		}
 		before = messages[len(messages)-1].ID
-		if len(toDelete) >= number || len(messages) < 100 || breakFromOuter {
+		if len(messages) < 100 {
 			break
 		}
 	}
