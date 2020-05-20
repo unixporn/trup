@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-const moveUsage = "note <#channel> [<@user> ...]"
+const moveUsage = "move <#channel> [<@user> ...]"
 
 func move(ctx *Context, args []string) {
 	if len(args) < 2 {

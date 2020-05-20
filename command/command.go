@@ -46,8 +46,8 @@ var Commands = map[string]Command{
 		Help: "Sends a link to the bot's repository.",
 	},
 	"move": {
-		Exec: move,
-		Help: moveUsage,
+		Exec:  move,
+		Usage: moveUsage,
 	},
 	"git": {
 		Exec:  git,
