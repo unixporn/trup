@@ -38,7 +38,7 @@ Outer:
 	for i := 1; i < 10; i++ {
 		messages, err := ctx.Session.ChannelMessages(ctx.Message.ChannelID, 100, before, "", "")
 		if err != nil {
-			ctx.ReportError("error", err)
+			ctx.ReportError(fmt.Sprintf("could not fetch the 100 messages preceding message of id %s (likely missing permissions to read channel history)", before), err)
 			continue
 		}
 		for _, message := range messages {
@@ -59,6 +59,10 @@ Outer:
 			break
 		}
 	}
-	ctx.Session.ChannelMessagesBulkDelete(ctx.Message.ChannelID, toDelete)
-	ctx.Reply(fmt.Sprintf("Deleted %d messages", len(toDelete)))
+	errBulk := ctx.Session.ChannelMessagesBulkDelete(ctx.Message.ChannelID, toDelete)
+	if errBulk != nil {
+		ctx.ReportError("could not proceed to deletion (likely missing permissions)", errBulk)
+	} else {
+		ctx.Reply(fmt.Sprintf("Deleted %d messages", len(toDelete)))
+	}
 }
