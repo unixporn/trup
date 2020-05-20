@@ -9,13 +9,13 @@ import (
 )
 
 const (
-	removeUsage = "remove <amount> <@user>"
-	removeHelp  = "deletes <amount> messages sent by <user> in the current channel. Doesn't delete messages older than 14 days."
+	purgeUsage = "purge <amount> <@user>"
+	purgeHelp  = "deletes <amount> messages sent by <user> in the current channel. Doesn't delete messages older than 14 days."
 )
 
-func remove(ctx *Context, args []string) {
+func purge(ctx *Context, args []string) {
 	if len(args) < 3 {
-		ctx.Reply("Usage: " + removeUsage)
+		ctx.Reply("Usage: " + purgeUsage)
 		return
 	}
 

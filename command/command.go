@@ -64,10 +64,10 @@ var Commands = map[string]Command{
 		Usage: descUsage,
 		Help:  "Sets or clears your description, displays it with fetch",
 	},
-	"remove": moderatorOnly(Command{
-		Exec:  remove,
-		Usage: removeUsage,
-		Help:  removeHelp,
+	"purge": moderatorOnly(Command{
+		Exec:  purge,
+		Usage: purgeUsage,
+		Help:  purgeHelp,
 	}),
 	"note": moderatorOnly(Command{
 		Exec:  note,
