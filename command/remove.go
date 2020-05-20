@@ -59,9 +59,9 @@ Outer:
 			break
 		}
 	}
-	errBulk := ctx.Session.ChannelMessagesBulkDelete(ctx.Message.ChannelID, toDelete)
-	if errBulk != nil {
-		ctx.ReportError("could not proceed to deletion (likely missing permissions)", errBulk)
+	err = ctx.Session.ChannelMessagesBulkDelete(ctx.Message.ChannelID, toDelete)
+	if err != nil {
+		ctx.ReportError("could not proceed to deletion (likely missing permissions)", err)
 	} else {
 		ctx.Reply(fmt.Sprintf("Deleted %d messages", len(toDelete)))
 	}
