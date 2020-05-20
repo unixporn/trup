@@ -8,11 +8,14 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-const removeUsage = "remove <amount> <@user>"
+const (
+	removeUsage = "remove <amount> <@user>"
+	removeHelp  = "deletes <amount> messages sent by <user> in the current channel. Doesn't delete messages older than 14 days."
+)
 
 func remove(ctx *Context, args []string) {
 	if len(args) < 3 {
-		ctx.Reply("not enough arguments.")
+		ctx.Reply("Usage: " + removeUsage)
 		return
 	}
 
@@ -31,25 +34,33 @@ func remove(ctx *Context, args []string) {
 		return
 	}
 
-	var toDelete []string
-	before := ctx.Message.ID
-	tooOldThreshold := time.Hour * 24 * 14
+	var (
+		toDelete = make([]string, 0, number)
+		before   = ctx.Message.ID
+		// discord doesn't let you bulk delete messages older than 14 days
+		tooOldThreshold = (time.Hour * 24 * 14) - time.Hour
+		now             = time.Now()
+	)
+
 Outer:
 	for i := 1; i < 10; i++ {
 		messages, err := ctx.Session.ChannelMessages(ctx.Message.ChannelID, 100, before, "", "")
 		if err != nil {
 			ctx.ReportError(fmt.Sprintf("could not fetch the 100 messages preceding message of id %s (likely missing permissions to read channel history)", before), err)
-			continue
-		}
-		for _, message := range messages {
-			created, _ := discordgo.SnowflakeTimestamp(message.ID)
-			duration := time.Now().Sub(created)
-			if duration > tooOldThreshold {
+			if len(toDelete) > 0 {
 				break Outer
 			}
-			if message.Author.ID == from {
-				toDelete = append(toDelete, message.ID)
+			return
+		}
+		for _, message := range messages {
+			if created, _ := discordgo.SnowflakeTimestamp(message.ID); now.Sub(created) > tooOldThreshold {
+				break Outer
 			}
+			if message.Author.ID != from {
+				continue
+			}
+
+			toDelete = append(toDelete, message.ID)
 			if len(toDelete) >= number {
 				break Outer
 			}
@@ -61,8 +72,9 @@ Outer:
 	}
 	err = ctx.Session.ChannelMessagesBulkDelete(ctx.Message.ChannelID, toDelete)
 	if err != nil {
-		ctx.ReportError("could not proceed to deletion (likely missing permissions)", err)
-	} else {
-		ctx.Reply(fmt.Sprintf("Deleted %d messages", len(toDelete)))
+		ctx.ReportError("could not bulk delete messages (likely missing permissions)", err)
+		return
 	}
+
+	ctx.Reply(fmt.Sprintf("Deleted %d messages", len(toDelete)))
 }

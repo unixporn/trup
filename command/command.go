@@ -65,8 +65,9 @@ var Commands = map[string]Command{
 		Help:  "Sets or clears your description, displays it with fetch",
 	},
 	"remove": moderatorOnly(Command{
-		Exec: remove,
+		Exec:  remove,
 		Usage: removeUsage,
+		Help:  removeHelp,
 	}),
 	"note": moderatorOnly(Command{
 		Exec:  note,
@@ -146,6 +147,7 @@ func moderatorOnly(cmd Command) Command {
 			ctx.Reply("this command is only for moderators.")
 		},
 		Usage:         cmd.Usage,
+		Help:          cmd.Help,
 		ModeratorOnly: true,
 	}
 }
