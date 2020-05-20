@@ -66,7 +66,7 @@ var Commands = map[string]Command{
 	},
 	"remove": moderatorOnly(Command{
 		Exec: remove,
-		Help: removeUsage,
+		Usage: removeUsage,
 	}),
 	"note": moderatorOnly(Command{
 		Exec:  note,
