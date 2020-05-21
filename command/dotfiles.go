@@ -14,7 +14,7 @@ const (
 func dotfiles(ctx *Context, args []string) {
 	user := ctx.Message.Author.ID
 	if len(args) == 1 {
-		setItFirstMsg := "You need to set your .dotfiles url first"
+		setItFirstMsg := "You need to set your !dotfiles url first"
 		profile, err := db.GetProfile(user)
 		if err != nil {
 			if err.Error() == pgx.ErrNoRows.Error() {
@@ -54,5 +54,5 @@ func dotfiles(ctx *Context, args []string) {
 		return
 	}
 
-	ctx.Reply("Success. You can run .dotfiles or .fetch to retrieve the url")
+	ctx.Reply("Success. You can run !dotfiles or !fetch to retrieve the url")
 }

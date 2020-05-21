@@ -55,5 +55,5 @@ func desc(ctx *Context, args []string) {
 		return
 	}
 
-	ctx.Reply("Your description has been set successfully. You can see it with .fetch")
+	ctx.Reply("Your description has been set successfully. You can see it with !fetch")
 }

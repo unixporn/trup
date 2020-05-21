@@ -71,7 +71,7 @@ func setFetch(ctx *Context, args []string) {
 		ctx.Reply("Failed to save. Error: " + err.Error())
 		return
 	}
-	ctx.Reply("success. You can now run .fetch")
+	ctx.Reply("success. You can now run !fetch")
 }
 
 const fetchUsage = "fetch [user]"
