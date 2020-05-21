@@ -14,7 +14,7 @@ const setFetchHelp = "Run without arguments to see instructions"
 func setFetch(ctx *Context, args []string) {
 	lines := strings.Split(ctx.Message.Content, "\n")
 	if len(lines) < 2 {
-		ctx.Reply("run this: `curl https://raw.githubusercontent.com/unixporn/trup/master/fetcher.sh | sh` and follow the instructions. It's recommended you download and read(verify) the script before running(<https://blog.dijit.sh/don-t-pipe-curl-to-bash>)")
+		ctx.Reply("run this: `curl -s https://raw.githubusercontent.com/unixporn/trup/master/fetcher.sh | sh` and follow the instructions. It's recommended you download and read(verify) the script before running(<https://blog.dijit.sh/don-t-pipe-curl-to-bash>)")
 		return
 	}
 
@@ -134,9 +134,9 @@ func fetch(ctx *Context, args []string) {
 				goto sysinfoEnd
 			}
 
-			message := "that user hasn't set their fetch information. You can ask them to run .setfetch"
+			message := "that user hasn't set their fetch information. You can ask them to run !setfetch"
 			if user.ID == ctx.Message.Author.ID {
-				message = "you first need to set your information with .setfetch"
+				message = "you first need to set your information with !setfetch"
 			}
 
 			ctx.Reply(message)
