@@ -11,6 +11,7 @@ import (
 
 type Env struct {
 	RoleMod         string
+	RoleColors      []string
 	ChannelShowcase string
 }
 
@@ -31,7 +32,7 @@ var Commands = map[string]Command{
 	"modping": {
 		Exec:  modping,
 		Usage: modpingUsage,
-		Help:  "Pings online mods. Don't abuse.",
+		Help:  modpingHelp,
 	},
 	"fetch": {
 		Exec:  fetch,
@@ -43,7 +44,7 @@ var Commands = map[string]Command{
 	},
 	"repo": {
 		Exec: repo,
-		Help: "Sends a link to the bot's repository.",
+		Help: repoHelp,
 	},
 	"move": {
 		Exec:  move,
@@ -52,17 +53,31 @@ var Commands = map[string]Command{
 	"git": {
 		Exec:  git,
 		Usage: gitUsage,
-		Help:  "Adds a git link to your fetch",
+		Help:  gitHelp,
 	},
 	"dotfiles": {
 		Exec:  dotfiles,
 		Usage: dotfilesUsage,
-		Help:  "Adds a dotfiles link to your fetch",
+		Help:  dotfilesHelp,
 	},
 	"desc": {
 		Exec:  desc,
 		Usage: descUsage,
-		Help:  "Sets or clears your description, displays it with fetch",
+		Help:  descHelp,
+	},
+	"role": {
+		Exec:  role,
+		Usage: roleUsage,
+		Help:  roleHelp,
+	},
+	"pfp": {
+		Exec:  pfp,
+		Usage: pfpUsage,
+		Help:  pfpHelp,
+	},
+	"poll": {
+		Exec:  poll,
+		Usage: pollUsage,
 	},
 	"purge": moderatorOnly(Command{
 		Exec:  purge,

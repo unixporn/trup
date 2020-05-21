@@ -14,9 +14,10 @@ import (
 )
 
 var (
-	prefix = "."
+	prefix = "!"
 	env    = command.Env{
 		RoleMod:         os.Getenv("ROLE_MOD"),
+		RoleColors:      strings.Split(os.Getenv("ROLE_COLORS"), ","),
 		ChannelShowcase: os.Getenv("CHANNEL_SHOWCASE"),
 	}
 	botId string

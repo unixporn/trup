@@ -6,7 +6,10 @@ import (
 	"github.com/jackc/pgx"
 )
 
-const dotfilesUsage = "dotfiles [url]"
+const (
+	dotfilesUsage = "dotfiles [url]"
+	dotfilesHelp  = "Adds a dotfiles link to your fetch."
+)
 
 func dotfiles(ctx *Context, args []string) {
 	user := ctx.Message.Author.ID

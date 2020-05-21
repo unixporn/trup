@@ -7,7 +7,10 @@ import (
 	"github.com/jackc/pgx"
 )
 
-const descUsage = "desc <text> OR desc clear"
+const (
+	descUsage = "desc <text> OR desc clear"
+	descHelp  = "Sets or clears your description, displays it with fetch"
+)
 
 func desc(ctx *Context, args []string) {
 	if len(args) < 2 {

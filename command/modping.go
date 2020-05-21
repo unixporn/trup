@@ -7,7 +7,10 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-const modpingUsage = "modping <reason>"
+const (
+	modpingUsage = "modping <reason>"
+	modpingHelp  = "Pings online mods. Don't abuse."
+)
 
 func modping(ctx *Context, args []string) {
 	if len(args) < 2 {

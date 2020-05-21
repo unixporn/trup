@@ -6,7 +6,10 @@ import (
 	"github.com/jackc/pgx"
 )
 
-const gitUsage = "git [url]"
+const (
+	gitUsage = "git [url]"
+	gitHelp  = "Adds a git link to your fetch."
+)
 
 func git(ctx *Context, args []string) {
 	user := ctx.Message.Author.ID
