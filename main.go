@@ -36,7 +36,7 @@ func main() {
 
 	discord.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
 		botId = r.User.ID
-		s.UpdateStatus(0, ".help")
+		s.UpdateStatus(0, "!help")
 	})
 	discord.AddHandler(memberJoin)
 	discord.AddHandler(messageCreate)
@@ -88,7 +88,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 	}
 	if mentionsBot {
-		s.ChannelMessageSend(m.ChannelID, m.Author.Mention()+" need help? Type `.help`")
+		s.ChannelMessageSend(m.ChannelID, m.Author.Mention()+" need help? Type `!help`")
 		return
 	}
 
