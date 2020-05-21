@@ -22,6 +22,7 @@ var (
 		ChannelBotlog:   os.Getenv("CHANNEL_BOTLOG"),
 	}
 	botId string
+	cache = newMessageCache(5000)
 )
 
 func main() {
@@ -40,6 +41,7 @@ func main() {
 	})
 	discord.AddHandler(memberJoin)
 	discord.AddHandler(messageCreate)
+	discord.AddHandler(messageDelete)
 
 	err = discord.Open()
 	if err != nil {
@@ -64,6 +66,8 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.Bot {
 		return
 	}
+
+	cache.add(m.ID, *m.Message)
 
 	if m.ChannelID == env.ChannelShowcase {
 		var validSubmission bool
@@ -136,6 +140,12 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 }
 
 func memberJoin(s *discordgo.Session, m *discordgo.GuildMemberAdd) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Println("Recovered from panic in memberJoin", r)
+		}
+	}()
+
 	accountCreateDate, _ := discordgo.SnowflakeTimestamp(m.User.ID)
 	embed := discordgo.MessageEmbed{
 		Author: &discordgo.MessageEmbedAuthor{
