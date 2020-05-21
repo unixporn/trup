@@ -41,8 +41,8 @@ func messageDelete(s *discordgo.Session, m *discordgo.MessageDelete) {
 
 	s.ChannelMessageSendEmbed(env.ChannelBotlog, &discordgo.MessageEmbed{
 		Author: &discordgo.MessageEmbedAuthor{
-			Name: "Message Delete",
-			URL:  message.Author.AvatarURL("128"),
+			Name:    "Message Delete",
+			IconURL: message.Author.AvatarURL("128"),
 		},
 		Title:       fmt.Sprintf("%s#%s(%s)", message.Author.Username, message.Author.Discriminator, message.Author.ID),
 		Description: message.Content,
