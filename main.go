@@ -74,7 +74,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				break
 			}
 		}
-		if !validSubmission && strings.Contains(m.Content, "https://") {
+		if !validSubmission && strings.Contains(m.Content, "http") {
 			validSubmission = true
 		}
 
