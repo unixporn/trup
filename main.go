@@ -66,11 +66,28 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	if m.ChannelID == env.ChannelShowcase {
+		var validSubmission bool
 		for _, a := range m.Attachments {
 			if a.Width > 0 {
+				validSubmission = true
 				db.UpdateSysinfoImage(m.Author.ID, a.URL)
 				break
 			}
+		}
+		if !validSubmission && strings.Contains(m.Content, "https://") {
+			validSubmission = true
+		}
+
+		if !validSubmission {
+			s.ChannelMessageDelete(m.ChannelID, m.ID)
+			ch, err := s.UserChannelCreate(m.Author.ID)
+			if err != nil {
+				log.Println("Failed to create user channel with " + m.Author.ID)
+				return
+			}
+
+			s.ChannelMessageSend(ch.ID, "Your showcase submission was detected to be invalid. If you wanna comment on a rice, use the #ricing-theming channel.\nIf this is a mistake, contact the moderators or open an issue on https://github.com/unixporn/trup")
+			return
 		}
 
 		err := s.MessageReactionAdd(m.ChannelID, m.ID, "❤")
