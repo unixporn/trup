@@ -89,7 +89,7 @@ func messageUpdate(s *discordgo.Session, m *discordgo.MessageUpdate) {
 			IconURL: m.Author.AvatarURL("128"),
 		},
 		Title:       fmt.Sprintf("%s#%s(%s)", m.Author.Username, m.Author.Discriminator, m.Author.ID),
-		Description: "Before:\n" + before + "\n\nNow:\n" + m.Content,
+		Description: "**Before:**\n" + before + "\n\n**Now:**\n" + m.Content,
 		Timestamp:   messageCreationDate.UTC().Format(dateFormat),
 		Footer:      footer,
 	})
