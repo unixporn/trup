@@ -42,6 +42,7 @@ func main() {
 	discord.AddHandler(memberJoin)
 	discord.AddHandler(messageCreate)
 	discord.AddHandler(messageDelete)
+	discord.AddHandler(messageUpdate)
 
 	err = discord.Open()
 	if err != nil {

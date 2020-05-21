@@ -39,6 +39,13 @@ func messageDelete(s *discordgo.Session, m *discordgo.MessageDelete) {
 		return
 	}
 
+	var footer *discordgo.MessageEmbedFooter
+	if channel, err := s.State.Channel(m.ChannelID); err == nil {
+		footer = &discordgo.MessageEmbedFooter{
+			Text: "#" + channel.Name,
+		}
+	}
+
 	s.ChannelMessageSendEmbed(env.ChannelBotlog, &discordgo.MessageEmbed{
 		Author: &discordgo.MessageEmbedAuthor{
 			Name:    "Message Delete",
@@ -47,5 +54,43 @@ func messageDelete(s *discordgo.Session, m *discordgo.MessageDelete) {
 		Title:       fmt.Sprintf("%s#%s(%s)", message.Author.Username, message.Author.Discriminator, message.Author.ID),
 		Description: message.Content,
 		Timestamp:   messageCreationDate.UTC().Format(dateFormat),
+		Footer:      footer,
+	})
+}
+
+func messageUpdate(s *discordgo.Session, m *discordgo.MessageUpdate) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Println("Recovered from panic in messageUpdate", r)
+		}
+	}()
+
+	const dateFormat = "2006-01-02T15:04:05.0000Z"
+	messageCreationDate, _ := discordgo.SnowflakeTimestamp(m.ID)
+
+	cached, inCache := cache.m[m.ID]
+	if !inCache {
+		return
+	}
+	before := cached.Content
+	cached.Content = m.Content
+	cache.m[m.ID] = cached
+
+	var footer *discordgo.MessageEmbedFooter
+	if channel, err := s.State.Channel(m.ChannelID); err == nil {
+		footer = &discordgo.MessageEmbedFooter{
+			Text: "#" + channel.Name,
+		}
+	}
+
+	s.ChannelMessageSendEmbed(env.ChannelBotlog, &discordgo.MessageEmbed{
+		Author: &discordgo.MessageEmbedAuthor{
+			Name:    "Message Edit",
+			IconURL: m.Author.AvatarURL("128"),
+		},
+		Title:       fmt.Sprintf("%s#%s(%s)", m.Author.Username, m.Author.Discriminator, m.Author.ID),
+		Description: "Before:\n" + before + "\n\nNow:\n" + m.Content,
+		Timestamp:   messageCreationDate.UTC().Format(dateFormat),
+		Footer:      footer,
 	})
 }
