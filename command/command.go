@@ -14,6 +14,7 @@ type Env struct {
 	RoleColors      []string
 	ChannelShowcase string
 	ChannelBotlog   string
+	ChannelFeedback string
 }
 
 type Context struct {

@@ -20,6 +20,7 @@ var (
 		RoleColors:      strings.Split(os.Getenv("ROLE_COLORS"), ","),
 		ChannelShowcase: os.Getenv("CHANNEL_SHOWCASE"),
 		ChannelBotlog:   os.Getenv("CHANNEL_BOTLOG"),
+		ChannelFeedback: os.Getenv("CHANNEL_FEEDBACK"),
 	}
 	botId string
 	cache = newMessageCache(5000)
@@ -102,15 +103,9 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 	}
 
-	var mentionsBot bool
-	for _, m := range m.Mentions {
-		if m.ID == botId {
-			mentionsBot = true
-			break
-		}
-	}
-	if mentionsBot {
-		s.ChannelMessageSend(m.ChannelID, m.Author.Mention()+" need help? Type `!help`")
+	if m.ChannelID == env.ChannelFeedback {
+		s.MessageReactionAdd(m.ChannelID, m.ID, "✅")
+		s.MessageReactionAdd(m.ChannelID, m.ID, "❌")
 		return
 	}
 
@@ -137,6 +132,19 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 
 		cmd.Exec(&context, args)
+		return
+	}
+
+	var mentionsBot bool
+	for _, m := range m.Mentions {
+		if m.ID == botId {
+			mentionsBot = true
+			break
+		}
+	}
+	if mentionsBot {
+		s.ChannelMessageSend(m.ChannelID, m.Author.Mention()+" need help? Type `!help`")
+		return
 	}
 }
 
