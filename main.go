@@ -41,6 +41,7 @@ func main() {
 		s.UpdateStatus(0, "!help")
 	})
 	discord.AddHandler(memberJoin)
+	discord.AddHandler(memberLeave)
 	discord.AddHandler(messageCreate)
 	discord.AddHandler(messageDelete)
 	discord.AddHandler(messageUpdate)
@@ -173,5 +174,26 @@ func memberJoin(s *discordgo.Session, m *discordgo.GuildMemberAdd) {
 	_, err := s.ChannelMessageSendEmbed(env.ChannelBotlog, &embed)
 	if err != nil {
 		log.Printf("Failed to send embed to channel %s of user(%s) join. Error: %s\n", env.ChannelBotlog, m.User.ID, err)
+	}
+}
+
+func memberLeave(s *discordgo.Session, m *discordgo.GuildMemberRemove) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Println("Recovered from panic in memberLeave", r)
+		}
+	}()
+
+	embed := discordgo.MessageEmbed{
+		Author: &discordgo.MessageEmbedAuthor{
+			IconURL: m.User.AvatarURL("64"),
+			Name:    "Member Leave",
+		},
+		Title: fmt.Sprintf("%s#%s(%s)", m.User.Username, m.User.Discriminator, m.User.ID),
+	}
+
+	_, err := s.ChannelMessageSendEmbed(env.ChannelBotlog, &embed)
+	if err != nil {
+		log.Printf("Failed to send embed to channel %s of user(%s) leave. Error: %s\n", env.ChannelBotlog, m.User.ID, err)
 	}
 }
