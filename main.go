@@ -105,8 +105,8 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	if m.ChannelID == env.ChannelFeedback {
-		s.MessageReactionAdd(m.ChannelID, m.ID, "✅")
-		s.MessageReactionAdd(m.ChannelID, m.ID, "❌")
+		s.MessageReactionAdd(m.ChannelID, m.ID, "👍")
+		s.MessageReactionAdd(m.ChannelID, m.ID, "👎")
 		return
 	}
 
