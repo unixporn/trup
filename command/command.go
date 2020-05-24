@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/url"
 	"regexp"
+	"strings"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -117,7 +118,10 @@ func parseChannelMention(mention string) string {
 	return res[1]
 }
 
-var userNotFound = errors.New("User not found")
+var (
+	userNotFound     = errors.New("User not found")
+	moreThanOneMatch = errors.New("Matched more than one user, try using username#0000")
+)
 
 func (ctx *Context) userFromString(str string) (*discordgo.Member, error) {
 	if m := parseMention(str); m != "" {
@@ -130,8 +134,17 @@ func (ctx *Context) userFromString(str string) (*discordgo.Member, error) {
 		return nil, err
 	}
 
+	discriminator := ""
+	if index := strings.LastIndex(str, "#"); index != -1 && len(str)-1-index == 4 {
+		discriminator = str[index+1:]
+		str = str[:index]
+	}
 	for _, m := range guild.Members {
-		if str == m.User.Username || str == m.Nick {
+		if discriminator != "" && m.User.Discriminator != discriminator {
+			continue
+		} else if len(m.User.Username) >= len(str) && strings.EqualFold(str, m.User.Username[:len(str)]) {
+			return m, nil
+		} else if discriminator == "" && len(m.Nick) >= len(str) && strings.EqualFold(str, m.Nick[:len(str)]) {
 			return m, nil
 		}
 	}
