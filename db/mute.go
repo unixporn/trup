@@ -63,7 +63,7 @@ func GetExpiredMutes() ([]Mute, error) {
 
 }
 
-func SetExpiredMutesInactive() error {
-	_, err := db.Exec(context.Background(), "UPDATE mute SET active=false WHERE active=true AND end_time < $1", time.Now())
+func SetExpiredMutesInactive(unmuted []string) error {
+	_, err := db.Exec(context.Background(), "UPDATE mute SET active=false WHERE usr IN $1", unmuted)
 	return err
 }
