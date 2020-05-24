@@ -124,6 +124,7 @@ func cleanupMutes(s *discordgo.Session) {
 			log.Printf("Error getting expired mutes %s", err)
 			return
 		}
+
 		unmuted := make([]string, 0, len(mutes))
 		for _, m := range mutes {
 			unmuted = append(unmuted, m.User)
@@ -135,5 +136,13 @@ func cleanupMutes(s *discordgo.Session) {
 				return
 			}
 		}
+
+		err = db.SetExpiredMutesInactive()
+
+		if err != nil {
+			log.Printf("Error setting expired mutes inactive %s", err)
+			return
+		}
+
 	}
 }
