@@ -36,6 +36,7 @@ create table if not exists mute (
     start_time timestamptz,
     end_time timestamptz,
     reason varchar,
+    active boolean not null,
     primary key (id)
 );
 
