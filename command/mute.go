@@ -34,27 +34,17 @@ func mute(ctx *Context, args []string) {
 	if len(args) > 3 {
 		reason = strings.Join(args[2:], "")
 	}
-	target, err := ctx.userFromString(user)
-	if err != nil {
-		msg := fmt.Sprintf("Failed to parse user. Error: %s", err)
-		log.Println(msg)
-		ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" "+msg)
-		return
-	}
-
-	userid := target.User.ID
-
-	w := db.NewMute(ctx.Message.GuildID, ctx.Message.Author.ID, user, userid, reason, start, end)
+	w := db.NewMute(ctx.Message.GuildID, ctx.Message.Author.ID, user, reason, start, end)
 
 	err = w.Save()
 	if err != nil {
 		msg := fmt.Sprintf("Failed to save your mute. Error: %s", err)
-		log.Println(msg)
+		log.Println(msg, reason,start,)
 		ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" "+msg)
 		return
 	}
 	// Unmute after timeout, rely on cleanupMutes if execution fails
-	err = ctx.Session.GuildMemberRoleAdd(ctx.Message.GuildID, userid, ctx.Env.RoleMute)
+	err = ctx.Session.GuildMemberRoleAdd(ctx.Message.GuildID, user, ctx.Env.RoleMute)
 	if err != nil {
 
 		msg := fmt.Sprintf("Error adding role. Error: %s", err)
@@ -63,13 +53,13 @@ func mute(ctx *Context, args []string) {
 		return
 	}
 	time.AfterFunc(i, func() {
-		unmute(ctx, userid)
+		unmute(ctx, user)
 	})
 
 }
-func unmute(ctx *Context, userid string) {
+func unmute(ctx *Context, user string) {
 
-	err := ctx.Session.GuildMemberRoleRemove(ctx.Message.GuildID, userid, ctx.Env.RoleMute)
+	err := ctx.Session.GuildMemberRoleRemove(ctx.Message.GuildID, user, ctx.Env.RoleMute)
 	if err != nil {
 
 		msg := fmt.Sprintf("Error adding role. Error: %s", err)
@@ -78,7 +68,7 @@ func unmute(ctx *Context, userid string) {
 		return
 	}
 
-	err = db.SetMuteInactive(userid)
+	err = db.SetMuteInactive(user)
 	if err != nil {
 
 		msg := fmt.Sprintf("Error adding role. Error: %s", err)

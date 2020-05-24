@@ -12,19 +12,17 @@ type Mute struct {
 	GuildId   string
 	Moderator string
 	User      string
-	UserId    string
 	StartTime time.Time
 	EndTime   time.Time
 	Reason    string
 }
 
-func NewMute(guildid, mod, user, userid, reason string, start, end time.Time) *Mute {
+func NewMute(guildid, mod, user, reason string, start, end time.Time) *Mute {
 	return &Mute{
 		pgtype.UUID{},
 		guildid,
 		mod,
 		user,
-		userid,
 		start,
 		end,
 		reason,
@@ -33,14 +31,14 @@ func NewMute(guildid, mod, user, userid, reason string, start, end time.Time) *M
 
 func (mute *Mute) Save() error {
 	// Set all previous mutes of this user to inactive
-	SetMuteInactive(mute.UserId)
-	_, err := db.Exec(context.Background(), "INSERT INTO mute(id,guildid,moderator,usr,usrid end, create_date) VALUES(uuid_generate_v4(), $1, $2, $3 $4 $5 $6)", mute.GuildId, mute.Moderator, mute.User, mute.UserId, mute.EndTime, mute.StartTime, true)
+	SetMuteInactive(mute.User)
+	_, err := db.Exec(context.Background(), "INSERT INTO mute(id,guildid,moderator,usr,end_time, start_time,active) VALUES(uuid_generate_v4(), $1, $2, $3, $4, $5, $6)", mute.GuildId, mute.Moderator, mute.User, mute.EndTime, mute.StartTime, true)
 	return err
 
 }
 
-func SetMuteInactive(userid string) error {
-	_, err := db.Exec(context.Background(), "UPDATE mute SET active=false WHERE active=true AND usrid=$1", userid)
+func SetMuteInactive(user string) error {
+	_, err := db.Exec(context.Background(), "UPDATE mute SET active=false WHERE active=true AND usr=$1", user)
 	return err
 
 }
@@ -60,7 +58,7 @@ func GetExpiredMutes() ([]Mute, error) {
 	var res []Mute
 	for rows.Next() {
 		var m Mute
-		err = rows.Scan(&m.Id, &m.Moderator, &m.User, &m.UserId, &m.StartTime, &m.EndTime, &m.Reason)
+		err = rows.Scan(&m.Id, &m.Moderator, &m.User, &m.StartTime, &m.EndTime, &m.Reason)
 		if err != nil {
 			return nil, err
 		}

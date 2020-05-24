@@ -32,7 +32,6 @@ create table if not exists mute (
     guildid varchar not null,
     moderator varchar not null,
     usr varchar not null,
-    usrid varchar not null,
     start_time timestamptz,
     end_time timestamptz,
     reason varchar,

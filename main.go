@@ -126,9 +126,9 @@ func cleanupMutes(s *discordgo.Session) {
 		}
 		unmuted := make([]string, 0, len(mutes))
 		for _, m := range mutes {
-			unmuted = append(unmuted, m.UserId)
+			unmuted = append(unmuted, m.User)
 
-			err = s.GuildMemberRoleRemove(m.GuildId, m.UserId, env.RoleMute)
+			err = s.GuildMemberRoleRemove(m.GuildId, m.User, env.RoleMute)
 
 			if err != nil {
 				log.Printf("Failed to remove role %s", err)
