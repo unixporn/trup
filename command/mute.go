@@ -30,7 +30,6 @@ func mute(ctx *Context, args []string) {
 	}
 
 	start := time.Now()
-	fmt.Println("Duration", time.Duration(i))
 	end := start.Add(time.Duration(i))
 	if len(args) > 3 {
 		reason = strings.Join(args[2:], "")
