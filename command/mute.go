@@ -30,7 +30,8 @@ func mute(ctx *Context, args []string) {
 	}
 
 	start := time.Now()
-	end := start.Add(time.Duration(i) * time.Second)
+	fmt.Println("Duration", time.Duration(i))
+	end := start.Add(time.Duration(i))
 	if len(args) > 3 {
 		reason = strings.Join(args[2:], "")
 	}
@@ -39,7 +40,7 @@ func mute(ctx *Context, args []string) {
 	err = w.Save()
 	if err != nil {
 		msg := fmt.Sprintf("Failed to save your mute. Error: %s", err)
-		log.Println(msg, reason,start,)
+		log.Println(msg, reason, start)
 		ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" "+msg)
 		return
 	}

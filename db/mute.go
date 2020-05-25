@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/jackc/pgx/pgtype"
@@ -33,6 +34,7 @@ func (mute *Mute) Save() error {
 	// Set all previous mutes of this user to inactive
 	SetMuteInactive(mute.User)
 	_, err := db.Exec(context.Background(), "INSERT INTO mute(id,guildid,moderator,usr,end_time, start_time,active) VALUES(uuid_generate_v4(), $1, $2, $3, $4, $5, $6)", mute.GuildId, mute.Moderator, mute.User, mute.EndTime, mute.StartTime, true)
+	fmt.Println("Saving ", mute.EndTime)
 	return err
 
 }
@@ -45,7 +47,7 @@ func SetMuteInactive(user string) error {
 
 func GetExpiredMutes() ([]Mute, error) {
 
-	rows, err := db.Query(context.Background(), "SELECT id,guildid,moderator,usr,end_time,start_time,active FROM mute WHERE active=true AND end_time < $1", time.Now())
+	rows, err := db.Query(context.Background(), "SELECT id,guildid,moderator,usr,end_time,start_time FROM mute WHERE active=true AND end_time < $1", time.Now())
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +55,7 @@ func GetExpiredMutes() ([]Mute, error) {
 	var res []Mute
 	for rows.Next() {
 		var m Mute
-		err = rows.Scan(&m.Id, &m.Moderator, &m.User, &m.StartTime, &m.EndTime, &m.Reason)
+		err = rows.Scan(&m.Id, &m.GuildId, &m.Moderator, &m.User, &m.EndTime, &m.StartTime)
 		if err != nil {
 			return nil, err
 		}
@@ -63,7 +65,7 @@ func GetExpiredMutes() ([]Mute, error) {
 
 }
 
-func SetExpiredMutesInactive(unmuted []string) error {
-	_, err := db.Exec(context.Background(), "UPDATE mute SET active=false WHERE usr IN $1", unmuted)
+func SetExpiredMutesInactive() error {
+	_, err := db.Exec(context.Background(), "UPDATE mute SET active=false WHERE end_time < $1", time.Now())
 	return err
 }
