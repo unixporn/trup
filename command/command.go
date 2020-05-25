@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/url"
 	"regexp"
+	"trup/db"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -36,14 +37,14 @@ var Commands = map[string]Command{
 		Usage: modpingUsage,
 		Help:  modpingHelp,
 	},
-	"fetch": {
+	"fetch": needsDatabase(Command{
 		Exec:  fetch,
 		Usage: fetchUsage,
-	},
-	"setfetch": {
+	}),
+	"setfetch": needsDatabase(Command{
 		Exec: setFetch,
 		Help: setFetchHelp,
-	},
+	}),
 	"repo": {
 		Exec: repo,
 		Help: repoHelp,
@@ -52,21 +53,21 @@ var Commands = map[string]Command{
 		Exec:  move,
 		Usage: moveUsage,
 	},
-	"git": {
+	"git": needsDatabase(Command{
 		Exec:  git,
 		Usage: gitUsage,
 		Help:  gitHelp,
-	},
-	"dotfiles": {
+	}),
+	"dotfiles": needsDatabase(Command{
 		Exec:  dotfiles,
 		Usage: dotfilesUsage,
 		Help:  dotfilesHelp,
-	},
-	"desc": {
+	}),
+	"desc": needsDatabase(Command{
 		Exec:  desc,
 		Usage: descUsage,
 		Help:  descHelp,
-	},
+	}),
 	"role": {
 		Exec:  role,
 		Usage: roleUsage,
@@ -86,14 +87,14 @@ var Commands = map[string]Command{
 		Usage: purgeUsage,
 		Help:  purgeHelp,
 	}),
-	"note": moderatorOnly(Command{
+	"note": moderatorOnly(needsDatabase(Command{
 		Exec:  note,
 		Usage: noteUsage,
-	}),
-	"warn": moderatorOnly(Command{
+	})),
+	"warn": moderatorOnly(needsDatabase(Command{
 		Exec:  warn,
 		Usage: warnUsage,
-	}),
+	})),
 }
 
 var parseMentionRegexp = regexp.MustCompile(`<@!?(\d+)>`)
@@ -166,6 +167,22 @@ func moderatorOnly(cmd Command) Command {
 		Usage:         cmd.Usage,
 		Help:          cmd.Help,
 		ModeratorOnly: true,
+	}
+}
+
+func needsDatabase(cmd Command) Command {
+	return Command{
+		Exec: func(ctx *Context, args []string) {
+			if !db.DatabaseUsable() {
+				ctx.Reply("this command is dependant on a database but that feature is disabled.")
+				return
+			}
+
+			cmd.Exec(ctx, args)
+		},
+		Usage:         cmd.Usage,
+		Help:          cmd.Help,
+		ModeratorOnly: cmd.ModeratorOnly,
 	}
 }
 
