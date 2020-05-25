@@ -2,31 +2,27 @@ package db
 
 import (
 	"context"
-	"fmt"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"log"
 	"os"
 )
 
-var (
-	db         *pgxpool.Pool
-	databaseOk = false
-)
+var db *pgxpool.Pool
 
 func DatabaseUsable() bool {
-	return databaseOk
+	return db != nil
 }
 
 func init() {
 	databaseUrl := os.Getenv("DATABASE_URL")
 	if databaseUrl == "" {
-		fmt.Println("Database disabled")
+		log.Println("Database disabled")
 		return
 	}
 	conn, err := pgxpool.Connect(context.Background(), databaseUrl)
 	if err != nil {
-		fmt.Printf("Unable to connect to the database, the database features will be disabled:\n%s\n", err)
+		log.Printf("Unable to connect to the database, the database features will be disabled:\n%s\n", err)
 		return
 	}
-	databaseOk = true
 	db = conn
 }
