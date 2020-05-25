@@ -173,12 +173,12 @@ func moderatorOnly(cmd Command) Command {
 func needsDatabase(cmd Command) Command {
 	return Command{
 		Exec: func(ctx *Context, args []string) {
-			if db.DatabaseUsable() {
-				cmd.Exec(ctx, args)
+			if !db.DatabaseUsable() {
+				ctx.Reply("this command is dependant on a database but that feature is disabled.")
 				return
 			}
 
-			ctx.Reply("this command is dependant on a database but that feature is disabled.")
+			cmd.Exec(ctx, args)
 		},
 		Usage:         cmd.Usage,
 		Help:          cmd.Help,
