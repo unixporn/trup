@@ -40,7 +40,7 @@ func main() {
 	discord.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
 		botId = r.User.ID
 		s.UpdateStatus(0, "!help")
-		go cleanupMutes(s)
+		go cleanupMutesLoop(s)
 	})
 	discord.AddHandler(memberJoin)
 	discord.AddHandler(memberLeave)
@@ -200,31 +200,28 @@ func memberLeave(s *discordgo.Session, m *discordgo.GuildMemberRemove) {
 	}
 }
 
-// Run on loop, and clean up old mutes(timed out, in case of failure elsewhere)
-func cleanupMutes(s *discordgo.Session) {
+func cleanupMutesLoop(s *discordgo.Session) {
 	for {
 		mutes, err := db.GetExpiredMutes()
 		if err != nil {
-			log.Printf("Error getting expired mutes %s", err)
-			return
+			log.Printf("Error getting expired mutes %s\n", err)
+			continue
 		}
 
-		unmuted := make([]string, 0, len(mutes))
 		for _, m := range mutes {
-
 			err = s.GuildMemberRoleRemove(m.GuildId, m.User, env.RoleMute)
 			if err != nil {
-				log.Printf("Failed to remove role %s", err)
-				return
+				log.Printf("Failed to remove role %s\n", err)
+				continue
 			}
-			unmuted = append(unmuted, m.User)
-		}
 
-		err = db.SetExpiredMutesInactive()
-		if err != nil {
-			log.Printf("Error setting expired mutes inactive %s", err)
-			return
-		}
+			s.ChannelMessageSend(env.ChannelBotlog, "User <@"+m.User+"> is now unmuted.")
 
+			err = db.SetMuteInactive(m.Id)
+			if err != nil {
+				log.Printf("Error setting expired mutes inactive %s\n", err)
+				continue
+			}
+		}
 	}
 }

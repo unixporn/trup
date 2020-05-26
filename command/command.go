@@ -2,7 +2,6 @@ package command
 
 import (
 	"errors"
-
 	"log"
 	"net/url"
 	"regexp"
