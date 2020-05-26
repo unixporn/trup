@@ -202,13 +202,13 @@ func memberLeave(s *discordgo.Session, m *discordgo.GuildMemberRemove) {
 
 // Run on loop, and clean up old mutes(timed out, in case of failure elsewhere)
 func cleanupMutes(s *discordgo.Session) {
-
 	for {
 		mutes, err := db.GetExpiredMutes()
 		if err != nil {
 			log.Printf("Error getting expired mutes %s", err)
 			return
 		}
+
 		unmuted := make([]string, 0, len(mutes))
 		for _, m := range mutes {
 
@@ -221,7 +221,6 @@ func cleanupMutes(s *discordgo.Session) {
 		}
 
 		err = db.SetExpiredMutesInactive()
-
 		if err != nil {
 			log.Printf("Error setting expired mutes inactive %s", err)
 			return

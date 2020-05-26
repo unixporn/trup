@@ -12,20 +12,20 @@ type Mute struct {
 	GuildId   string
 	Moderator string
 	User      string
+	Reason    string
 	StartTime time.Time
 	EndTime   time.Time
-	Reason    string
 }
 
-func NewMute(guildid, mod, user, reason string, start, end time.Time) *Mute {
+func NewMute(guildId, mod, user, reason string, start, end time.Time) *Mute {
 	return &Mute{
 		pgtype.UUID{},
-		guildid,
+		guildId,
 		mod,
 		user,
+		reason,
 		start,
 		end,
-		reason,
 	}
 }
 
@@ -38,6 +38,7 @@ func (mute *Mute) Save() error {
 }
 
 func SetMuteInactive(user string) error {
+
 	_, err := db.Exec(context.Background(), "UPDATE mute SET active=false WHERE active=true AND usr=$1", user)
 	return err
 
@@ -64,6 +65,8 @@ func GetExpiredMutes() ([]Mute, error) {
 }
 
 func SetExpiredMutesInactive() error {
+
 	_, err := db.Exec(context.Background(), "UPDATE mute SET active=false WHERE end_time < $1", time.Now())
 	return err
+
 }

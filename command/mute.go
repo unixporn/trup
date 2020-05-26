@@ -20,6 +20,7 @@ func mute(ctx *Context, args []string) {
 		duration = args[2]
 		reason   = ""
 	)
+
 	i, err := time.ParseDuration(duration)
 	if err != nil {
 		msg := fmt.Sprintf("Failed to parse duration. Is the duration in the correct format? Examples: 10s, 30m, 1h10m10s? Error: %s", err)
@@ -32,8 +33,8 @@ func mute(ctx *Context, args []string) {
 	if len(args) > 3 {
 		reason = strings.Join(args[2:], "")
 	}
-	w := db.NewMute(ctx.Message.GuildID, ctx.Message.Author.ID, user, reason, start, end)
 
+	w := db.NewMute(ctx.Message.GuildID, ctx.Message.Author.ID, user, reason, start, end)
 	err = w.Save()
 	if err != nil {
 		ctx.ReportError("Failed to save your mute", err)
