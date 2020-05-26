@@ -1,12 +1,12 @@
 package command
 
 import (
+	"strings"
+	"trup/db"
+
 	"github.com/bwmarrin/discordgo"
 	"github.com/dustin/go-humanize"
 	"github.com/jackc/pgx"
-	"log"
-	"strings"
-	"trup/db"
 )
 
 const setFetchHelp = "Run without arguments to see instructions"
@@ -14,7 +14,7 @@ const setFetchHelp = "Run without arguments to see instructions"
 func setFetch(ctx *Context, args []string) {
 	lines := strings.Split(ctx.Message.Content, "\n")
 	if len(lines) < 2 {
-		ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" run this: `curl https://raw.githubusercontent.com/unixporn/trup/master/fetcher.sh | sh` and follow the instructions.")
+		ctx.Reply("run this: `curl -s https://raw.githubusercontent.com/unixporn/trup/master/fetcher.sh | sh` and follow the instructions. It's recommended you download and read(verify) the script before running(<https://blog.dijit.sh/don-t-pipe-curl-to-bash>)")
 		return
 	}
 
@@ -48,12 +48,12 @@ func setFetch(ctx *Context, args []string) {
 		case "Memory":
 			b, err := humanize.ParseBytes(value)
 			if err != nil {
-				ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" Failed to parse Max RAM")
+				ctx.Reply("Failed to parse Max RAM")
 				return
 			}
 			data.Memory = b
 		default:
-			ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" key '"+key+"' is not valid")
+			ctx.Reply("key '" + key + "' is not valid")
 			return
 		}
 	}
@@ -68,13 +68,13 @@ func setFetch(ctx *Context, args []string) {
 	info := db.NewSysinfo(ctx.Message.Author.ID, data)
 	err := info.Save()
 	if err != nil {
-		ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" Failed to save. Error: "+err.Error())
+		ctx.Reply("Failed to save. Error: " + err.Error())
 		return
 	}
-	ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" success. You can now run .fetch")
+	ctx.Reply("success. You can now run !fetch")
 }
 
-const fetchUsage = "fetch [@user]"
+const fetchUsage = "fetch [user]"
 
 func fetch(ctx *Context, args []string) {
 	var user *discordgo.User
@@ -83,39 +83,76 @@ func fetch(ctx *Context, args []string) {
 	} else {
 		usr, err := ctx.userFromString(strings.Join(args[1:], " "))
 		if err != nil {
-			ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" failed to find the user. Error: "+err.Error())
+			ctx.Reply("failed to find the user. Error: " + err.Error())
 			return
 		}
 		user = usr.User
 	}
 
+	const inline = true
+	embed := discordgo.MessageEmbed{
+		Title:  "Fetch " + user.Username + "#" + user.Discriminator,
+		Fields: []*discordgo.MessageEmbedField{},
+	}
+
+	profile, err := db.GetProfile(user.ID)
+	if err != nil && err.Error() != pgx.ErrNoRows.Error() {
+		whose := "your"
+		if user.ID != ctx.Message.Author.ID {
+			whose = "the user's"
+		}
+		ctx.ReportError("Failed to fetch "+whose+" profile.", err)
+	}
+	profileFields := []*discordgo.MessageEmbedField{}
+	if err == nil {
+		if profile.Description != "" {
+			embed.Description = profile.Description
+		}
+		if profile.Git != "" {
+			profileFields = append(profileFields, &discordgo.MessageEmbedField{
+				"Git",
+				profile.Git,
+				inline,
+			})
+		}
+		if profile.Dotfiles != "" {
+			profileFields = append(profileFields, &discordgo.MessageEmbedField{
+				"Dotfiles",
+				profile.Dotfiles,
+				inline,
+			})
+		}
+	}
+
+	somethingToPost := len(embed.Fields) > 0 || len(profileFields) > 0 || embed.Description != ""
+
 	info, err := db.GetSysinfo(user.ID)
 	if err != nil {
 		// err == pgx.ErrNoRows doesn't work, not sure why
 		if err.Error() == pgx.ErrNoRows.Error() {
-			message := ctx.Message.Author.Mention()
-			if user.ID == ctx.Message.Author.ID {
-				message += " you first need to set your information with .setfetch"
-			} else {
-				message += " that user hasn't set their fetch information. You can ask them to run .setfetch"
+			if somethingToPost {
+				goto sysinfoEnd
 			}
 
-			ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, message)
+			message := "that user hasn't set their fetch information. You can ask them to run !setfetch"
+			if user.ID == ctx.Message.Author.ID {
+				message = "you first need to set your information with !setfetch"
+			}
+
+			ctx.Reply(message)
 			return
 		}
 
-		ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" failed to find the user's info. Error: "+err.Error())
+		ctx.Reply("failed to find the user's info. Error: " + err.Error())
 		return
 	}
 
-	const inline = true
-	embed := discordgo.MessageEmbed{
-		Title: "Fetch " + user.Username + "#" + user.Discriminator,
-		Thumbnail: &discordgo.MessageEmbedThumbnail{
+	if info.Info.Distro != "" {
+		embed.Thumbnail = &discordgo.MessageEmbedThumbnail{
 			URL: getDistroImage(info.Info.Distro),
-		},
-		Fields: []*discordgo.MessageEmbedField{},
+		}
 	}
+
 	if info.Info.Kernel != "" {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
 			"Kernel",
@@ -192,29 +229,10 @@ func fetch(ctx *Context, args []string) {
 		}
 	}
 
+sysinfoEnd:
+	embed.Fields = append(embed.Fields, profileFields...)
+
 	ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed)
-}
-
-func UpdateSysinfoImage(userId string, image string) {
-	info, err := db.GetSysinfo(userId)
-	if err != nil && err.Error() != pgx.ErrNoRows.Error() {
-		log.Printf("Failed to fetch system info for %s; Error: %s\n", userId, err)
-		return
-	}
-
-	if info == nil {
-		info = db.NewSysinfo(userId, db.SysinfoData{
-			Image: image,
-		})
-	} else {
-		info.Info.Image = image
-	}
-
-	err = info.Save()
-	if err != nil {
-		log.Printf("Failed to save info %#v; Error: %s\n", info, err)
-		return
-	}
 }
 
 func getDistroImage(name string) string {
@@ -269,6 +287,7 @@ var distroImages = []struct {
 	{name: "linux lite", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/79/Linux_Lite_Simple_Fast_Free_logo.png/250px-Linux_Lite_Simple_Fast_Free_logo.png"},
 	{name: "linux mint", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Linux_Mint_Official_Logo.svg/250px-Linux_Mint_Official_Logo.svg.png"},
 	{name: "lunar linux", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Lunar_Linux_logo.png/200px-Lunar_Linux_logo.png"},
+	{name: "macos", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/MacOS_wordmark_%282017%29.svg/200px-MacOS_wordmark_%282017%29.svg.png"},
 	{name: "mageia", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Mageia_logo.svg/250px-Mageia_logo.svg.png"},
 	{name: "mandriva", image: "https://upload.wikimedia.org/wikipedia/en/thumb/3/34/Mandriva-Logo.svg/200px-Mandriva-Logo.svg.png"},
 	{name: "manjaro", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Manjaro_logo_text.png/250px-Manjaro_logo_text.png"},

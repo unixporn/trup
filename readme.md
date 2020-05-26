@@ -2,8 +2,11 @@
 
 ```sh
 TOKEN=your_token
+ROLE_MOD=707318869445967872
+ROLE_COLORS=707318869445967872,707318869445967872
 CHANNEL_SHOWCASE=635625917623828520
-ROLE_MOD=707318869445967872 # moderator role
+CHANNEL_FEEDBACK=
+CHANNEL_BOTLOG=
 ```
 
 # Automatic setup with Nix
@@ -38,4 +41,7 @@ export DATABASE_URL=postgresql://user@localhost/trup
 ```
 
 ## Kudos to:
-- davidv7 & @GaugeK for fetcher.sh
+- [davidv171](https://github.com/davidv171) & [GaugeK](https://github.com/GaugeK) for fetcher.sh
+- [aosync](https://github.com/aosync) for commands purge and move
+- [tteeoo](https://github.com/tteeoo) for commands git, desc and dotfiles
+- [kayew](https://github.com/kayew) for a more explicit setfetch message

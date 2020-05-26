@@ -5,21 +5,21 @@ import "strings"
 func Help(ctx *Context, args []string) {
 	var text strings.Builder
 
-	isCallerModerator := isModerator(ctx)
+	isCallerModerator := ctx.isModerator()
 	for name, cmd := range Commands {
 		if cmd.ModeratorOnly && !isCallerModerator {
 			continue
 		}
 
-		text.WriteString(name)
-		if cmd.Help != "" {
-			text.WriteString(" - " + cmd.Help)
-		}
+		text.WriteString("**" + name + "**")
 		if cmd.Usage != "" {
 			text.WriteString(" - Usage: " + cmd.Usage)
+		}
+		if cmd.Help != "" {
+			text.WriteString("\n> " + cmd.Help)
 		}
 		text.WriteByte('\n')
 	}
 
-	ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, "```\n"+text.String()+"```")
+	ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, "\n"+text.String())
 }

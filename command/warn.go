@@ -12,7 +12,7 @@ const warnUsage = "warn <@user> <reason>"
 
 func warn(ctx *Context, args []string) {
 	if len(args) < 3 {
-		ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" not enough arguments.")
+		ctx.Reply("not enough arguments.")
 		return
 	}
 
@@ -24,9 +24,7 @@ func warn(ctx *Context, args []string) {
 	w := db.NewWarn(ctx.Message.Author.ID, user, reason)
 	err := w.Save()
 	if err != nil {
-		msg := fmt.Sprintf("Failed to save your warning. Error: %s", err)
-		log.Println(msg)
-		ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" "+msg)
+		ctx.ReportError("Failed to save your warning", err)
 		return
 	}
 

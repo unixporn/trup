@@ -1,16 +1,20 @@
 package command
 
 import (
-	"github.com/bwmarrin/discordgo"
 	"log"
 	"strings"
+
+	"github.com/bwmarrin/discordgo"
 )
 
-const modpingUsage = "modping <reason>"
+const (
+	modpingUsage = "modping <reason>"
+	modpingHelp  = "Pings online mods. Don't abuse."
+)
 
 func modping(ctx *Context, args []string) {
 	if len(args) < 2 {
-		ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" Usage: "+modpingUsage)
+		ctx.Reply("Usage: " + modpingUsage)
 		return
 	}
 
@@ -19,7 +23,7 @@ func modping(ctx *Context, args []string) {
 	mods := []string{}
 	g, err := ctx.Session.State.Guild(ctx.Message.GuildID)
 	if err != nil {
-		log.Printf("Failed to fetch guild %s; Error: %s\n", ctx.Message.GuildID, err)
+		ctx.ReportError("Failed to fetch guild "+ctx.Message.GuildID, err)
 		return
 	}
 	for _, mem := range g.Members {
@@ -27,7 +31,7 @@ func modping(ctx *Context, args []string) {
 			if r == ctx.Env.RoleMod {
 				p, err := ctx.Session.State.Presence(ctx.Message.GuildID, mem.User.ID)
 				if err != nil {
-					log.Printf("Failed to fetch presence, guild: %s, user: %s; Error: %s\n", ctx.Message.GuildID, ctx.Message.Author.ID, err)
+					log.Printf("Failed to fetch presence. Error: %s\n", err)
 					break
 				}
 				if p.Status != discordgo.StatusOffline {

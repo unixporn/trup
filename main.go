@@ -14,13 +14,17 @@ import (
 )
 
 var (
-	prefix = "."
+	prefix = "!"
 	env    = command.Env{
 		RoleMod:         os.Getenv("ROLE_MOD"),
+		RoleColors:      strings.Split(os.Getenv("ROLE_COLORS"), ","),
 		ChannelShowcase: os.Getenv("CHANNEL_SHOWCASE"),
 		RoleMute:        os.Getenv("ROLE_MUTE"),
+		ChannelBotlog:   os.Getenv("CHANNEL_BOTLOG"),
+		ChannelFeedback: os.Getenv("CHANNEL_FEEDBACK"),
 	}
 	botId string
+	cache = newMessageCache(5000)
 )
 
 func main() {
@@ -35,10 +39,14 @@ func main() {
 
 	discord.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
 		botId = r.User.ID
-		s.UpdateStatus(0, ".help")
+		s.UpdateStatus(0, "!help")
 		go cleanupMutes(s)
 	})
+	discord.AddHandler(memberJoin)
+	discord.AddHandler(memberLeave)
 	discord.AddHandler(messageCreate)
+	discord.AddHandler(messageDelete)
+	discord.AddHandler(messageUpdate)
 
 	err = discord.Open()
 	if err != nil {
@@ -54,12 +62,41 @@ func main() {
 }
 
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("Recovered from panic in messageCreate. r: %#v; Message(%s): %s;\n", r, m.ID, m.Content)
+		}
+	}()
+
+	if m.Author.Bot {
+		return
+	}
+
+	cache.add(m.ID, *m.Message)
+
 	if m.ChannelID == env.ChannelShowcase {
+		var validSubmission bool
 		for _, a := range m.Attachments {
 			if a.Width > 0 {
-				command.UpdateSysinfoImage(m.Author.ID, a.URL)
+				validSubmission = true
+				db.UpdateSysinfoImage(m.Author.ID, a.URL)
 				break
 			}
+		}
+		if !validSubmission && strings.Contains(m.Content, "http") {
+			validSubmission = true
+		}
+
+		if !validSubmission {
+			s.ChannelMessageDelete(m.ChannelID, m.ID)
+			ch, err := s.UserChannelCreate(m.Author.ID)
+			if err != nil {
+				log.Println("Failed to create user channel with " + m.Author.ID)
+				return
+			}
+
+			s.ChannelMessageSend(ch.ID, "Your showcase submission was detected to be invalid. If you wanna comment on a rice, use the #ricing-theming channel.\nIf this is a mistake, contact the moderators or open an issue on https://github.com/unixporn/trup")
+			return
 		}
 
 		err := s.MessageReactionAdd(m.ChannelID, m.ID, "❤")
@@ -69,15 +106,9 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 	}
 
-	var mentionsBot bool
-	for _, m := range m.Mentions {
-		if m.ID == botId {
-			mentionsBot = true
-			break
-		}
-	}
-	if mentionsBot {
-		s.ChannelMessageSend(m.ChannelID, m.Author.Mention()+" need help? Type `.help`")
+	if m.ChannelID == env.ChannelFeedback {
+		s.MessageReactionAdd(m.ChannelID, m.ID, "👍")
+		s.MessageReactionAdd(m.ChannelID, m.ID, "👎")
 		return
 	}
 
@@ -98,20 +129,74 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			return
 		}
 
-		var found bool
-		allKeys := make([]string, 0, len(command.Commands))
-		for name, cmd := range command.Commands {
-			allKeys = append(allKeys, name)
-			if !found && args[0] == name {
-				found = true
-				cmd.Exec(&context, args)
-			}
+		cmd, exists := command.Commands[args[0]]
+		if !exists {
+			return
 		}
-		if !found {
-			// this will need to be either disabled
-			// or need a workaround for situations like "..." when PREFIX=.
-			//s.ChannelMessageSend(m.ChannelID, m.Author.Mention()+" command not found. Available commands: "+strings.Join(allKeys, ", "))
+
+		cmd.Exec(&context, args)
+		return
+	}
+
+	var mentionsBot bool
+	for _, m := range m.Mentions {
+		if m.ID == botId {
+			mentionsBot = true
+			break
 		}
+	}
+	if mentionsBot {
+		s.ChannelMessageSend(m.ChannelID, m.Author.Mention()+" need help? Type `!help`")
+		return
+	}
+}
+
+func memberJoin(s *discordgo.Session, m *discordgo.GuildMemberAdd) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Println("Recovered from panic in memberJoin", r)
+		}
+	}()
+
+	accountCreateDate, _ := discordgo.SnowflakeTimestamp(m.User.ID)
+	embed := discordgo.MessageEmbed{
+		Author: &discordgo.MessageEmbedAuthor{
+			IconURL: m.User.AvatarURL("64"),
+			Name:    "Member Join",
+		},
+		Title: fmt.Sprintf("%s#%s(%s)", m.User.Username, m.User.Discriminator, m.User.ID),
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:  "Account Creation Date",
+				Value: accountCreateDate.UTC().Format("2006-01-02 15:04"),
+			},
+		},
+	}
+
+	_, err := s.ChannelMessageSendEmbed(env.ChannelBotlog, &embed)
+	if err != nil {
+		log.Printf("Failed to send embed to channel %s of user(%s) join. Error: %s\n", env.ChannelBotlog, m.User.ID, err)
+	}
+}
+
+func memberLeave(s *discordgo.Session, m *discordgo.GuildMemberRemove) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Println("Recovered from panic in memberLeave", r)
+		}
+	}()
+
+	embed := discordgo.MessageEmbed{
+		Author: &discordgo.MessageEmbedAuthor{
+			IconURL: m.User.AvatarURL("64"),
+			Name:    "Member Leave",
+		},
+		Title: fmt.Sprintf("%s#%s(%s)", m.User.Username, m.User.Discriminator, m.User.ID),
+	}
+
+	_, err := s.ChannelMessageSendEmbed(env.ChannelBotlog, &embed)
+	if err != nil {
+		log.Printf("Failed to send embed to channel %s of user(%s) leave. Error: %s\n", env.ChannelBotlog, m.User.ID, err)
 	}
 }
 

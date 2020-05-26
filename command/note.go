@@ -2,18 +2,18 @@ package command
 
 import (
 	"fmt"
-	"github.com/bwmarrin/discordgo"
-	"github.com/dustin/go-humanize"
-	"log"
 	"strings"
 	"trup/db"
+
+	"github.com/bwmarrin/discordgo"
+	"github.com/dustin/go-humanize"
 )
 
 const noteUsage = "note <@user> [text]"
 
 func note(ctx *Context, args []string) {
 	if len(args) < 2 {
-		ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" not enough arguments.")
+		ctx.Reply("not enough arguments.")
 		return
 	}
 
@@ -27,26 +27,23 @@ func note(ctx *Context, args []string) {
 
 		err := note.Save()
 		if err != nil {
-			ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" failed to save note. Error: "+err.Error())
-			log.Printf("Failed to save note %#v; Error: %s\n", note, err)
+			ctx.ReportError(fmt.Sprintf("Failed to save note %#v", note), err)
 			return
 		}
 
-		ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" noted.")
+		ctx.Reply("noted.")
 		return
 	}
 
 	notes, err := db.GetNotes(about)
 	if err != nil {
-		ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" failed to retrieve notes. Error: "+err.Error())
+		ctx.Reply("failed to retrieve notes. Error: " + err.Error())
 		return
 	}
 
 	aboutMember, err := ctx.Session.GuildMember(ctx.Message.GuildID, about)
 	if err != nil {
-		msg := fmt.Sprintf("Failed to fetch member %s; Error: %s\n", about, err)
-		log.Println(msg)
-		ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" "+msg)
+		ctx.ReportError("Failed to fetch member "+about, err)
 		return
 	}
 
@@ -60,9 +57,7 @@ func note(ctx *Context, args []string) {
 	for _, n := range notes {
 		takerMember, err := ctx.Session.GuildMember(ctx.Message.GuildID, n.Taker)
 		if err != nil {
-			msg := fmt.Sprintf("Failed to fetch member %s; Error: %s\n", n.Taker, err)
-			log.Println(msg)
-			ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" "+msg)
+			ctx.ReportError("Failed to fetch member "+n.Taker, err)
 			return
 		}
 
