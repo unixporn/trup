@@ -52,6 +52,8 @@ func mute(ctx *Context, args []string) {
 		ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" "+msg)
 		return
 	}
+	ctx.Reply("User successfully muted.")
+
 	time.AfterFunc(i, func() {
 		unmute(ctx, user)
 	})
