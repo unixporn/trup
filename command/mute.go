@@ -21,7 +21,7 @@ func mute(ctx *Context, args []string) {
 		reason   = ""
 	)
 	if len(args) > 4 {
-		reason = strings.Join(args[3:], "")
+		reason = strings.Join(args[3:], " ")
 	}
 
 	i, err := time.ParseDuration(duration)
