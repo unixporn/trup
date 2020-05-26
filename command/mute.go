@@ -2,7 +2,6 @@ package command
 
 import (
 	"fmt"
-	"log"
 	"strings"
 	"time"
 	"trup/db"
@@ -24,8 +23,7 @@ func mute(ctx *Context, args []string) {
 	i, err := time.ParseDuration(duration)
 	if err != nil {
 		msg := fmt.Sprintf("Failed to parse duration. Is the duration in the correct format? Examples: 10s, 30m, 1h10m10s? Error: %s", err)
-		log.Println(msg)
-		ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" "+msg)
+		ctx.ReportError(msg, err)
 		return
 	}
 
@@ -38,18 +36,13 @@ func mute(ctx *Context, args []string) {
 
 	err = w.Save()
 	if err != nil {
-		msg := fmt.Sprintf("Failed to save your mute. Error: %s", err)
-		log.Println(msg, reason, start)
-		ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" "+msg)
+		ctx.ReportError("Failed to save your mute", err)
 		return
 	}
 	// Unmute after timeout, rely on cleanupMutes if execution fails
 	err = ctx.Session.GuildMemberRoleAdd(ctx.Message.GuildID, user, ctx.Env.RoleMute)
 	if err != nil {
-
-		msg := fmt.Sprintf("Error adding role. Error: %s", err)
-		log.Println(msg)
-		ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" "+msg)
+		ctx.ReportError("Error adding role", err)
 		return
 	}
 	ctx.Reply("User successfully muted.")
@@ -63,19 +56,13 @@ func unmute(ctx *Context, user string) {
 
 	err := ctx.Session.GuildMemberRoleRemove(ctx.Message.GuildID, user, ctx.Env.RoleMute)
 	if err != nil {
-
-		msg := fmt.Sprintf("Error adding role. Error: %s", err)
-		log.Println(msg)
-		ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" "+msg)
+		ctx.ReportError("Error adding role", err)
 		return
 	}
 
 	err = db.SetMuteInactive(user)
 	if err != nil {
-
-		msg := fmt.Sprintf("Error adding role. Error: %s", err)
-		log.Println(msg)
-		ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" "+msg)
+		ctx.ReportError("Error adding role", err)
 		return
 	}
 }

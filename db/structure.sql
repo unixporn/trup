@@ -1,7 +1,7 @@
 -- needs postgresql 9.1
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-create table if not exists note (
+CREATE TABLE IF NOT EXISTS note (
     id uuid,
     taker varchar not null,
     about varchar not null,
@@ -10,7 +10,7 @@ create table if not exists note (
     primary key (id)
 );
 
-create table if not exists warn (
+CREATE TABLE IF NOT EXISTS warn (
     id uuid,
     moderator varchar not null,
     usr varchar not null,
@@ -19,7 +19,7 @@ create table if not exists warn (
     primary key (id)
 );
 
-create table if not exists sysinfo (
+CREATE TABLE IF NOT EXISTS sysinfo (
     usr varchar,
     info jsonb,
     modify_date timestamptz,
@@ -27,7 +27,7 @@ create table if not exists sysinfo (
     primary key (usr)
 );
 
-create table if not exists mute (
+CREATE TABLE IF NOT EXISTS mute (
     id uuid,
     guildid varchar not null,
     moderator varchar not null,
@@ -39,7 +39,7 @@ create table if not exists mute (
     primary key (id)
 );
 
-create table if not exists profile (
+CREATE TABLE IF NOT EXISTS profile (
     usr varchar,
     git varchar,
     dotfiles varchar,
@@ -47,20 +47,20 @@ create table if not exists profile (
     primary key (usr)
 );
 
-create or replace procedure sysinfo_set(_usr varchar, _info jsonb, _modify_date timestamptz, _create_date timestamptz)
+CREATE OR REPLACE PROCEDURE sysinfo_set(_usr varchar, _info jsonb, _modify_date timestamptz, _create_date timestamptz)
 language plpgsql
-as $$
+AS $$
 BEGIN
-	insert into sysinfo(usr, info, modify_date, create_date) values(_usr, _info, _modify_date, _create_date);
-exception when unique_violation then
-	update sysinfo set info = _info, modify_date = _modify_date where usr = _usr;
-END $$;
+	INSERT INTO sysinfo(usr, info, modify_date, create_date) VALUES(_usr, _info, _modify_date, _create_date);
+EXCEPTION WHEN unique_violation THEN
+	UPDATE sysinfo SET info = _info, modify_date = _modify_date WHERE usr = _usr;
+end $$;
 
-create or replace procedure profile_set(_usr varchar, _git varchar, _dotfiles varchar, _description varchar)
+CREATE OR REPLACE PROCEDURE profile_set(_usr varchar, _git varchar, _dotfiles varchar, _description varchar)
 language plpgsql
-as $$
+AS $$
 BEGIN
-	insert into profile(usr, git, dotfiles, description) values(_usr, _git, _dotfiles, _description);
-exception when unique_violation then
-	update profile set git = _git, dotfiles = _dotfiles, description = _description where usr = _usr;
+	INSERT INTO profile(usr, git, dotfiles, description) VALUES(_usr, _git, _dotfiles, _description);
+EXCEPTION WHEN unique_violation THEN
+	UPDATE profile SET git = _git, dotfiles = _dotfiles, description = _description WHERE usr = _usr;
 END $$;

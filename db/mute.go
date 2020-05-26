@@ -32,7 +32,7 @@ func NewMute(guildid, mod, user, reason string, start, end time.Time) *Mute {
 func (mute *Mute) Save() error {
 	// Set all previous mutes of this user to inactive
 	SetMuteInactive(mute.User)
-	_, err := db.Exec(context.Background(), "INSERT INTO mute(id,guildid,moderator,usr,end_time, start_time,active) VALUES(uuid_generate_v4(), $1, $2, $3, $4, $5, $6)", mute.GuildId, mute.Moderator, mute.User, mute.EndTime, mute.StartTime, true)
+	_, err := db.Exec(context.Background(), "INSERT INTO mute(id, guildid, moderator, usr, end_time, start_time,active) VALUES(uuid_generate_v4(), $1, $2, $3, $4, $5, $6)", mute.GuildId, mute.Moderator, mute.User, mute.EndTime, mute.StartTime, true)
 	return err
 
 }
@@ -45,7 +45,7 @@ func SetMuteInactive(user string) error {
 
 func GetExpiredMutes() ([]Mute, error) {
 
-	rows, err := db.Query(context.Background(), "SELECT guildid,usr FROM mute WHERE active=true AND end_time < $1", time.Now())
+	rows, err := db.Query(context.Background(), "SELECT guildid, usr FROM mute WHERE active=true AND end_time < $1", time.Now())
 	if err != nil {
 		return nil, err
 	}

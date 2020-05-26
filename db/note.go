@@ -32,7 +32,7 @@ func (note *Note) Save() error {
 
 func GetNotes(about string) ([]Note, error) {
 	var res []Note
-	rows, err := db.Query(context.Background(), "SELECT id, taker, about, content, create_date FROM note WHERE about=$1 ORDER BY create_date desc limit 25", &about)
+	rows, err := db.Query(context.Background(), "SELECT id, taker, about, content, create_date FROM note WHERE about=$1 ORDER BY create_date DESC LIMIT 25", &about)
 	if err != nil {
 		return nil, err
 	}
