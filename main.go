@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 	"trup/command"
 	"trup/db"
 
@@ -202,6 +203,8 @@ func memberLeave(s *discordgo.Session, m *discordgo.GuildMemberRemove) {
 
 func cleanupMutesLoop(s *discordgo.Session) {
 	for {
+		time.Sleep(time.Minute)
+
 		mutes, err := db.GetExpiredMutes()
 		if err != nil {
 			log.Printf("Error getting expired mutes %s\n", err)
