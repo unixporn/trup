@@ -11,6 +11,7 @@ import (
 
 type Env struct {
 	RoleMod         string
+	RoleMute        string
 	RoleColors      []string
 	ChannelShowcase string
 	ChannelBotlog   string
@@ -93,6 +94,10 @@ var Commands = map[string]Command{
 	"warn": moderatorOnly(Command{
 		Exec:  warn,
 		Usage: warnUsage,
+	}),
+	"mute": moderatorOnly(Command{
+		Exec:  mute,
+		Usage: muteUsage,
 	}),
 }
 

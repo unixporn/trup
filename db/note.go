@@ -2,8 +2,9 @@ package db
 
 import (
 	"context"
-	"github.com/jackc/pgx/pgtype"
 	"time"
+
+	"github.com/jackc/pgx/pgtype"
 )
 
 type Note struct {
@@ -25,13 +26,13 @@ func NewNote(taker, about, content string) *Note {
 }
 
 func (note *Note) Save() error {
-	_, err := db.Exec(context.Background(), "insert into note(id, taker, about, content, create_date) values(uuid_generate_v4(), $1, $2, $3, $4)", note.Taker, note.About, note.Content, note.CreateDate)
+	_, err := db.Exec(context.Background(), "INSERT INTO note(id, taker, about, content, create_date) VALUES(uuid_generate_v4(), $1, $2, $3, $4)", note.Taker, note.About, note.Content, note.CreateDate)
 	return err
 }
 
 func GetNotes(about string) ([]Note, error) {
 	var res []Note
-	rows, err := db.Query(context.Background(), "select id, taker, about, content, create_date from note where about=$1 order by create_date desc limit 25", &about)
+	rows, err := db.Query(context.Background(), "SELECT id, taker, about, content, create_date FROM note WHERE about=$1 ORDER BY create_date DESC LIMIT 25", &about)
 	if err != nil {
 		return nil, err
 	}

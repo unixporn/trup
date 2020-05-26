@@ -19,6 +19,7 @@ var (
 		RoleMod:         os.Getenv("ROLE_MOD"),
 		RoleColors:      strings.Split(os.Getenv("ROLE_COLORS"), ","),
 		ChannelShowcase: os.Getenv("CHANNEL_SHOWCASE"),
+		RoleMute:        os.Getenv("ROLE_MUTE"),
 		ChannelBotlog:   os.Getenv("CHANNEL_BOTLOG"),
 		ChannelFeedback: os.Getenv("CHANNEL_FEEDBACK"),
 	}
@@ -39,6 +40,7 @@ func main() {
 	discord.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
 		botId = r.User.ID
 		s.UpdateStatus(0, "!help")
+		go cleanupMutesLoop(s)
 	})
 	discord.AddHandler(memberJoin)
 	discord.AddHandler(memberLeave)
@@ -51,7 +53,7 @@ func main() {
 		log.Fatalf("Failed on discord.Open(): %s\n", err)
 	}
 
-	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
+	fmt.Println("Bot is now running.  Press CTRL-c to exit.")
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 	<-sc
@@ -195,5 +197,31 @@ func memberLeave(s *discordgo.Session, m *discordgo.GuildMemberRemove) {
 	_, err := s.ChannelMessageSendEmbed(env.ChannelBotlog, &embed)
 	if err != nil {
 		log.Printf("Failed to send embed to channel %s of user(%s) leave. Error: %s\n", env.ChannelBotlog, m.User.ID, err)
+	}
+}
+
+func cleanupMutesLoop(s *discordgo.Session) {
+	for {
+		mutes, err := db.GetExpiredMutes()
+		if err != nil {
+			log.Printf("Error getting expired mutes %s\n", err)
+			continue
+		}
+
+		for _, m := range mutes {
+			err = s.GuildMemberRoleRemove(m.GuildId, m.User, env.RoleMute)
+			if err != nil {
+				log.Printf("Failed to remove role %s\n", err)
+				continue
+			}
+
+			s.ChannelMessageSend(env.ChannelBotlog, "User <@"+m.User+"> is now unmuted.")
+
+			err = db.SetMuteInactive(m.Id)
+			if err != nil {
+				log.Printf("Error setting expired mutes inactive %s\n", err)
+				continue
+			}
+		}
 	}
 }

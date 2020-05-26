@@ -45,7 +45,7 @@ func (sysinfo *Sysinfo) Save() error {
 }
 
 func GetSysinfo(user string) (*Sysinfo, error) {
-	row := db.QueryRow(context.Background(), "select usr, info, modify_date, create_date from sysinfo where usr = $1", user)
+	row := db.QueryRow(context.Background(), "SELECT usr, info, modify_date, create_date FROM sysinfo WHERE usr = $1", user)
 	var sysinfo Sysinfo
 	err := row.Scan(&sysinfo.User, &sysinfo.Info, &sysinfo.ModifyDate, &sysinfo.CreateDate)
 	if err != nil {
