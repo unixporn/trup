@@ -323,6 +323,7 @@ var distroImages = []struct {
 	{name: "univention corporate server", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/Univention_Corporate_Server_Logo.png/250px-Univention_Corporate_Server_Logo.png"},
 	{name: "uruk", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Logo_of_Uruk_Project.svg/250px-Logo_of_Uruk_Project.svg.png"},
 	{name: "vine", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Tux.svg/35px-Tux.svg.png"},
+	{name: "void", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Void_Linux_logo.svg/200px-Void_Linux_logo.svg.png"},
 	{name: "whonix", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Whonix_Logo.png/200px-Whonix_Logo.png"},
 	{name: "xubuntu", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Xubuntu_logo_and_wordmark.svg/200px-Xubuntu_logo_and_wordmark.svg.png"},
 }
