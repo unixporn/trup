@@ -23,6 +23,7 @@ var (
 		RoleMute:        os.Getenv("ROLE_MUTE"),
 		ChannelBotlog:   os.Getenv("CHANNEL_BOTLOG"),
 		ChannelFeedback: os.Getenv("CHANNEL_FEEDBACK"),
+		ChannelBot:      os.Getenv("CHANNEL_BOT"),
 	}
 	botId string
 	cache = newMessageCache(5000)
