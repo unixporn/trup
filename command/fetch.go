@@ -12,6 +12,8 @@ import (
 const setFetchHelp = "Run without arguments to see instructions"
 
 func setFetch(ctx *Context, args []string) {
+	defer promptBotChannel(ctx)
+
 	lines := strings.Split(ctx.Message.Content, "\n")
 	if len(lines) < 2 {
 		ctx.Reply("run this: `curl -s https://raw.githubusercontent.com/unixporn/trup/master/fetcher.sh | sh` and follow the instructions. It's recommended you download and read(verify) the script before running(<https://blog.dijit.sh/don-t-pipe-curl-to-bash>)")

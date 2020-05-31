@@ -3,6 +3,8 @@ package command
 import "strings"
 
 func Help(ctx *Context, args []string) {
+	defer promptBotChannel(ctx)
+
 	var text strings.Builder
 
 	isCallerModerator := ctx.isModerator()

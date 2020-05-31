@@ -16,6 +16,7 @@ type Env struct {
 	ChannelShowcase string
 	ChannelBotlog   string
 	ChannelFeedback string
+	ChannelBot      string
 }
 
 type Context struct {
@@ -41,10 +42,10 @@ var Commands = map[string]Command{
 		Exec:  fetch,
 		Usage: fetchUsage,
 	},
-	"setfetch": {
+	"setfetch": considerBotChannel(Command{
 		Exec: setFetch,
 		Help: setFetchHelp,
-	},
+	}),
 	"repo": {
 		Exec: repo,
 		Help: repoHelp,
@@ -63,16 +64,16 @@ var Commands = map[string]Command{
 		Usage: dotfilesUsage,
 		Help:  dotfilesHelp,
 	},
-	"desc": {
+	"desc": considerBotChannel(Command{
 		Exec:  desc,
 		Usage: descUsage,
 		Help:  descHelp,
-	},
-	"role": {
+	}),
+	"role": considerBotChannel(Command{
 		Exec:  role,
 		Usage: roleUsage,
 		Help:  roleHelp,
-	},
+	}),
 	"pfp": {
 		Exec:  pfp,
 		Usage: pfpUsage,
@@ -157,20 +158,37 @@ func (ctx *Context) ReportError(msg string, err error) {
 }
 
 func moderatorOnly(cmd Command) Command {
-	return Command{
-		Exec: func(ctx *Context, args []string) {
-			for _, r := range ctx.Message.Member.Roles {
-				if r == ctx.Env.RoleMod {
-					cmd.Exec(ctx, args)
-					return
-				}
+	cmd.ModeratorOnly = true
+	cmd.Exec = func(ctx *Context, args []string) {
+		for _, r := range ctx.Message.Member.Roles {
+			if r == ctx.Env.RoleMod {
+				cmd.Exec(ctx, args)
+				return
 			}
+		}
 
-			ctx.Reply("this command is only for moderators.")
-		},
-		Usage:         cmd.Usage,
-		Help:          cmd.Help,
-		ModeratorOnly: true,
+		ctx.Reply("this command is only for moderators.")
+	}
+	return cmd
+}
+
+// considerBotChannel sends a message after cmd.Exec
+// asking user to invoke the command in ChannelBot
+// next time
+func considerBotChannel(cmd Command) Command {
+	cmd.Exec = func(ctx *Context, args []string) {
+		cmd.Exec(ctx, args)
+		promptBotChannel(ctx)
+	}
+	return cmd
+}
+
+// promptBotChannel sends a message prompting to
+// invoke the command in ChannelBot next time
+// if the channel of invocation is not already ChannelBot
+func promptBotChannel(ctx *Context) {
+	if ctx.Message.ChannelID != ctx.Env.ChannelBot {
+		ctx.Reply("Consider invoking this command in <@&" + ctx.Env.ChannelBot + "> next time")
 	}
 }
 
