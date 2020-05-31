@@ -13,6 +13,8 @@ const (
 )
 
 func desc(ctx *Context, args []string) {
+	defer promptBotChannel(ctx)
+
 	if len(args) < 2 {
 		ctx.Reply("Usage: " + descUsage)
 		return

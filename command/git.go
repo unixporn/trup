@@ -35,6 +35,8 @@ func git(ctx *Context, args []string) {
 		return
 	}
 
+	defer promptBotChannel(ctx)
+
 	url := args[1]
 
 	if !isValidUrl(url) {
