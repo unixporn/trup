@@ -18,9 +18,13 @@ type Env struct {
 	ChannelFeedback string
 }
 
-type Context struct {
+type State struct {
 	Env     *Env
 	Session *discordgo.Session
+}
+
+type Context struct {
+	*State
 	Message *discordgo.Message
 }
 
@@ -29,6 +33,13 @@ type Command struct {
 	Usage         string
 	Help          string
 	ModeratorOnly bool
+}
+
+type Cmdi interface {
+	Exec(*Context, []string)
+	Usage() string
+	Help() string
+	ModeratorOnly() bool
 }
 
 var Commands = map[string]Command{
