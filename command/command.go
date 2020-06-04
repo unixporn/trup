@@ -16,6 +16,7 @@ type Env struct {
 	ChannelShowcase string
 	ChannelBotlog   string
 	ChannelFeedback string
+	ChannelModlog   string
 }
 
 type Context struct {

@@ -30,7 +30,7 @@ func NewMute(guildId, mod, user, reason string, start, end time.Time) *Mute {
 }
 
 func (mute *Mute) Save() error {
-	_, err := db.Exec(context.Background(), "INSERT INTO mute(id, guildid, moderator, usr, end_time, start_time,active) VALUES(uuid_generate_v4(), $1, $2, $3, $4, $5, $6)", mute.GuildId, mute.Moderator, mute.User, mute.EndTime, mute.StartTime, true)
+	_, err := db.Exec(context.Background(), "INSERT INTO mute(id, guildid, moderator, usr, end_time, start_time, active, reason) VALUES(uuid_generate_v4(), $1, $2, $3, $4, $5, $6, $7)", mute.GuildId, mute.Moderator, mute.User, mute.EndTime, mute.StartTime, true, mute.Reason)
 	return err
 }
 
