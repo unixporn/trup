@@ -55,9 +55,9 @@ func mute(ctx *Context, args []string) {
 	}
 	ctx.Reply("User successfully muted.")
 
+	r := ""
 	if reason != "" {
-		ctx.Session.ChannelMessageSend(ctx.Env.ChannelModlog, fmt.Sprintf("User <@%s> was muted for %s with reason %s ", user, duration, reason))
-	} else {
-		ctx.Session.ChannelMessageSend(ctx.Env.ChannelModlog, fmt.Sprintf("User <@%s> was muted for %s", user, duration))
+		r = " with reason: " + reason
 	}
+	ctx.Session.ChannelMessageSend(ctx.Env.ChannelModlog, fmt.Sprintf("User <@%s> was muted for %s%s.", user, duration, r))
 }

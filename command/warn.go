@@ -45,9 +45,9 @@ func warn(ctx *Context, args []string) {
 
 	ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, fmt.Sprintf("<@%s> Has been warned%s with reason: %s.", user, nth, reason))
 
-	if reason == "" {
-		ctx.Session.ChannelMessageSend(ctx.Env.ChannelModlog, fmt.Sprintf("<@%s> was warned by moderator <@%s>. They've been warned%s", user, ctx.Message.Author.ID, nth))
-	} else {
-		ctx.Session.ChannelMessageSend(ctx.Env.ChannelModlog, fmt.Sprintf("<@%s> was warned by moderator <@%s> with reason: %s. They've been warned%s", user, ctx.Message.Author.ID, reason, nth))
+	r := ""
+	if reason != "" {
+		r = " with reason: " + reason
 	}
+    	ctx.Session.ChannelMessageSend(ctx.Env.ChannelModlog, fmt.Sprintf("<@%s> was warned by moderator <@%s> %s. They've been warned%s", user, ctx.Message.Author.ID, r, nth))
 }
