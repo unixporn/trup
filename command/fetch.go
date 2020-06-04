@@ -146,7 +146,7 @@ func fetch(ctx *Context, args []string) {
 		ctx.Reply("failed to find the user's info. Error: " + err.Error())
 		return
 	}
-
+	embed.Color = ctx.Session.State.UserColor(user.ID, ctx.Message.ChannelID)
 	if info.Info.Distro != "" {
 		embed.Thumbnail = &discordgo.MessageEmbedThumbnail{
 			URL: getDistroImage(info.Info.Distro),
