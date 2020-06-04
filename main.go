@@ -218,9 +218,9 @@ func cleanupMutesLoop(s *discordgo.Session) {
 				log.Printf("Failed to remove role %s\n", err)
 				continue
 			}
-
-			s.ChannelMessageSend(env.ChannelBotlog, "User <@" + m.User + "> is now unmuted.")
-			s.ChannelMessageSend(env.ChannelModlog, "User <@" + m.User + "> is now unmuted")
+			unmutedMsg := "User <@" + m.User + "> is now unmuted."
+			s.ChannelMessageSend(env.ChannelBotlog, unmutedMsg)
+			s.ChannelMessageSend(env.ChannelModlog, unmutedMsg)
 
 			err = db.SetMuteInactive(m.Id)
 			if err != nil {
