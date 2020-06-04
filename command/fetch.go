@@ -228,6 +228,10 @@ func fetch(ctx *Context, args []string) {
 			URL: info.Info.Image,
 		}
 	}
+	if !info.ModifyDate.IsZero() {
+		const dateFormat = "2006-01-02T15:04:05.0000Z"
+		embed.Timestamp = info.ModifyDate.UTC().Format(dateFormat)
+	}
 
 sysinfoEnd:
 	embed.Fields = append(embed.Fields, profileFields...)
