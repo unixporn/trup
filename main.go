@@ -23,6 +23,7 @@ var (
 		RoleMute:        os.Getenv("ROLE_MUTE"),
 		ChannelBotlog:   os.Getenv("CHANNEL_BOTLOG"),
 		ChannelFeedback: os.Getenv("CHANNEL_FEEDBACK"),
+		ChannelModlog:   os.Getenv("CHANNEL_MODLOG"),
 	}
 	botId string
 	cache = newMessageCache(5000)
@@ -218,7 +219,8 @@ func cleanupMutesLoop(s *discordgo.Session) {
 				continue
 			}
 
-			s.ChannelMessageSend(env.ChannelBotlog, "User <@"+m.User+"> is now unmuted.")
+			s.ChannelMessageSend(env.ChannelBotlog, "User <@" + m.User + "> is now unmuted.")
+			s.ChannelMessageSend(env.ChannelModlog, "User <@" + m.User + "> is now unmuted")
 
 			err = db.SetMuteInactive(m.Id)
 			if err != nil {

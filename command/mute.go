@@ -1,6 +1,7 @@
 package command
 
 import (
+	"fmt"
 	"strings"
 	"time"
 	"trup/db"
@@ -20,7 +21,7 @@ func mute(ctx *Context, args []string) {
 		start    = time.Now()
 		reason   = ""
 	)
-	if len(args) > 4 {
+	if len(args) > 3 {
 		reason = strings.Join(args[3:], " ")
 	}
 
@@ -52,6 +53,11 @@ func mute(ctx *Context, args []string) {
 	if err != nil {
 		ctx.ReportError("Failed to set note about the user", err)
 	}
-
 	ctx.Reply("User successfully muted.")
+
+	if reason != "" {
+		ctx.Session.ChannelMessageSend(ctx.Env.ChannelModlog, fmt.Sprintf("User <@%s> was muted for %s with reason %s ", user, duration, reason))
+	} else {
+		ctx.Session.ChannelMessageSend(ctx.Env.ChannelModlog, fmt.Sprintf("User <@%s> was muted for %s", user, duration))
+	}
 }

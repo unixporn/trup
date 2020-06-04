@@ -2,10 +2,11 @@ package command
 
 import (
 	"fmt"
-	"github.com/dustin/go-humanize"
 	"log"
 	"strings"
 	"trup/db"
+
+	"github.com/dustin/go-humanize"
 )
 
 const warnUsage = "warn <@user> <reason>"
@@ -43,4 +44,10 @@ func warn(ctx *Context, args []string) {
 	}
 
 	ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, fmt.Sprintf("<@%s> Has been warned%s with reason: %s.", user, nth, reason))
+
+	if reason == "" {
+		ctx.Session.ChannelMessageSend(ctx.Env.ChannelModlog, fmt.Sprintf("<@%s> was warned by moderator <@%s>. They've been warned%s", user, ctx.Message.Author.ID, nth))
+	} else {
+		ctx.Session.ChannelMessageSend(ctx.Env.ChannelModlog, fmt.Sprintf("<@%s> was warned by moderator <@%s> with reason: %s. They've been warned%s", user, ctx.Message.Author.ID, reason, nth))
+	}
 }
