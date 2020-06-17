@@ -68,7 +68,7 @@ if [ "$kernel" = "Linux" ]; then
 	[ "$EDITOR" ] && EDITOR="${EDITOR##*/}"
 
 	# terminal, remove declaration of color support from the name
-			term=$(ps -e | grep -m 1 -o \
+      term=$(ps -e | grep -m 1 -o \
         -e "alacritty$" \
         -e "kitty$" \
         -e "xterm$" \
