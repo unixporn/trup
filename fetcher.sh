@@ -86,7 +86,7 @@ if [ "$kernel" = "Linux" ]; then
 				-e "qterminal$" \
 				-e "termonad$" \
 				-e "lxterminal$" \
-        -e "st$"
+        -e " st$" \
 				-e "tilda$")
 
 	print
