@@ -68,7 +68,27 @@ if [ "$kernel" = "Linux" ]; then
 	[ "$EDITOR" ] && EDITOR="${EDITOR##*/}"
 
 	# terminal, remove declaration of color support from the name
-	term="${TERM%-*color*}"
+  [ -z "/usr/local/bin/st" ] || term=st
+
+			term=$(ps -e | grep -m 1 -o \
+				-e "alacritty" \
+				-e "kitty" \
+				-e "xterm" \
+				-e "urxvt" \
+				-e "xfce4-terminal" \
+				-e "gnome-terminal" \
+				-e "mate-terminal" \
+				-e "cool-retro-term" \
+				-e "konsole" \
+				-e "termite" \
+				-e "rxvt" \
+				-e "tilix" \
+				-e "sakura" \
+				-e "terminator" \
+				-e "qterminal" \
+				-e "termonad" \
+				-e "lxterminal" \
+				-e "tilda")
 
 	print
 elif [ "$kernel"  = "Darwin" ]; then
