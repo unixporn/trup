@@ -68,8 +68,6 @@ if [ "$kernel" = "Linux" ]; then
 	[ "$EDITOR" ] && EDITOR="${EDITOR##*/}"
 
 	# terminal, remove declaration of color support from the name
-  [ -z "/usr/local/bin/st" ] || term=st
-
 			term=$(ps -e | grep -m 1 -o \
 				-e "alacritty" \
 				-e "kitty" \
@@ -88,6 +86,7 @@ if [ "$kernel" = "Linux" ]; then
 				-e "qterminal" \
 				-e "termonad" \
 				-e "lxterminal" \
+        -e "st$"
 				-e "tilda")
 
 	print
