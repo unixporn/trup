@@ -79,15 +79,15 @@ if [ "$kernel" = "Linux" ]; then
 		-e "cool-retro-term$" \
 		-e "konsole$" \
 		-e "termite$" \
-		-e " rxvt$" \
+		-e "^rxvt$" \
 		-e "tilix$" \
 		-e "sakura$" \
 		-e "terminator$" \
 		-e "qterminal$" \
 		-e "termonad$" \
 		-e "lxterminal$" \
-		-e " st$" \
-		-e " xst$" \
+		-e "^st$" \
+		-e "^xst$" \
 		-e "tilda$")
 
 	print
