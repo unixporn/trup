@@ -79,7 +79,7 @@ if [ "$kernel" = "Linux" ]; then
 		-e "cool-retro-term$" \
 		-e "konsole$" \
 		-e "termite$" \
-		-e "rxvt$" \
+		-e " rxvt$" \
 		-e "tilix$" \
 		-e "sakura$" \
 		-e "terminator$" \
