@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/url"
 	"regexp"
+	"strings"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -123,7 +124,14 @@ func parseChannelMention(mention string) string {
 	return res[1]
 }
 
-var userNotFound = errors.New("User not found")
+var (
+	userNotFound     = errors.New("User not found")
+	moreThanOneMatch = errors.New("Matched more than one user, try using username#0000")
+)
+
+func hasPrefixFold(s, prefix string) bool {
+	return len(s) >= len(prefix) && strings.EqualFold(s[:len(prefix)], prefix)
+}
 
 func (ctx *Context) userFromString(str string) (*discordgo.Member, error) {
 	if m := parseMention(str); m != "" {
@@ -136,13 +144,31 @@ func (ctx *Context) userFromString(str string) (*discordgo.Member, error) {
 		return nil, err
 	}
 
+	discriminator := ""
+	if index := strings.LastIndex(str, "#"); index != -1 && len(str)-1-index == 4 {
+		discriminator = str[index+1:]
+		str = str[:index]
+	}
+
+	matches := []*discordgo.Member{}
+
 	for _, m := range guild.Members {
-		if str == m.User.Username || str == m.Nick {
-			return m, nil
+		if discriminator != "" {
+			if m.User.Discriminator == discriminator && strings.EqualFold(m.User.Username, str) {
+				matches = append(matches, m)
+			}
+		} else if hasPrefixFold(m.Nick, str) || hasPrefixFold(m.User.Username, str) {
+			matches = append(matches, m)
 		}
 	}
 
-	return nil, userNotFound
+	if len(matches) < 1 {
+		return nil, userNotFound
+	}
+	if len(matches) > 1 {
+		return nil, moreThanOneMatch
+	}
+	return matches[0], nil
 }
 
 func (ctx *Context) Reply(msg string) {
