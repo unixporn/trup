@@ -1,5 +1,6 @@
 trup
 .idea/
+.vscode/
 .env
 pglogs
 postgres/
