@@ -123,6 +123,10 @@ var (
 	moreThanOneMatch = errors.New("Matched more than one user, try using username#0000")
 )
 
+func hasPrefixFold(s, prefix string) bool {
+	return len(s) >= len(prefix) && strings.EqualFold(s[:len(prefix)], prefix)
+}
+
 func (ctx *Context) userFromString(str string) (*discordgo.Member, error) {
 	if m := parseMention(str); m != "" {
 		mem, err := ctx.Session.GuildMember(ctx.Message.GuildID, m)
@@ -139,17 +143,26 @@ func (ctx *Context) userFromString(str string) (*discordgo.Member, error) {
 		discriminator = str[index+1:]
 		str = str[:index]
 	}
+
+	matches := []*discordgo.Member{}
+
 	for _, m := range guild.Members {
-		if discriminator != "" && m.User.Discriminator != discriminator {
-			continue
-		} else if len(m.User.Username) >= len(str) && strings.EqualFold(str, m.User.Username[:len(str)]) {
-			return m, nil
-		} else if discriminator == "" && len(m.Nick) >= len(str) && strings.EqualFold(str, m.Nick[:len(str)]) {
-			return m, nil
+		if discriminator != "" {
+			if m.User.Discriminator == discriminator && strings.EqualFold(m.User.Username, str) {
+				matches = append(matches, m)
+			}
+		} else if hasPrefixFold(m.Nick, str) || hasPrefixFold(m.User.Username, str) {
+			matches = append(matches, m)
 		}
 	}
 
-	return nil, userNotFound
+	if len(matches) < 1 {
+		return nil, userNotFound
+	}
+	if len(matches) > 1 {
+		return nil, moreThanOneMatch
+	}
+	return matches[0], nil
 }
 
 func (ctx *Context) Reply(msg string) {
