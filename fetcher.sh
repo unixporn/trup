@@ -10,12 +10,13 @@ You can also attach an image to the message, be it your screenshot or wallpaper.
 !setfetch
 Distro: $NAME $ver
 Kernel: $(uname -sr)
-Terminal:$term
+Terminal: $term
 $([ "$wm" ] && echo "DE/WM: $wm" || echo "Display protocol: $displayprot")
 Editor: $EDITOR
 GTK3 Theme: $theme
 GTK Icon Theme: $icons
 CPU: $cpu
+GPU: $gpu
 Memory: $ram
 EOF
 }
@@ -63,6 +64,35 @@ if [ "$kernel" = "Linux" ]; then
 	# hardware
 	cpu="$(awk -F': ' '/model name\t: /{print $2;exit} ' "/proc/cpuinfo")"
 	ram="$(awk '/[^0-9]* / {print $2" "$3;exit} ' "/proc/meminfo")"
+  # gpu
+
+  if
+    [ $(lspci | grep -i vga | grep -i nvidia | awk '{print $5}') ];
+  then
+    gpua="NVIDIA";
+  elif
+    [ $(lspci | grep -i vga | grep -i intel | awk '{print $5}') ];
+  then
+    gpua="Intel";
+  elif
+    [ $(lspci | grep -i vga | grep -i amd | grep -i ati | grep -i radeon) ];
+  then
+    gpua="AMD"
+  fi
+  
+  if
+    [ "$gpua"="NVIDIA" ]
+  then
+      gpu="$(lspci | grep -i nvidia | grep -i vga | awk '{print $5 " " $8 " " $9 " " $10 " " $11}'| sed -e 's/\[\|\]//g')"
+  elif
+      [ "$gpua"="Intel" ]
+  then
+        gpu="$(lspci | grep -i intel | grep -i vga | awk '{print $5 " " $8 " " $9 " " $10 " " $11}' | sed -e 's/\(|\)//g')"
+  elif
+        [ "$gpua"="AMD" ]
+  then
+          gpu="$(lspci | grep -iE "VGA|Display" | grep -i amd | grep -i ati | grep -i vega | awk '{print $9 " " $11 " " $12}' | sed -e 's/\[\|\]//g')"
+  fi
 
 	# editor, remove the file path
 	[ "$EDITOR" ] && EDITOR="${EDITOR##*/}"
