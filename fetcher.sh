@@ -113,7 +113,7 @@ if [ "$kernel" = "Linux" ]; then
         then
           gpu="$(lspci | grep -i vga | grep -i rx | awk '{print $5 " " $9 " " $11 " " $12}' | sed -e 's/\[\|\]//g')"
         else
-          gpu="unknown"
+          gpu=" "
         fi
 
 
