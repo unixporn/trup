@@ -69,15 +69,15 @@ if [ "$kernel" = "Linux" ]; then
         if
           [ "$(lspci | grep -i vga | grep -i nvidia | awk '{print $5}')" ]
         then
-	  gpu="$(lspci | grep -iE 'vga|display|3d' | grep -iE nvidia | awk '{print $5 " " $8 " " $9 " " $10 " " $11}'| sed -e 's/\[\|\]//g')"
+	        gpu="$(lspci | grep -iE 'vga|display|3d' | grep -iE nvidia | awk '{print $5 " " $8 " " $9 " " $10 " " $11}'| sed -e 's/\[\|\]//g')"
         elif
           [ "$(lspci | grep -iE 'vga|display|3d' | grep -i amd)" ]
         then
-	  gpu="$(lspci | grep -iE 'vga|display|3d' | grep -iE amd | awk '{print $5 " " $9 " " $11 " " $12}' | sed -e 's/\[\|\]//g')"
+	        gpu="$(lspci | grep -iE 'vga|display|3d' | grep -iE amd | awk '{print $5 " " $9 " " $11 " " $12}' | sed -e 's/\[\|\]//g')"
         elif
           [ "$(lspci | grep -iE 'vga|display|3d' | grep -i radeon)" ]
         then
-	  gpu="$(lspci | grep -iE 'vga|display|3d' | grep -iE radeon | awk '{print $5 " " $9 " " $11 " " $12}' | sed -e 's/\[\|\]//g')"
+	         gpu="$(lspci | grep -iE 'vga|display|3d' | grep -iE radeon | awk '{print $5 " " $9 " " $11 " " $12}' | sed -e 's/\[\|\]//g')"
         elif
           [ "$(lspci | grep -iE 'vga|display|3d' | grep -i rx)" ]
         then
@@ -93,8 +93,8 @@ if [ "$kernel" = "Linux" ]; then
         elif
           [ "$(lspci | grep -i vga | grep -i intel | awk '{print $5}')" ]
         then
-	  gpu="$(lspci | grep -E 'VGA|Display' | grep -iE intel | awk '{print $5 " " $8 " " $9 " " $10 " " $11}' | cut -d'(' -f1)"
-	else
+	        gpu="$(lspci | grep -E 'VGA|Display' | grep -iE intel | awk '{print $5 " " $8 " " $9 " " $10 " " $11}' | cut -d'(' -f1)"
+	      else
           gpu=" "
         fi
 
