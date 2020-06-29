@@ -21,6 +21,7 @@ func setFetch(ctx *Context, args []string) {
 	data := db.SysinfoData{}
 	m := map[string]*string{
 		"CPU":              &data.Cpu,
+		"GPU":              &data.Gpu,
 		"Kernel":           &data.Kernel,
 		"Distro":           &data.Distro,
 		"DE/WM":            &data.DeWm,
@@ -213,6 +214,13 @@ func fetch(ctx *Context, args []string) {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
 			"CPU",
 			info.Info.Cpu,
+			inline,
+		})
+	}
+	if info.Info.Gpu != "" {
+		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
+			"GPU",
+			info.Info.Gpu,
 			inline,
 		})
 	}
