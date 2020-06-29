@@ -65,38 +65,12 @@ if [ "$kernel" = "Linux" ]; then
 	cpu="$(awk -F': ' '/model name\t: /{print $2;exit} ' "/proc/cpuinfo")"
 	ram="$(awk '/[^0-9]* / {print $2" "$3;exit} ' "/proc/meminfo")"
 
-        # gpu
-        if
-          [ "$(lspci | grep -i vga | grep -i nvidia | awk '{print $5}')" ]
-        then
-          gpu="$(lspci | grep -iE 'vga|display|3d' | grep -iE nvidia | awk '{print $5 " " $8 " " $9 " " $10 " " $11}'| sed -e 's/\[\|\]//g')"
-        elif
-          [ "$(lspci | grep -iE 'vga|display|3d' | grep -i amd)" ]
-        then
-          gpu="$(lspci | grep -iE 'vga|display|3d' | grep -iE amd | awk '{print $5 " " $9 " " $11 " " $12}' | sed -e 's/\[\|\]//g')"
-        elif
-          [ "$(lspci | grep -iE 'vga|display|3d' | grep -i radeon)" ]
-        then
-           gpu="$(lspci | grep -iE 'vga|display|3d' | grep -iE radeon | awk '{print $5 " " $9 " " $11 " " $12}' | sed -e 's/\[\|\]//g')"
-        elif
-          [ "$(lspci | grep -iE 'vga|display|3d' | grep -i rx)" ]
-        then
-          gpu="$(lspci | grep -iE 'vga|display|3d' | grep -iE rx | awk '{print $5 " " $9 " " $11 " " $12}' | sed -e 's/\[\|\]//g')"
-        elif
-          [ "$(lspci | grep -iE 'vga|display|3d' | grep -i xt)" ]
-        then
-          gpu="$(lspci | grep -iE 'vga|display|3d' | grep -iE xt | awk '{print $5 " " $9 " " $11 " " $12}' | sed -e 's/\[\|\]//g')"
-        elif
-          [ "$(lspci | grep -iE 'vga|display|3d' | grep -i vega)" ]
-        then
-          gpu="$(lspci | grep -iE 'vga|display|3d' | grep -iE vega | awk '{print $5 " " $9 " " $11 " " $12}' | sed -e 's/\[\|\]//g')"
-        elif
-          [ "$(lspci | grep -i vga | grep -i intel | awk '{print $5}')" ]
-        then
-          gpu="$(lspci | grep -E 'VGA|Display' | grep -iE intel | awk '{print $5 " " $8 " " $9 " " $10 " " $11}' | cut -d'(' -f1)"
-        else
-          gpu=" "
-        fi
+        gpu="$(lspci -mm | grep -i 'vga\|display' | grep -o '\[[^"]*' | tr -d '[]' \
+          | grep -iv 'ali\|amd/ati' | sed -e 's#[a-zA-Z0-9]\+/.* ##' -e 's#[a-zA-Z0-9]\+/.*##' -e 's/(.*//')"
+
+        # intel iGPU fallback
+        [ ! "$gpu" ] && gpu="$(lspci -mm | grep -i 'vga' \
+          | grep -io 'intel.*ion" "[^"]*' | sed -e 's/Corp.*"//' -e 's/Control.*//')"
 
 	# editor, remove the file path
 	[ "$EDITOR" ] && EDITOR="${EDITOR##*/}"
