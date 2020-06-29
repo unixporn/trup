@@ -1,8 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"log"
+	"net/http"
+	"path/filepath"
+	"strings"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -46,15 +51,62 @@ func messageDelete(s *discordgo.Session, m *discordgo.MessageDelete) {
 		}
 	}
 
-	s.ChannelMessageSendEmbed(env.ChannelBotlog, &discordgo.MessageEmbed{
-		Author: &discordgo.MessageEmbedAuthor{
-			Name:    "Message Delete",
-			IconURL: message.Author.AvatarURL("128"),
+	// message.Attachments = append(message.Attachments, discordgo.MessageAttachment
+	var image *discordgo.MessageEmbedImage
+	var video *discordgo.MessageEmbedVideo
+	var files []*discordgo.File
+	for _, att := range message.Attachments {
+		if att.Height > 0 {
+			const maxFileSize = 0xFFFFFF // 16MB
+			fmt.Println("ProxyURL:", att.ProxyURL)
+			resp, err := http.Get(att.ProxyURL)
+			if err != nil || resp.ContentLength > maxFileSize {
+				image = &discordgo.MessageEmbedImage{URL: att.ProxyURL}
+				break
+			}
+
+			buff := make([]byte, 512)
+			_, err = resp.Body.Read(buff)
+			if err != nil {
+				fmt.Println("errRead: ", err)
+				break
+			}
+			contentType := http.DetectContentType(buff)
+			fmt.Println("contentType", contentType)
+
+			ext := filepath.Ext(resp.Request.URL.Path)
+			if ext == "" {
+				ext = ".png"
+			}
+			files = append(files, &discordgo.File{
+				Name:   "file" + ext,
+				Reader: io.LimitReader(io.MultiReader(bytes.NewReader(buff), resp.Body), maxFileSize),
+			})
+
+			if strings.Split(contentType, "/")[0] == "video" {
+				video = &discordgo.MessageEmbedVideo{URL: "attachment://" + files[0].Name}
+			} else {
+				image = &discordgo.MessageEmbedImage{URL: "attachment://" + files[0].Name}
+			}
+			break
+		}
+	}
+	fmt.Printf("image: %#v;\nvideo: %#v\n", image, video)
+
+	s.ChannelMessageSendComplex(env.ChannelBotlog, &discordgo.MessageSend{
+		Embed: &discordgo.MessageEmbed{
+			Author: &discordgo.MessageEmbedAuthor{
+				Name:    "Message Delete",
+				IconURL: message.Author.AvatarURL("128"),
+			},
+			Title:       fmt.Sprintf("%s#%s(%s)", message.Author.Username, message.Author.Discriminator, message.Author.ID),
+			Description: message.Content,
+			Image:       image,
+			Video:       video,
+			Timestamp:   messageCreationDate.UTC().Format(dateFormat),
+			Footer:      footer,
 		},
-		Title:       fmt.Sprintf("%s#%s(%s)", message.Author.Username, message.Author.Discriminator, message.Author.ID),
-		Description: message.Content,
-		Timestamp:   messageCreationDate.UTC().Format(dateFormat),
-		Footer:      footer,
+		Files: files,
 	})
 }
 
