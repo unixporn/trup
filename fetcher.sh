@@ -61,9 +61,9 @@ if [ "$kernel" = "Linux" ]; then
 				-e "[x]monad")
 	}
 
-	# hardware
-	cpu="$(awk -F': ' '/model name\t: /{print $2;exit} ' "/proc/cpuinfo")"
-	ram="$(awk '/[^0-9]* / {print $2" "$3;exit} ' "/proc/meminfo")"
+       # hardware
+       cpu="$(awk -F': ' '/model name\t: /{print $2;exit} ' "/proc/cpuinfo")"
+       ram="$(awk '/[^0-9]* / {print $2" "$3;exit} ' "/proc/meminfo")"
 
        #gpu
        gpu="$(lspci -mm | grep -i 'vga\|display' | grep -o '\[[^"]*' | tr -d '[]' \
