@@ -25,7 +25,7 @@ func setFetch(ctx *Context, args []string) {
 			if err.Error() == pgx.ErrNoRows.Error() {
 				ctx.Reply("Cannot update fetch; No existing fetch data found")
 			} else {
-				ctx.ReportError("Failed to get existing fetch data", err);
+				ctx.ReportError("Failed to get existing fetch data", err)
 			}
 			return
 		}
