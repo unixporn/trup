@@ -1,6 +1,8 @@
 package command
 
 import (
+	"encoding/json"
+	"log"
 	"strings"
 	"trup/db"
 
@@ -271,13 +273,23 @@ sysinfoEnd:
 
 	_, err = ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed)
 	if err != nil {
-		if restErr, ok := err.(discordgo.RESTError); ok {
-			if restErr.Response.StatusCode == 400 {
-				if info.Info.Image != "" {
-					embed.Image = nil
-				}
-				ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed)
+		var retry bool
+		if restErr, ok := err.(*discordgo.RESTError); ok {
+			var embedErr embedError
+			if err := json.Unmarshal(restErr.ResponseBody, &embedErr); err != nil {
+				log.Printf("Failed to unmarshal RESTError to embedError, err: %s\n", err)
+				return
 			}
+			for _, field := range embedErr.Embed {
+				if field == "image" {
+					embed.Image = nil
+					retry = true
+				}
+			}
+		}
+
+		if retry {
+			ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed)
 		}
 	}
 }
