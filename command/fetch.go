@@ -46,12 +46,17 @@ func setFetch(ctx *Context, args []string) {
 	}
 	for i := 1; i < len(lines); i++ {
 		kI := strings.Index(lines[i], ":")
-		if kI == -1 || strings.HasPrefix(lines[i], "http") {
+		if kI == -1 {
 			continue
 		}
 
 		key := lines[i][:kI]
 		value := strings.TrimSpace(lines[i][kI+1:])
+
+		if isValidUrl(lines[i]) {
+			data.Image = lines[i]
+			continue
+		}
 
 		if addr, found := m[key]; found {
 			*addr = value
@@ -264,7 +269,17 @@ func fetch(ctx *Context, args []string) {
 sysinfoEnd:
 	embed.Fields = append(embed.Fields, profileFields...)
 
-	ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed)
+	_, err = ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed)
+	if err != nil {
+		if restErr, ok := err.(discordgo.RESTError); ok {
+			if restErr.Response.StatusCode == 400 {
+				if info.Info.Image != "" {
+					embed.Image = nil
+				}
+				ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed)
+			}
+		}
+	}
 }
 
 func getDistroImage(name string) string {
