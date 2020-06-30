@@ -39,12 +39,17 @@ func role(ctx *Context, args []string) {
 		ctx.Reply("Invalid number")
 		return
 	}
-	roleId := ctx.Env.RoleColors[number]
+	roleID := ctx.Env.RoleColors[number]
+	addRole := true
 
 	for _, r := range ctx.Message.Member.Roles {
+		if r == roleID {
+			addRole = false
+		}
+
 		for _, cr := range ctx.Env.RoleColors {
 			if r == cr {
-				err = ctx.Session.GuildMemberRoleRemove(ctx.Message.GuildID, ctx.Message.Author.ID, cr)
+				err = ctx.Session.GuildMemberRoleRemove(ctx.Message.GuildID, ctx.Message.Author.ID, r)
 				if err != nil {
 					log.Printf("Failed to remove user(%s)'s color role(%s)\n", ctx.Message.Author.ID, cr)
 				}
@@ -52,10 +57,12 @@ func role(ctx *Context, args []string) {
 		}
 	}
 
-	err = ctx.Session.GuildMemberRoleAdd(ctx.Message.GuildID, ctx.Message.Author.ID, roleId)
-	if err != nil {
-		ctx.ReportError("Failed to assign you the role", err)
-		return
+	if addRole {
+		err = ctx.Session.GuildMemberRoleAdd(ctx.Message.GuildID, ctx.Message.Author.ID, roleID)
+		if err != nil {
+			ctx.ReportError("Failed to assign you the role", err)
+			return
+		}
 	}
 
 	ctx.Reply("Success.")
