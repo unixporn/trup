@@ -46,7 +46,7 @@ func setFetch(ctx *Context, args []string) {
 	}
 	for i := 1; i < len(lines); i++ {
 		kI := strings.Index(lines[i], ":")
-		if kI == -1 {
+		if kI == -1 || strings.HasPrefix(lines[i], "http") {
 			continue
 		}
 
@@ -69,6 +69,13 @@ func setFetch(ctx *Context, args []string) {
 		default:
 			ctx.Reply("key '" + key + "' is not valid")
 			return
+		}
+	}
+
+	for _, a := range ctx.Message.Embeds {
+		if a.Type == "image" {
+			data.Image = a.URL
+			break
 		}
 	}
 
