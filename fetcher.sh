@@ -61,18 +61,18 @@ if [ "$kernel" = "Linux" ]; then
 				-e "[x]monad")
 	}
 
-       # hardware
-       cpu="$(awk -F': ' '/model name\t: /{print $2;exit} ' "/proc/cpuinfo")"
-       ram="$(awk '/[^0-9]* / {print $2" "$3;exit} ' "/proc/meminfo")"
+	# hardware
+	cpu="$(awk -F': ' '/model name\t: /{print $2;exit} ' "/proc/cpuinfo")"
+	ram="$(awk '/[^0-9]* / {print $2" "$3;exit} ' "/proc/meminfo")"
 
-       # gpu
-       if command -v lspci >/dev/null; then
-       		gpu="$(lspci -mm | grep -i 'vga\|display' | grep -o '\[[^"]*' | tr -d '[]' \
-             	  | grep -iv 'ali\|amd/ati' | sed -e 's#[a-zA-Z0-9]\+/.* ##' -e 's#[a-zA-Z0-9]\+/.*##' -e 's/(.*//')"
+	# gpu
+	if command -v lspci >/dev/null; then
+		gpu="$(lspci -mm | grep -i 'vga\|display' | grep -o '\[[^"]*' | tr -d '[]' \
+		  | grep -iv 'ali\|amd/ati' | sed -e 's#[a-zA-Z0-9]\+/.* ##' -e 's#[a-zA-Z0-9]\+/.*##' -e 's/(.*//')"
            	# intel iGPU fallback
-           	[ ! "$gpu" ] && gpu="$(lspci -mm | grep -i 'vga' \
-             	  | grep -io 'intel.*ion" "[^"]*' | sed -e 's/Corp.*"//' -e 's/Control.*//')"
-       fi
+		[ ! "$gpu" ] && gpu="$(lspci -mm | grep -i 'vga' \
+		  | grep -io 'intel.*ion" "[^"]*' | sed -e 's/Corp.*"//' -e 's/Control.*//')"
+	fi
 
 
 	# editor, remove the file path
