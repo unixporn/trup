@@ -10,6 +10,7 @@ import (
 
 type SysinfoData struct {
 	Cpu             string
+	Gpu             string
 	Kernel          string
 	Distro          string
 	DeWm            string
