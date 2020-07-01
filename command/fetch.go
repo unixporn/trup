@@ -1,6 +1,8 @@
 package command
 
 import (
+	"encoding/json"
+	"log"
 	"strings"
 	"trup/db"
 
@@ -53,6 +55,11 @@ func setFetch(ctx *Context, args []string) {
 		key := lines[i][:kI]
 		value := strings.TrimSpace(lines[i][kI+1:])
 
+		if isValidUrl(lines[i]) {
+			data.Image = lines[i]
+			continue
+		}
+
 		if addr, found := m[key]; found {
 			*addr = value
 			continue
@@ -69,6 +76,13 @@ func setFetch(ctx *Context, args []string) {
 		default:
 			ctx.Reply("key '" + key + "' is not valid")
 			return
+		}
+	}
+
+	for _, a := range ctx.Message.Embeds {
+		if a.Type == "image" {
+			data.Image = a.URL
+			break
 		}
 	}
 
@@ -257,7 +271,27 @@ func fetch(ctx *Context, args []string) {
 sysinfoEnd:
 	embed.Fields = append(embed.Fields, profileFields...)
 
-	ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed)
+	_, err = ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed)
+	if err != nil {
+		var retry bool
+		if restErr, ok := err.(*discordgo.RESTError); ok {
+			var embedErr embedError
+			if err := json.Unmarshal(restErr.ResponseBody, &embedErr); err != nil {
+				log.Printf("Failed to unmarshal RESTError to embedError, err: %s\n", err)
+				return
+			}
+			for _, field := range embedErr.Embed {
+				if field == "image" {
+					embed.Image = nil
+					retry = true
+				}
+			}
+		}
+
+		if retry {
+			ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed)
+		}
+	}
 }
 
 func getDistroImage(name string) string {
