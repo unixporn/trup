@@ -211,6 +211,9 @@ func (ctx *Context) isModerator() bool {
 }
 
 func isValidUrl(toTest string) bool {
+	if !strings.HasPrefix(toTest, "http") {
+		return false
+	}
 	u, err := url.Parse(toTest)
 	return err == nil && u.Scheme != "" && u.Host != ""
 }
