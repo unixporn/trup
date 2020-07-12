@@ -24,9 +24,14 @@ EOF
 if [ "$kernel" = "Linux" ]; then
 	# get distro
 	# name is saved in the $NAME variable
-	. "/etc/os-release"
-	. "/etc/artix-release" # add support for Artix.
-
+	if [[ -f "/etc/os-release" ]] then
+		. "/etc/os-release"
+	fi
+	# Artix support --- On artix
+	# /etc/os-release doesnt exist
+	if [[ ! -f "/etc/os-release" ]] then
+		. "/etc/artix-release"
+	fi
 	# get display protocol
 	[ "$DISPLAY" ] && displayprot="x11"
 	[ "$WAYLAND_DISPLAY" ] && displayprot="wayland"
