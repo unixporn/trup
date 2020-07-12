@@ -25,6 +25,7 @@ if [ "$kernel" = "Linux" ]; then
 	# get distro
 	# name is saved in the $NAME variable
 	. "/etc/os-release"
+	. "/etc/artix-release" # add support for Artix.
 
 	# get display protocol
 	[ "$DISPLAY" ] && displayprot="x11"
