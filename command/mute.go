@@ -7,7 +7,7 @@ import (
 	"trup/db"
 )
 
-const muteUsage = "warn <@user> <duration> [reason]"
+const muteUsage = "mute <@user> <duration> [reason]"
 
 func mute(ctx *Context, args []string) {
 	if len(args) < 3 {
