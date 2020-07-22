@@ -106,6 +106,7 @@ var Commands = map[string]Command{
 var parseMentionRegexp = regexp.MustCompile(`<@!?(\d+)>`)
 
 // parseMention takes a Discord mention string and returns the id
+// returns empty string if id was not found
 func parseMention(mention string) string {
 	res := parseMentionRegexp.FindStringSubmatch(mention)
 	if len(res) < 2 {
@@ -172,7 +173,7 @@ func (ctx *Context) userFromString(str string) (*discordgo.Member, error) {
 }
 
 func (ctx *Context) Reply(msg string) {
-	_, err := ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" "+msg)
+	_, err := ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, msg)
 	if err != nil {
 		log.Printf("Failed to reply to message %s; Error: %s\n", ctx.Message.ID, err)
 	}

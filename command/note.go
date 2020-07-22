@@ -17,9 +17,11 @@ func note(ctx *Context, args []string) {
 		return
 	}
 
-	var (
-		about = parseMention(args[1])
-	)
+	about := parseMention(args[1])
+	if about == "" {
+		ctx.Reply("The first argument must be a user mention.")
+		return
+	}
 
 	if len(args) > 2 {
 		content := strings.Join(args[2:], " ")
@@ -31,19 +33,14 @@ func note(ctx *Context, args []string) {
 			return
 		}
 
-		ctx.Reply("noted.")
-		return
-	}
-
-	notes, err := db.GetNotes(about)
-	if err != nil {
-		ctx.Reply("failed to retrieve notes. Error: " + err.Error())
+		ctx.Reply("Success.")
 		return
 	}
 
 	aboutMember, err := ctx.Session.GuildMember(ctx.Message.GuildID, about)
+	notes, err := db.GetNotes(aboutMember.User.ID)
 	if err != nil {
-		ctx.ReportError("Failed to fetch member "+about, err)
+		ctx.ReportError("Failed to retrieve notes.", err)
 		return
 	}
 

@@ -38,7 +38,8 @@ func warn(ctx *Context, args []string) {
 		nth = " for the " + humanize.Ordinal(warnCount) + " time"
 	}
 
-	err = db.NewNote(ctx.Message.Author.ID, user, "User was warned for: "+reason).Save()
+	taker := ctx.Message.Author
+	err = db.NewNote(taker.ID, user, "User was warned for: "+reason).Save()
 	if err != nil {
 		log.Printf("Failed to save warning note. Error: %s\n", err)
 	}
@@ -49,5 +50,5 @@ func warn(ctx *Context, args []string) {
 	if reason != "" {
 		r = " with reason: " + reason
 	}
-    	ctx.Session.ChannelMessageSend(ctx.Env.ChannelModlog, fmt.Sprintf("<@%s> was warned by moderator <@%s> %s. They've been warned%s", user, ctx.Message.Author.ID, r, nth))
+	ctx.Session.ChannelMessageSend(ctx.Env.ChannelModlog, fmt.Sprintf("<@%s> was warned by moderator %s%s. They've been warned%s", user, taker.Username, r, nth))
 }

@@ -30,7 +30,7 @@ func purge(ctx *Context, args []string) {
 
 	from := parseMention(args[2])
 	if from == "" {
-		ctx.Reply("the second argument must be a user mention")
+		ctx.Reply("The second argument must be a user mention.")
 		return
 	}
 
@@ -46,7 +46,7 @@ Outer:
 	for i := 1; i < 10; i++ {
 		messages, err := ctx.Session.ChannelMessages(ctx.Message.ChannelID, 100, before, "", "")
 		if err != nil {
-			ctx.ReportError(fmt.Sprintf("could not fetch the 100 messages preceding message of id %s (likely missing permissions to read channel history)", before), err)
+			ctx.ReportError(fmt.Sprintf("could not fetch the 100 messages preceding message of id %s. (likely missing permissions to read channel history)", before), err)
 			if len(toDelete) > 0 {
 				break Outer
 			}
@@ -72,9 +72,9 @@ Outer:
 	}
 	err = ctx.Session.ChannelMessagesBulkDelete(ctx.Message.ChannelID, toDelete)
 	if err != nil {
-		ctx.ReportError("could not bulk delete messages (likely missing permissions)", err)
+		ctx.ReportError("Could not bulk delete messages. (likely missing permissions)", err)
 		return
 	}
 
-	ctx.Reply(fmt.Sprintf("Deleted %d messages", len(toDelete)))
+	ctx.Reply(fmt.Sprintf("Deleted %d messages.", len(toDelete)))
 }
