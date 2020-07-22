@@ -336,6 +336,7 @@ var distroImages = []struct {
 	{name: "fuduntu", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Fuduntu-logo.png/100px-Fuduntu-logo.png"},
 	{name: "geckolinux", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Tux.svg/35px-Tux.svg.png"},
 	{name: "gentoo", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Gentoo_Linux_logo_matte.svg/100px-Gentoo_Linux_logo_matte.svg.png"},
+	{name: "instantos", image: "https://media.githubusercontent.com/media/instantOS/instantLOGO/master/png/light.png"},
 	{name: "kali", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Kali_Linux_2.0_wordmark.svg/131px-Kali_Linux_2.0_wordmark.svg.png"},
 	{name: "kanotix", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Kanotix-hellfire.png/300px-Kanotix-hellfire.png"},
 	{name: "kaos", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/KaOS_201603.png/300px-KaOS_201603.png"},
