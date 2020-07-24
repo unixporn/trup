@@ -25,4 +25,7 @@ pkgs.stdenv.mkDerivation {
 		createdb trup
 		psql trup <$PWD/db/structure.sql
 	'';
+
+  # needed by initdb on non-NixOS systems
+	LOCALE_ARCHIVE = if pkgs.stdenv.isLinux then "${pkgs.glibcLocales}/lib/locale/locale-archive" else "";
 }
