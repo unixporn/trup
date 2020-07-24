@@ -49,6 +49,7 @@ func main() {
 	discord.AddHandler(messageCreate)
 	discord.AddHandler(messageDelete)
 	discord.AddHandler(messageUpdate)
+	discord.AddHandler(messageReactionAdd)
 
 	err = discord.Open()
 	if err != nil {
@@ -61,6 +62,37 @@ func main() {
 	<-sc
 
 	discord.Close()
+}
+
+func messageReactionAdd(s *discordgo.Session, m *discordgo.MessageReactionAdd) {
+	botID := s.State.User.ID
+	if m.UserID == botID {
+		return
+	}
+	message, err := s.ChannelMessage(m.ChannelID, m.MessageID)
+	if err != nil {
+		return
+	}
+
+	isPoll := false
+	for _, embed := range message.Embeds {
+		if embed.Title == "Poll:" {
+			isPoll = true
+		}
+	}
+
+	if !isPoll || message.Author.ID != botID {
+		return
+	}
+
+	for _, reaction := range message.Reactions {
+		if reaction.Emoji.Name != m.Emoji.Name {
+			err := s.MessageReactionRemove(m.ChannelID, m.MessageID, reaction.Emoji.Name, m.UserID)
+			if err != nil {
+				return
+			}
+		}
+	}
 }
 
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
