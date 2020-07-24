@@ -47,6 +47,11 @@ CREATE TABLE IF NOT EXISTS profile (
     primary key (usr)
 );
 
+CREATE TABLE IF NOT EXISTS blocked_regexes (
+	pattern varchar,
+	primary key (pattern)
+);
+
 CREATE OR REPLACE PROCEDURE sysinfo_set(_usr varchar, _info jsonb, _modify_date timestamptz, _create_date timestamptz)
 language plpgsql
 AS $$

@@ -84,6 +84,11 @@ var Commands = map[string]Command{
 		Exec:  poll,
 		Usage: pollUsage,
 	},
+	"blocklist": moderatorOnly(Command{
+		Exec:  blocklist,
+		Usage: blocklistUsage,
+		Help:  blocklistHelp,
+	}),
 	"purge": moderatorOnly(Command{
 		Exec:  purge,
 		Usage: purgeUsage,

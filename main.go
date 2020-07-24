@@ -106,6 +106,25 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
+	isByModerator := false
+	for _, r := range m.Member.Roles {
+		if r == env.RoleMod {
+			isByModerator = true
+		}
+	}
+
+	if !isByModerator {
+		hasBlockedWords, err := db.ContainsBlockedWords(m.Message.Content)
+		if err != nil {
+			return
+		}
+
+		if hasBlockedWords {
+			s.ChannelMessageDelete(m.ChannelID, m.ID)
+			return
+		}
+	}
+
 	cache.add(m.ID, *m.Message)
 
 	if m.ChannelID == env.ChannelShowcase {
