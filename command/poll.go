@@ -36,5 +36,6 @@ func poll(ctx *Context, args []string) {
 	}
 
 	ctx.Session.MessageReactionAdd(pollMessage.ChannelID, pollMessage.ID, "✅")
+	ctx.Session.MessageReactionAdd(pollMessage.ChannelID, pollMessage.ID, "🤷")
 	ctx.Session.MessageReactionAdd(pollMessage.ChannelID, pollMessage.ID, "❎")
 }
