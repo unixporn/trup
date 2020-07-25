@@ -85,7 +85,7 @@ var Commands = map[string]Command{
 		Exec:  poll,
 		Usage: pollUsage,
 	},
-	"blocklist": modPrivateOnly(moderatorOnly(Command{
+	"blocklist": moderatorOnly(modPrivateOnly(Command{
 		Exec:  blocklist,
 		Usage: blocklistUsage,
 		Help:  blocklistHelp,

@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"errors"
 	"regexp"
 	"strings"
 )

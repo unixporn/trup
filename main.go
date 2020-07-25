@@ -107,8 +107,6 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	cache.add(m.ID, *m.Message)
-
 	isByModerator := false
 	for _, r := range m.Member.Roles {
 		if r == env.RoleMod {
@@ -117,21 +115,12 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	if !isByModerator {
-		matchedString, err := db.FindBlockedWordMatch(m.Message.Content)
-		if err != nil {
-			log.Printf("Failed to check if message \"%s\" contains blocked words\n%s\n", m.Content, err)
-			return
-		}
-
-		if matchedString != "" {
-			err := s.ChannelMessageDelete(m.ChannelID, m.ID)
-			if err != nil {
-				log.Printf("Failed to delete message by \"%s\" containing blocked words\n%s\n", m.Author.Username, err)
-			}
-			logMessageAutodelete(s, m, matchedString)
+		if runMessageFilter(s, m) {
 			return
 		}
 	}
+
+	cache.add(m.ID, *m.Message)
 
 	if m.ChannelID == env.ChannelShowcase {
 		var validSubmission bool
@@ -286,6 +275,25 @@ func cleanupMutesLoop(s *discordgo.Session) {
 			}
 		}
 	}
+}
+
+func runMessageFilter(s *discordgo.Session, m *discordgo.MessageCreate) bool {
+	matchedString, err := db.FindBlockedWordMatch(m.Message.Content)
+	if err != nil {
+		log.Printf("Failed to check if message \"%s\" contains blocked words\n%s\n", m.Content, err)
+		return false
+	}
+
+	if matchedString != "" {
+		err := s.ChannelMessageDelete(m.ChannelID, m.ID)
+		if err != nil {
+			log.Printf("Failed to delete message by \"%s\" containing blocked words\n%s\n", m.Author.Username, err)
+			return false
+		}
+		logMessageAutodelete(s, m, matchedString)
+		return true
+	}
+	return false
 }
 
 func logMessageAutodelete(s *discordgo.Session, m *discordgo.MessageCreate, matchedString string) {
