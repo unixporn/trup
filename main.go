@@ -115,7 +115,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	if !isByModerator {
-		if runMessageFilter(s, m) {
+		if wasDeleted := runMessageFilter(s, m); wasDeleted {
 			return
 		}
 	}
@@ -277,7 +277,7 @@ func cleanupMutesLoop(s *discordgo.Session) {
 	}
 }
 
-func runMessageFilter(s *discordgo.Session, m *discordgo.MessageCreate) bool {
+func runMessageFilter(s *discordgo.Session, m *discordgo.MessageCreate) (deleted bool) {
 	matchedString, err := db.FindBlockedWordMatch(m.Message.Content)
 	if err != nil {
 		log.Printf("Failed to check if message \"%s\" contains blocked words\n%s\n", m.Content, err)
