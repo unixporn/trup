@@ -29,7 +29,7 @@ func AddToBlocklist(pattern string) error {
 		return err
 	}
 
-	_, err = db.Query(context.Background(), "INSERT INTO blocked_regexes VALUES ($1)", pattern)
+	_, err = db.Exec(context.Background(), "INSERT INTO blocked_regexes VALUES ($1)", pattern)
 	if err != nil {
 		return err
 	}
@@ -38,15 +38,12 @@ func AddToBlocklist(pattern string) error {
 }
 
 func RemoveFromBlocklist(pattern string) (bool, error) {
-	rows, err := db.Query(context.Background(), "DELETE FROM blocked_regexes WHERE pattern = $1 RETURNING *;", pattern)
+	commandTag, err := db.Exec(context.Background(), "DELETE FROM blocked_regexes WHERE pattern = $1 RETURNING *;", pattern)
 	if err != nil {
 		return false, err
 	}
-	// apparently, the database will only be updated after this is ran
-	hasNext := rows.Next()
 	updatePatternCache()
-
-	return hasNext, nil
+	return commandTag.RowsAffected() > 0, nil
 }
 
 func FindBlockedWordMatch(message string) (string, error) {

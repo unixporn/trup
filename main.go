@@ -106,6 +106,8 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
+	cache.add(m.ID, *m.Message)
+
 	isByModerator := false
 	for _, r := range m.Member.Roles {
 		if r == env.RoleMod {
@@ -129,8 +131,6 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			return
 		}
 	}
-
-	cache.add(m.ID, *m.Message)
 
 	if m.ChannelID == env.ChannelShowcase {
 		var validSubmission bool
