@@ -7,13 +7,14 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 )
 
 var (
-	fileExpirationMinutes = 5
-	imageLogFilePath      = "./imageLog"
+	fileExpiration   = time.Minute
+	imageLogFilePath = "./imageLog"
 )
 
 func StoreImage(message *discordgo.Message, attachment *discordgo.MessageAttachment) error {
@@ -80,13 +81,8 @@ func GetStoredImages(channelId string, messageId string) ([]*discordgo.File, err
 func PopExpiredImageLogs() ([]CachedFile, error) {
 	rows, err := db.Query(
 		context.Background(),
-		`SELECT filename, attachment_id FROM image_log_files 
-     WHERE 
-      ( DATE_PART('day',    CURRENT_TIMESTAMP - create_date) * 60 * 24 
-      + DATE_PART('hour',   CURRENT_TIMESTAMP - create_date) * 60 
-      + DATE_PART('minute', CURRENT_TIMESTAMP - create_date)
-      ) > $1`,
-		fileExpirationMinutes,
+		"SELECT filename, attachment_id FROM image_log_files WHERE CURRENT_TIMESTAMP - create_date > $1",
+		fileExpiration,
 	)
 	if err != nil {
 		return nil, err
@@ -104,13 +100,8 @@ func PopExpiredImageLogs() ([]CachedFile, error) {
 
 	_, err = db.Exec(
 		context.Background(),
-		`DELETE FROM image_log_files 
-     WHERE 
-      ( DATE_PART('day',    CURRENT_TIMESTAMP - create_date) * 60 * 24 
-      + DATE_PART('hour',   CURRENT_TIMESTAMP - create_date) * 60 
-      + DATE_PART('minute', CURRENT_TIMESTAMP - create_date)
-      ) > $1`,
-		fileExpirationMinutes,
+		"DELETE FROM image_log_files WHERE CURRENT_TIMESTAMP - create_date > $1",
+		fileExpiration,
 	)
 	if err != nil {
 		log.Printf("Failed to pop expired images from database: %s", err)
