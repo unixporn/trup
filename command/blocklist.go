@@ -13,18 +13,18 @@ const (
 
 func blocklist(ctx *Context, args []string) {
 	if len(args) < 2 {
-		ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, fmt.Sprintf("Not enough arguments"))
+		ctx.Reply("Not enough arguments")
 		return
 	}
 	switch args[1] {
 	case "add":
 		if len(args) < 3 {
-			ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, fmt.Sprintf("Please give me your pattern"))
+			ctx.Reply(blocklistUsage)
 			return
 		}
 		pattern := strings.Join(args[2:], " ")
 		if pattern[0] != '`' || pattern[len(pattern)-1] != '`' {
-			ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, fmt.Sprintf("Please surround the pattern with `"))
+			ctx.Reply("Please surround the pattern with `")
 			return
 		}
 
@@ -32,10 +32,10 @@ func blocklist(ctx *Context, args []string) {
 
 		err := db.AddToBlocklist(pattern)
 		if err != nil {
-			ctx.ReportError("Failed to add your pattern", err)
+			ctx.ReportError(fmt.Sprintf("Failed to add your pattern\n%s", err.Error()), err)
 			return
 		}
-		ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, fmt.Sprintf("the pattern `%s` has been added to the blocklist", pattern))
+		ctx.Reply(fmt.Sprintf("the pattern `%s` has been added to the blocklist", pattern))
 	case "get":
 		patterns, err := db.GetBlocklist()
 		if err != nil {
@@ -46,12 +46,12 @@ func blocklist(ctx *Context, args []string) {
 
 	case "remove":
 		if len(args) < 3 {
-			ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, fmt.Sprintf("Please give me your pattern"))
+			ctx.Reply("Please give me your pattern")
 			return
 		}
 		pattern := strings.Join(args[2:], " ")
 		if pattern[0] != '`' || pattern[len(pattern)-1] != '`' {
-			ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, fmt.Sprintf("Please surround the pattern with `"))
+			ctx.Reply("Please surround the pattern with backticks (`)")
 			return
 		}
 
@@ -63,12 +63,12 @@ func blocklist(ctx *Context, args []string) {
 			return
 		}
 		if !didDelete {
-			ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, fmt.Sprintf("Couldn't find `%s` in the blocklist", pattern))
+			ctx.Reply(fmt.Sprintf("Couldn't find `%s` in the blocklist", pattern))
 			return
 		}
 		ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, fmt.Sprintf("the pattern `%s` has been removed from the blocklist", pattern))
 
 	default:
-		ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, fmt.Sprintf("Unknown subcommand"))
+		ctx.Reply(blocklistUsage)
 	}
 }

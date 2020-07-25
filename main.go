@@ -116,11 +116,15 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if !isByModerator {
 		hasBlockedWords, err := db.ContainsBlockedWords(m.Message.Content)
 		if err != nil {
+			log.Printf("Failed to check if message \"%s\" contains blocked words\n%s\n", m.Content, err)
 			return
 		}
 
 		if hasBlockedWords {
-			s.ChannelMessageDelete(m.ChannelID, m.ID)
+			err := s.ChannelMessageDelete(m.ChannelID, m.ID)
+			if err != nil {
+				log.Printf("Failed to delete message by \"%s\" containing blocked words\n%s\n", m.Author.Username, err)
+			}
 			return
 		}
 	}

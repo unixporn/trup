@@ -23,66 +23,83 @@ func GetBlocklist() ([]string, error) {
 }
 
 func AddToBlocklist(pattern string) error {
-	_, err := db.Query(context.Background(), "INSERT INTO blocked_regexes VALUES ($1)", pattern)
-	_, _ = getRegexCache()
-	regexCache.addPattern(pattern)
-	return err
-}
-
-func RemoveFromBlocklist(pattern string) (bool, error) {
-	rows, err := db.Query(context.Background(), "DELETE FROM blocked_regexes WHERE pattern = $1", pattern)
-	if err != nil {
-		return false, err
-	}
-	rows.Next()
-	values, err := rows.Values()
-	if err != nil {
-		return false, err
-	}
-	return values[0].(int) > 0, nil
-}
-
-type RegexCache struct {
-	patterns        []string
-	combinedPattern regexp.Regexp
-}
-
-var regexCache *RegexCache
-
-func (cache *RegexCache) addPattern(pattern string) error {
-	cache.patterns = append(cache.patterns, pattern)
-	regex, err := regexp.Compile(strings.Join(cache.patterns, "|"))
+	// check if the regex is actually valid
+	_, err := regexp.Compile(pattern)
 	if err != nil {
 		return err
 	}
-	cache.combinedPattern = *regex
+
+	_, err = db.Query(context.Background(), "INSERT INTO blocked_regexes VALUES ($1)", pattern)
+	if err != nil {
+		return err
+	}
+	addPatternToCache(pattern)
 	return nil
 }
 
-func getRegexCache() (*RegexCache, error) {
-	if regexCache == nil {
-		patterns, err := GetBlocklist()
-		if err != nil {
-			return nil, err
-		}
-		regex, err := regexp.Compile(strings.Join(patterns, "|"))
-		if err != nil {
-			return nil, err
-		}
-
-		regexCache = &RegexCache{
-			patterns:        patterns,
-			combinedPattern: *regex,
-		}
-
-	}
-	return regexCache, nil
-}
-
-func ContainsBlockedWords(message string) (bool, error) {
-	cache, err := getRegexCache()
+func RemoveFromBlocklist(pattern string) (bool, error) {
+	rows, err := db.Query(context.Background(), "DELETE FROM blocked_regexes WHERE pattern = $1 RETURNING *;", pattern)
 	if err != nil {
 		return false, err
 	}
-	return cache.combinedPattern.MatchString(message), nil
+	// apparently, the database will only be updated after this is ran
+	hasNext := rows.Next()
+	updatePatternCache()
+
+	return hasNext, nil
+}
+
+func ContainsBlockedWords(message string) (bool, error) {
+	blockRegex, err := getBlockRegex()
+	return blockRegex.MatchString(message), err
+}
+
+var patternCache *regexp.Regexp
+
+func updatePatternCache() error {
+	patterns, err := GetBlocklist()
+	if err != nil {
+		return err
+	}
+	if len(patterns) == 0 {
+		// this regex should never match anything.
+		// If the blocklist is empty, we need to make sure nothing is deleted.
+		patternCache = regexp.MustCompile("a^")
+	} else {
+		regex, err := compileCombinedPatternRegex(patterns)
+		if err != nil {
+			return err
+		}
+		patternCache = regex
+	}
+	return nil
+}
+
+func addPatternToCache(pattern string) error {
+	patterns, err := GetBlocklist()
+	if err != nil {
+		return err
+	}
+	patterns = append(patterns, pattern)
+	regex, err := compileCombinedPatternRegex(patterns)
+	if err != nil {
+		return err
+	}
+	patternCache = regex
+	return nil
+}
+
+func getBlockRegex() (*regexp.Regexp, error) {
+	if patternCache == nil {
+		err := updatePatternCache()
+		if err != nil {
+			return nil, err
+		}
+	}
+	return patternCache, nil
+}
+
+func compileCombinedPatternRegex(patterns []string) (*regexp.Regexp, error) {
+	regex, err := regexp.Compile("(?i)" + strings.Join(patterns, "|"))
+	return regex, err
 }
