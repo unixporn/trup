@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	blocklistUsage = "blocklist <add|remove|get> [regex]"
+	blocklistUsage = "blocklist <add|remove|list> [regex]"
 	blocklistHelp  = "Run commands related to the blocklist"
 )
 
@@ -17,7 +17,7 @@ func blocklist(ctx *Context, args []string) {
 		return
 	}
 	switch args[1] {
-	case "get":
+	case "list", "get":
 		blocklistGet(ctx)
 	case "add":
 		if len(args) < 3 {

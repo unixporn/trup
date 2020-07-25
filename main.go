@@ -17,13 +17,14 @@ import (
 var (
 	prefix = "!"
 	env    = command.Env{
-		RoleMod:         os.Getenv("ROLE_MOD"),
-		RoleColors:      strings.Split(os.Getenv("ROLE_COLORS"), ","),
-		ChannelShowcase: os.Getenv("CHANNEL_SHOWCASE"),
-		RoleMute:        os.Getenv("ROLE_MUTE"),
-		ChannelBotlog:   os.Getenv("CHANNEL_BOTLOG"),
-		ChannelFeedback: os.Getenv("CHANNEL_FEEDBACK"),
-		ChannelModlog:   os.Getenv("CHANNEL_MODLOG"),
+		RoleMod:            os.Getenv("ROLE_MOD"),
+		RoleColors:         strings.Split(os.Getenv("ROLE_COLORS"), ","),
+		ChannelShowcase:    os.Getenv("CHANNEL_SHOWCASE"),
+		RoleMute:           os.Getenv("ROLE_MUTE"),
+		ChannelBotlog:      os.Getenv("CHANNEL_BOTLOG"),
+		ChannelFeedback:    os.Getenv("CHANNEL_FEEDBACK"),
+		ChannelModlog:      os.Getenv("CHANNEL_MODLOG"),
+		CategoryModPrivate: os.Getenv("CATEGORY_MOD_PRIVATE"),
 	}
 	botId string
 	cache = newMessageCache(5000)
