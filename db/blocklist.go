@@ -49,9 +49,10 @@ func RemoveFromBlocklist(pattern string) (bool, error) {
 	return hasNext, nil
 }
 
-func ContainsBlockedWords(message string) (bool, error) {
+func FindBlockedWordMatch(message string) (string, error) {
 	blockRegex, err := getBlockRegex()
-	return blockRegex.MatchString(message), err
+	submatch := blockRegex.FindString(message)
+	return submatch, err
 }
 
 var patternCache *regexp.Regexp

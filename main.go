@@ -114,18 +114,18 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	if !isByModerator {
-		hasBlockedWords, err := db.ContainsBlockedWords(m.Message.Content)
+		matchedString, err := db.FindBlockedWordMatch(m.Message.Content)
 		if err != nil {
 			log.Printf("Failed to check if message \"%s\" contains blocked words\n%s\n", m.Content, err)
 			return
 		}
 
-		if hasBlockedWords {
+		if matchedString != "" {
 			err := s.ChannelMessageDelete(m.ChannelID, m.ID)
 			if err != nil {
 				log.Printf("Failed to delete message by \"%s\" containing blocked words\n%s\n", m.Author.Username, err)
 			}
-			logMessageAutodelete(s, m)
+			logMessageAutodelete(s, m, matchedString)
 			return
 		}
 	}
@@ -287,7 +287,7 @@ func cleanupMutesLoop(s *discordgo.Session) {
 	}
 }
 
-func logMessageAutodelete(s *discordgo.Session, m *discordgo.MessageCreate) {
+func logMessageAutodelete(s *discordgo.Session, m *discordgo.MessageCreate, matchedString string) {
 	const dateFormat = "2006-01-02T15:04:05.0000Z"
 	messageCreationDate, _ := discordgo.SnowflakeTimestamp(m.ID)
 
@@ -303,7 +303,7 @@ func logMessageAutodelete(s *discordgo.Session, m *discordgo.MessageCreate) {
 			Name:    "Message Autodelete",
 			IconURL: m.Message.Author.AvatarURL("128"),
 		},
-		Title:       fmt.Sprintf("%s#%s(%s)", m.Message.Author.Username, m.Message.Author.Discriminator, m.Message.Author.ID),
+		Title:       fmt.Sprintf("%s#%s(%s) - deleted because of `%s`", m.Message.Author.Username, m.Message.Author.Discriminator, m.Message.Author.ID, matchedString),
 		Description: m.Message.Content,
 		Timestamp:   messageCreationDate.UTC().Format(dateFormat),
 		Footer:      footer,
