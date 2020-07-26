@@ -278,6 +278,13 @@ func cleanupMutesLoop(s *discordgo.Session) {
 }
 
 func runMessageFilter(s *discordgo.Session, m *discordgo.MessageCreate) (deleted bool) {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Printf("Recovered from runMessageFilter; err: %s\n", err)
+			deleted = false
+		}
+	}()
+
 	matchedString, err := db.FindBlockedWordMatch(m.Message.Content)
 	if err != nil {
 		log.Printf("Failed to check if message \"%s\" contains blocked words\n%s\n", m.Content, err)

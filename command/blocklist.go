@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	blocklistUsage = "blocklist <add|remove|list> [regex]"
+	blocklistUsage = "blocklist <add | remove | list> [regex]"
 	blocklistHelp  = "Run commands related to the blocklist"
 )
 
@@ -44,9 +44,9 @@ func blocklistAdd(ctx *Context, pattern string) {
 
 	pattern = pattern[1 : len(pattern)-1]
 
-	err := db.AddToBlocklist(pattern)
+	err := db.AddToBlocklist(ctx.Message.Author.ID, pattern)
 	if err != nil {
-		ctx.ReportError(fmt.Sprintf("Failed to add your pattern\n%s", err.Error()), err)
+		ctx.ReportError(fmt.Sprintf("Failed to add your pattern. %s", err.Error()), err)
 		return
 	}
 	ctx.Reply(fmt.Sprintf("the pattern `%s` has been added to the blocklist", pattern))

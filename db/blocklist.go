@@ -22,14 +22,14 @@ func GetBlocklist() ([]string, error) {
 	return patterns, nil
 }
 
-func AddToBlocklist(pattern string) error {
+func AddToBlocklist(moderator, pattern string) error {
 	// check if the regex is actually valid
 	_, err := regexp.Compile(pattern)
 	if err != nil {
 		return err
 	}
 
-	_, err = db.Exec(context.Background(), "INSERT INTO blocked_regexes VALUES ($1)", pattern)
+	_, err = db.Exec(context.Background(), "INSERT INTO blocked_regexes (pattern, added_by) VALUES ($1, $2)", pattern, moderator)
 	if err != nil {
 		return err
 	}
@@ -37,7 +37,7 @@ func AddToBlocklist(pattern string) error {
 	return nil
 }
 
-func RemoveFromBlocklist(pattern string) (bool, error) {
+func RemoveFromBlocklist(pattern string) (removed bool, err error) {
 	commandTag, err := db.Exec(context.Background(), "DELETE FROM blocked_regexes WHERE pattern = $1 RETURNING *;", pattern)
 	if err != nil {
 		return false, err
@@ -48,8 +48,12 @@ func RemoveFromBlocklist(pattern string) (bool, error) {
 
 func FindBlockedWordMatch(message string) (string, error) {
 	blockRegex, err := getBlockRegex()
+	if err != nil {
+		return "", err
+	}
+
 	submatch := blockRegex.FindString(message)
-	return submatch, err
+	return submatch, nil
 }
 
 var patternCache *regexp.Regexp
