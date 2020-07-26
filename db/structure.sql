@@ -58,9 +58,8 @@ CREATE TABLE IF NOT EXISTS attachment_log_cache (
 	message_id bigint not null,
 	attachment_id bigint not null,
 	filename varchar not null,
-	create_date timestamptz,
-	should_delete boolean,
-	object_id oid,
+	create_date timestamptz not null,
+	object_id oid not null,
 	primary key (attachment_id)
 );
 
