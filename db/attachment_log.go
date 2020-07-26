@@ -22,7 +22,7 @@ func StoreAttachment(message *discordgo.Message, attachment *discordgo.MessageAt
 		return nil
 	}
 
-	resp, err := http.Get(attachment.URL)
+	resp, err := http.Get(attachment.ProxyURL)
 	if err != nil {
 		return err
 	}
