@@ -123,7 +123,10 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	cache.add(m.ID, *m.Message)
 
 	for _, attachment := range m.Message.Attachments {
-		db.StoreImage(m.Message, attachment)
+		err := db.StoreImage(m.Message, attachment)
+		if err != nil {
+			log.Println(err)
+		}
 	}
 
 	if m.ChannelID == env.ChannelShowcase {
@@ -262,18 +265,18 @@ func cleanupLoop(s *discordgo.Session) {
 }
 
 func cleanupImageLog(s *discordgo.Session) {
-	files, err := db.PopExpiredImageLogs()
+	err := db.PopExpiredImageLogs()
 	if err != nil {
 		log.Printf("Error getting expired images %s\n", err)
 		return
 	}
-	for _, file := range files {
-		err = os.Remove(file.Filepath)
-		if err != nil {
-			log.Printf("Failed to delete file %s: %s\n", file.Filepath, err)
-			continue
-		}
-	}
+	//for _, file := range files {
+	//err = os.Remove(file.Filepath)
+	//if err != nil {
+	//log.Printf("Failed to delete file %s: %s\n", file.Filepath, err)
+	//continue
+	//}
+	//}
 }
 
 func cleanupMutes(s *discordgo.Session) {

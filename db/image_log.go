@@ -1,15 +1,14 @@
 package db
 
 import (
+	"bytes"
 	"context"
-	"fmt"
 	"io"
-	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/jackc/pgx/v4"
 )
 
 var (
@@ -22,20 +21,44 @@ func StoreImage(message *discordgo.Message, attachment *discordgo.MessageAttachm
 		return nil
 	}
 
-	err := DownloadFile(attachment.URL, imageLogFilePath+"/"+attachment.ID)
+	resp, err := http.Get(attachment.URL)
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 
 	messageSendTime, err := message.Timestamp.Parse()
 	if err != nil {
 		return err
 	}
 
+	tx, err := db.Begin(context.Background())
+	if err != nil {
+		return err
+	}
+	lo := tx.LargeObjects()
+	objectId, err := lo.Create(context.Background(), 0)
+	if err != nil {
+		return err
+	}
+	obj, err := lo.Open(context.Background(), objectId, pgx.LargeObjectModeWrite)
+	if err != nil {
+		return err
+	}
+	_, err = io.Copy(obj, resp.Body)
+	if err != nil {
+		return err
+	}
+	err = obj.Close()
+	if err != nil {
+		return err
+	}
+	tx.Commit(context.Background())
+
 	_, err = db.Exec(
 		context.Background(),
-		"INSERT INTO image_log_files (channel_id, message_id, attachment_id, filename, create_date) VALUES ($1, $2, $3, $4, $5)",
-		message.ChannelID, message.ID, attachment.ID, attachment.Filename, messageSendTime,
+		"INSERT INTO image_log_files (channel_id, message_id, attachment_id, filename, create_date, object_id) VALUES ($1, $2, $3, $4, $5, $6)",
+		message.ChannelID, message.ID, attachment.ID, attachment.Filename, messageSendTime, objectId,
 	)
 	if err != nil {
 		return err
@@ -44,58 +67,93 @@ func StoreImage(message *discordgo.Message, attachment *discordgo.MessageAttachm
 }
 
 type CachedFile struct {
-	Filepath     string
 	Filename     string
 	AttachmentId int64
+	objectId     uint32
 }
 
 func GetStoredImages(channelId string, messageId string) ([]*discordgo.File, error) {
 	rows, err := db.Query(
 		context.Background(),
-		"SELECT filename, attachment_id FROM image_log_files WHERE channel_id = $1 AND message_id = $2",
+		"SELECT object_id, attachment_id, filename FROM image_log_files WHERE channel_id = $1 AND message_id = $2",
 		channelId, messageId,
 	)
 	if err != nil {
 		return nil, err
 	}
+
+	defer rows.Close()
+
 	files := []*discordgo.File{}
 	for rows.Next() {
 		values, err := rows.Values()
 		if err != nil {
 			return nil, err
 		}
-		attachmentId := values[1].(int64)
-		cachedFile := CachedFile{Filepath: fmt.Sprintf("%s/%d", imageLogFilePath, attachmentId), Filename: values[0].(string), AttachmentId: attachmentId}
-		reader, err := os.Open(cachedFile.Filepath)
+		cachedFile := CachedFile{objectId: values[0].(uint32), AttachmentId: values[1].(int64), Filename: values[2].(string)}
 		if err != nil {
 			return nil, err
 		}
+
+		tx, err := db.Begin(context.Background())
+		if err != nil {
+			return nil, err
+		}
+		lo := tx.LargeObjects()
+		object, err := lo.Open(context.Background(), cachedFile.objectId, pgx.LargeObjectModeRead)
+		if err != nil {
+			return nil, err
+		}
+
+		buf := new(bytes.Buffer)
+		buf.ReadFrom(object)
+
+		object.Close()
+		tx.Commit(context.Background())
+
 		files = append(files, &discordgo.File{
 			Name:   cachedFile.Filename,
-			Reader: reader,
+			Reader: buf,
 		})
 	}
 	return files, nil
 }
 
-func PopExpiredImageLogs() ([]CachedFile, error) {
+func PopExpiredImageLogs() error {
+
 	rows, err := db.Query(
 		context.Background(),
-		"SELECT filename, attachment_id FROM image_log_files WHERE CURRENT_TIMESTAMP - create_date > $1",
+		"SELECT object_id FROM image_log_files WHERE CURRENT_TIMESTAMP - create_date > $1",
 		fileExpiration,
 	)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	files := []CachedFile{}
+
+	defer rows.Close()
+
 	for rows.Next() {
 		values, err := rows.Values()
 		if err != nil {
-			return nil, err
+			return err
 		}
-		attachmentId := values[1].(int64)
-		cachedFile := CachedFile{Filepath: fmt.Sprintf("%s/%d", imageLogFilePath, attachmentId), Filename: values[0].(string), AttachmentId: attachmentId}
-		files = append(files, cachedFile)
+
+		objectId := values[0].(uint32)
+		tx, err := db.Begin(context.Background())
+		if err != nil {
+			return err
+		}
+
+		lo := tx.LargeObjects()
+		err = lo.Unlink(context.Background(), objectId)
+		if err != nil {
+			return err
+		}
+		err = tx.Commit(context.Background())
+
+		if err != nil {
+			return nil
+		}
 	}
 
 	_, err = db.Exec(
@@ -104,35 +162,11 @@ func PopExpiredImageLogs() ([]CachedFile, error) {
 		fileExpiration,
 	)
 	if err != nil {
-		log.Printf("Failed to pop expired images from database: %s", err)
+		return err
 	}
-	return files, nil
+	return nil
 }
 
 func isImage(attachment *discordgo.MessageAttachment) bool {
 	return attachment.Height != 0 && attachment.Width != 0
-}
-
-func DownloadFile(url string, filepath string) error {
-	// Create the file
-	out, err := os.Create(filepath)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-
-	// Get the data
-	resp, err := http.Get(url)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	// Write the body to file
-	_, err = io.Copy(out, resp.Body)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

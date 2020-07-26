@@ -60,7 +60,7 @@ func messageDelete(s *discordgo.Session, m *discordgo.MessageDelete) {
 
 	imageFiles, err := db.GetStoredImages(m.ChannelID, m.Message.ID)
 	if err != nil {
-		log.Printf("error loading image files")
+		log.Printf("error loading image files: %s\n", err)
 		s.ChannelMessageSendEmbed(env.ChannelBotlog, messageEmbed)
 		return
 	}

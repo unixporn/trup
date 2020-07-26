@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS image_log_files (
 	filename varchar not null,
 	create_date timestamptz,
 	should_delete boolean,
+	object_id oid,
 	primary key (attachment_id)
 );
 
