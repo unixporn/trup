@@ -1,7 +1,6 @@
 package db
 
 import (
-	"bytes"
 	"context"
 	"io"
 	"log"
@@ -67,39 +66,47 @@ func StoreAttachment(message *discordgo.Message, attachment *discordgo.MessageAt
 	return nil
 }
 
-func GetStoredAttachments(channelId string, messageId string) ([]*discordgo.File, error) {
+func GetStoredAttachments(channelId string, messageId string) ([]*discordgo.File, func() error, error) {
 	rows, err := db.Query(
 		context.Background(),
 		"SELECT object_id, filename FROM attachment_log_cache WHERE channel_id = $1 AND message_id = $2",
 		channelId, messageId,
 	)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	defer rows.Close()
+
+	tx, err := db.Begin(context.Background())
+	if err != nil {
+		return nil, nil, err
+	}
 
 	files := []*discordgo.File{}
 	for rows.Next() {
 		values, err := rows.Values()
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		objectId := values[0].(uint32)
 		filename := values[1].(string)
 
-		fileBytes, err := loadBytesFromLargeObject(objectId)
+		readCloser, err := loadBytesFromLargeObject(tx, objectId)
 		if err != nil {
-			log.Printf("Error loading bytes from largeobject: %s\n", err)
+			log.Printf("Error loading reader from largeobject: %s\n", err)
 			continue
 		}
 
 		files = append(files, &discordgo.File{
 			Name:   filename,
-			Reader: fileBytes,
+			Reader: readCloser,
 		})
 	}
-	return files, nil
+	onFinish := func() error {
+		return tx.Commit(context.Background())
+	}
+	return files, onFinish, nil
 }
 
 func PruneExpiredAttachments() error {
@@ -137,23 +144,13 @@ func PruneExpiredAttachments() error {
 	return nil
 }
 
-func loadBytesFromLargeObject(objectId uint32) (*bytes.Buffer, error) {
-	tx, err := db.Begin(context.Background())
-	if err != nil {
-		return nil, err
-	}
+func loadBytesFromLargeObject(tx pgx.Tx, objectId uint32) (io.ReadCloser, error) {
 	lo := tx.LargeObjects()
 	object, err := lo.Open(context.Background(), objectId, pgx.LargeObjectModeRead)
 	if err != nil {
 		return nil, err
 	}
-
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(object)
-
-	object.Close()
-	tx.Commit(context.Background())
-	return buf, nil
+	return object, nil
 }
 
 func deleteLargeObject(objectId uint32) error {
