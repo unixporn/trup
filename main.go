@@ -265,7 +265,7 @@ func cleanupLoop(s *discordgo.Session) {
 }
 
 func cleanupImageLog(s *discordgo.Session) {
-	err := db.PopExpiredImageLogs()
+	err := db.PruneExpiredImageLogs()
 	if err != nil {
 		log.Printf("Error getting expired images %s\n", err)
 		return

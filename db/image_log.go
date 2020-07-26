@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"log"
 	"net/http"
 	"time"
 
@@ -36,6 +37,7 @@ func StoreImage(message *discordgo.Message, attachment *discordgo.MessageAttachm
 	if err != nil {
 		return err
 	}
+
 	lo := tx.LargeObjects()
 	objectId, err := lo.Create(context.Background(), 0)
 	if err != nil {
@@ -53,9 +55,8 @@ func StoreImage(message *discordgo.Message, attachment *discordgo.MessageAttachm
 	if err != nil {
 		return err
 	}
-	tx.Commit(context.Background())
 
-	_, err = db.Exec(
+	_, err = tx.Exec(
 		context.Background(),
 		"INSERT INTO image_log_files (channel_id, message_id, attachment_id, filename, create_date, object_id) VALUES ($1, $2, $3, $4, $5, $6)",
 		message.ChannelID, message.ID, attachment.ID, attachment.Filename, messageSendTime, objectId,
@@ -63,19 +64,14 @@ func StoreImage(message *discordgo.Message, attachment *discordgo.MessageAttachm
 	if err != nil {
 		return err
 	}
+	tx.Commit(context.Background())
 	return nil
-}
-
-type CachedFile struct {
-	Filename     string
-	AttachmentId int64
-	objectId     uint32
 }
 
 func GetStoredImages(channelId string, messageId string) ([]*discordgo.File, error) {
 	rows, err := db.Query(
 		context.Background(),
-		"SELECT object_id, attachment_id, filename FROM image_log_files WHERE channel_id = $1 AND message_id = $2",
+		"SELECT object_id, filename FROM image_log_files WHERE channel_id = $1 AND message_id = $2",
 		channelId, messageId,
 	)
 	if err != nil {
@@ -90,37 +86,24 @@ func GetStoredImages(channelId string, messageId string) ([]*discordgo.File, err
 		if err != nil {
 			return nil, err
 		}
-		cachedFile := CachedFile{objectId: values[0].(uint32), AttachmentId: values[1].(int64), Filename: values[2].(string)}
-		if err != nil {
-			return nil, err
-		}
+		objectId := values[0].(uint32)
+		filename := values[1].(string)
 
-		tx, err := db.Begin(context.Background())
+		fileBytes, err := loadBytesFromLargeObject(objectId)
 		if err != nil {
-			return nil, err
+			log.Printf("Error loading bytes from largeobject: %s\n", err)
+			continue
 		}
-		lo := tx.LargeObjects()
-		object, err := lo.Open(context.Background(), cachedFile.objectId, pgx.LargeObjectModeRead)
-		if err != nil {
-			return nil, err
-		}
-
-		buf := new(bytes.Buffer)
-		buf.ReadFrom(object)
-
-		object.Close()
-		tx.Commit(context.Background())
 
 		files = append(files, &discordgo.File{
-			Name:   cachedFile.Filename,
-			Reader: buf,
+			Name:   filename,
+			Reader: fileBytes,
 		})
 	}
 	return files, nil
 }
 
-func PopExpiredImageLogs() error {
-
+func PruneExpiredImageLogs() error {
 	rows, err := db.Query(
 		context.Background(),
 		"SELECT object_id FROM image_log_files WHERE CURRENT_TIMESTAMP - create_date > $1",
@@ -138,19 +121,7 @@ func PopExpiredImageLogs() error {
 			return err
 		}
 
-		objectId := values[0].(uint32)
-		tx, err := db.Begin(context.Background())
-		if err != nil {
-			return err
-		}
-
-		lo := tx.LargeObjects()
-		err = lo.Unlink(context.Background(), objectId)
-		if err != nil {
-			return err
-		}
-		err = tx.Commit(context.Background())
-
+		err = deleteLargeObject(values[0].(uint32))
 		if err != nil {
 			return nil
 		}
@@ -161,6 +132,44 @@ func PopExpiredImageLogs() error {
 		"DELETE FROM image_log_files WHERE CURRENT_TIMESTAMP - create_date > $1",
 		fileExpiration,
 	)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func loadBytesFromLargeObject(objectId uint32) (*bytes.Buffer, error) {
+	tx, err := db.Begin(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	lo := tx.LargeObjects()
+	object, err := lo.Open(context.Background(), objectId, pgx.LargeObjectModeRead)
+	if err != nil {
+		return nil, err
+	}
+
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(object)
+
+	object.Close()
+	tx.Commit(context.Background())
+	return buf, nil
+}
+
+func deleteLargeObject(objectId uint32) error {
+	tx, err := db.Begin(context.Background())
+	if err != nil {
+		return err
+	}
+
+	lo := tx.LargeObjects()
+	err = lo.Unlink(context.Background(), objectId)
+	if err != nil {
+		return err
+	}
+
+	err = tx.Commit(context.Background())
 	if err != nil {
 		return err
 	}
