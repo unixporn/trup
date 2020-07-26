@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS note (
     taker varchar not null,
     about varchar not null,
     content text not null,
-	note_type int not null,
+    note_type int not null,
     create_date timestamptz,
     primary key (id)
 );
@@ -58,16 +58,16 @@ CREATE OR REPLACE PROCEDURE sysinfo_set(_usr varchar, _info jsonb, _modify_date 
 language plpgsql
 AS $$
 BEGIN
-	INSERT INTO sysinfo(usr, info, modify_date, create_date) VALUES(_usr, _info, _modify_date, _create_date);
+    INSERT INTO sysinfo(usr, info, modify_date, create_date) VALUES(_usr, _info, _modify_date, _create_date);
 EXCEPTION WHEN unique_violation THEN
-	UPDATE sysinfo SET info = _info, modify_date = _modify_date WHERE usr = _usr;
+    UPDATE sysinfo SET info = _info, modify_date = _modify_date WHERE usr = _usr;
 end $$;
 
 CREATE OR REPLACE PROCEDURE profile_set(_usr varchar, _git varchar, _dotfiles varchar, _description varchar)
 language plpgsql
 AS $$
 BEGIN
-	INSERT INTO profile(usr, git, dotfiles, description) VALUES(_usr, _git, _dotfiles, _description);
+    INSERT INTO profile(usr, git, dotfiles, description) VALUES(_usr, _git, _dotfiles, _description);
 EXCEPTION WHEN unique_violation THEN
-	UPDATE profile SET git = _git, dotfiles = _dotfiles, description = _description WHERE usr = _usr;
+    UPDATE profile SET git = _git, dotfiles = _dotfiles, description = _description WHERE usr = _usr;
 END $$;
