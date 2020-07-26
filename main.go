@@ -122,12 +122,14 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	cache.add(m.ID, *m.Message)
 
-	for _, attachment := range m.Message.Attachments {
-		err := db.StoreAttachment(m.Message, attachment)
-		if err != nil {
-			log.Println(err)
+	go func() {
+		for _, attachment := range m.Message.Attachments {
+			err := db.StoreAttachment(m.Message, attachment)
+			if err != nil {
+				log.Println(err)
+			}
 		}
-	}
+	}()
 
 	if m.ChannelID == env.ChannelShowcase {
 		var validSubmission bool
