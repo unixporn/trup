@@ -314,14 +314,14 @@ func logMessageAutodelete(s *discordgo.Session, m *discordgo.MessageCreate, matc
 		}
 	}
 
+	contextLink := ""
 	beforeMessages, err := s.ChannelMessages(m.ChannelID, 1, m.ID, "", "")
 	if err != nil {
 		log.Printf("Error fetching previous message for context of message deletion: %s\n", err)
-	}
-
-	var contextLink string
-	if len(beforeMessages) > 0 {
-		contextLink = fmt.Sprintf("[(context)](%s)", makeMessageLink(m.GuildID, beforeMessages[0]))
+	} else {
+		if len(beforeMessages) > 0 {
+			contextLink = fmt.Sprintf("[(context)](%s)", makeMessageLink(m.GuildID, beforeMessages[0]))
+		}
 	}
 
 	botlogEntry, err := s.ChannelMessageSendEmbed(env.ChannelBotlog, &discordgo.MessageEmbed{
@@ -348,7 +348,7 @@ func logMessageAutodelete(s *discordgo.Session, m *discordgo.MessageCreate, matc
 	})
 
 	botlogEntryLink := makeMessageLink(m.Message.GuildID, botlogEntry)
-	note := db.NewNote(s.State.User.ID, m.Author.ID, fmt.Sprintf("(AUTO) Message deleted because of word `%s` [(source)](%s)", matchedString, botlogEntryLink), db.BlocklistViolation)
+	note := db.NewNote(s.State.User.ID, m.Author.ID, fmt.Sprintf("Message deleted because of word `%s` [(source)](%s)", matchedString, botlogEntryLink), db.BlocklistViolation)
 	err = note.Save()
 	if err != nil {
 		log.Println(err)
