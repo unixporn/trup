@@ -314,7 +314,7 @@ func logMessageAutodelete(s *discordgo.Session, m *discordgo.MessageCreate, matc
 		}
 	}
 
-	s.ChannelMessageSendEmbed(env.ChannelBotlog, &discordgo.MessageEmbed{
+	botlogEntry, err := s.ChannelMessageSendEmbed(env.ChannelBotlog, &discordgo.MessageEmbed{
 		Author: &discordgo.MessageEmbedAuthor{
 			Name:    "Message Autodelete",
 			IconURL: m.Message.Author.AvatarURL("128"),
@@ -324,4 +324,17 @@ func logMessageAutodelete(s *discordgo.Session, m *discordgo.MessageCreate, matc
 		Timestamp:   messageCreationDate.UTC().Format(dateFormat),
 		Footer:      footer,
 	})
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	botlogEntryLink := fmt.Sprintf("https://discord.com/channels/%s/%s/%s", m.Message.GuildID, botlogEntry.ChannelID, botlogEntry.ID)
+	note := db.NewNote(s.State.User.ID, m.Author.ID, fmt.Sprintf("(AUTO) Message deleted because of word `%s` [(source)](%s)", matchedString, botlogEntryLink), db.BlocklistViolation)
+	err = note.Save()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
 }

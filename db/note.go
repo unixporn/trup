@@ -7,20 +7,29 @@ import (
 	"github.com/jackc/pgx/pgtype"
 )
 
+type NoteType int
+
+const (
+	ManualNote         NoteType = 0
+	BlocklistViolation NoteType = 1
+)
+
 type Note struct {
 	Id         pgtype.UUID
 	Taker      string
 	About      string
 	Content    string
+	NoteType   NoteType
 	CreateDate time.Time
 }
 
-func NewNote(taker, about, content string) *Note {
+func NewNote(taker, about, content string, noteType NoteType) *Note {
 	return &Note{
 		pgtype.UUID{},
 		taker,
 		about,
 		content,
+		noteType,
 		time.Now(),
 	}
 }

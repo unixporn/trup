@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS note (
     taker varchar not null,
     about varchar not null,
     content text not null,
+	note_type int not null,
     create_date timestamptz,
     primary key (id)
 );

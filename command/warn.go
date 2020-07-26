@@ -39,7 +39,7 @@ func warn(ctx *Context, args []string) {
 	}
 
 	taker := ctx.Message.Author
-	err = db.NewNote(taker.ID, user, "User was warned for: "+reason).Save()
+	err = db.NewNote(taker.ID, user, "User was warned for: "+reason, db.ManualNote).Save()
 	if err != nil {
 		log.Printf("Failed to save warning note. Error: %s\n", err)
 	}

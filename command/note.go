@@ -25,7 +25,7 @@ func note(ctx *Context, args []string) {
 
 	if len(args) > 2 {
 		content := strings.Join(args[2:], " ")
-		note := db.NewNote(ctx.Message.Author.ID, about, content)
+		note := db.NewNote(ctx.Message.Author.ID, about, content, db.ManualNote)
 
 		err := note.Save()
 		if err != nil {
