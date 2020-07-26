@@ -53,6 +53,16 @@ CREATE TABLE IF NOT EXISTS blocked_regexes (
     primary key (pattern)
 );
 
+CREATE TABLE IF NOT EXISTS image_log_files (
+	channel_id bigint not null,
+	message_id bigint not null,
+	attachment_id bigint not null,
+	filename varchar not null,
+	create_date timestamptz,
+	should_delete boolean,
+	primary key (attachment_id)
+);
+
 CREATE OR REPLACE PROCEDURE sysinfo_set(_usr varchar, _info jsonb, _modify_date timestamptz, _create_date timestamptz)
 language plpgsql
 AS $$

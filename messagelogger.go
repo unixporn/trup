@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"trup/db"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -46,7 +47,7 @@ func messageDelete(s *discordgo.Session, m *discordgo.MessageDelete) {
 		}
 	}
 
-	s.ChannelMessageSendEmbed(env.ChannelBotlog, &discordgo.MessageEmbed{
+	messageEmbed := &discordgo.MessageEmbed{
 		Author: &discordgo.MessageEmbedAuthor{
 			Name:    "Message Delete",
 			IconURL: message.Author.AvatarURL("128"),
@@ -55,6 +56,18 @@ func messageDelete(s *discordgo.Session, m *discordgo.MessageDelete) {
 		Description: message.Content,
 		Timestamp:   messageCreationDate.UTC().Format(dateFormat),
 		Footer:      footer,
+	}
+
+	imageFiles, err := db.GetStoredImages(m.ChannelID, m.Message.ID)
+	if err != nil {
+		log.Printf("error loading image files")
+		s.ChannelMessageSendEmbed(env.ChannelBotlog, messageEmbed)
+		return
+	}
+
+	s.ChannelMessageSendComplex(env.ChannelBotlog, &discordgo.MessageSend{
+		Embed: messageEmbed,
+		Files: imageFiles,
 	})
 }
 
