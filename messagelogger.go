@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"log"
+	"strings"
+	"trup/db"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -46,7 +48,7 @@ func messageDelete(s *discordgo.Session, m *discordgo.MessageDelete) {
 		}
 	}
 
-	s.ChannelMessageSendEmbed(env.ChannelBotlog, &discordgo.MessageEmbed{
+	messageEmbed := &discordgo.MessageEmbed{
 		Author: &discordgo.MessageEmbedAuthor{
 			Name:    "Message Delete",
 			IconURL: message.Author.AvatarURL("128"),
@@ -55,7 +57,37 @@ func messageDelete(s *discordgo.Session, m *discordgo.MessageDelete) {
 		Description: message.Content,
 		Timestamp:   messageCreationDate.UTC().Format(dateFormat),
 		Footer:      footer,
+	}
+
+	mediaFiles, finish, err := db.GetStoredAttachments(m.ChannelID, m.Message.ID)
+	defer finish()
+	if err != nil || len(mediaFiles) == 0 {
+		s.ChannelMessageSendEmbed(env.ChannelBotlog, messageEmbed)
+		return
+	}
+
+	discordFiles := []*discordgo.File{}
+	for _, file := range mediaFiles {
+		discordFiles = append(discordFiles, &discordgo.File{
+			Name:        file.Filename,
+			Reader:      file.Reader,
+			ContentType: file.GetContentType(),
+		})
+	}
+
+	if strings.Split(discordFiles[0].ContentType, "/")[0] == "video" {
+		messageEmbed.Video = &discordgo.MessageEmbedVideo{URL: "attachment://" + mediaFiles[0].Filename}
+	} else if strings.Split(discordFiles[0].ContentType, "/")[0] == "image" {
+		messageEmbed.Image = &discordgo.MessageEmbedImage{URL: "attachment://" + mediaFiles[0].Filename}
+	}
+
+	_, err = s.ChannelMessageSendComplex(env.ChannelBotlog, &discordgo.MessageSend{
+		Embed: messageEmbed,
+		Files: discordFiles,
 	})
+	if err != nil {
+		log.Printf("Error writing message with attachments to botlog: %s", err)
+	}
 }
 
 func messageUpdate(s *discordgo.Session, m *discordgo.MessageUpdate) {

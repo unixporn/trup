@@ -43,7 +43,7 @@ func main() {
 	discord.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
 		botId = r.User.ID
 		s.UpdateStatus(0, "!help")
-		go cleanupMutesLoop(s)
+		go cleanupLoop(s)
 	})
 	discord.AddHandler(memberJoin)
 	discord.AddHandler(memberLeave)
@@ -121,6 +121,15 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	cache.add(m.ID, *m.Message)
+
+	go func() {
+		for _, attachment := range m.Message.Attachments {
+			err := db.StoreAttachment(m.Message, attachment)
+			if err != nil {
+				log.Println(err)
+			}
+		}
+	}()
 
 	if m.ChannelID == env.ChannelShowcase {
 		var validSubmission bool
@@ -248,31 +257,55 @@ func memberLeave(s *discordgo.Session, m *discordgo.GuildMemberRemove) {
 	}
 }
 
-func cleanupMutesLoop(s *discordgo.Session) {
+func cleanupLoop(s *discordgo.Session) {
 	for {
 		time.Sleep(time.Minute)
 
-		mutes, err := db.GetExpiredMutes()
+		cleanupMutes(s)
+		cleanupAttachmentCache(s)
+	}
+}
+
+func cleanupAttachmentCache(s *discordgo.Session) {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Printf("Panicked in cleanupAttachmentCache. Error: %v\n", err)
+		}
+	}()
+	err := db.PruneExpiredAttachments()
+	if err != nil {
+		log.Printf("Error getting expired images %s\n", err)
+		return
+	}
+}
+
+func cleanupMutes(s *discordgo.Session) {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Printf("Panicked in cleanupMutes. Error: %v\n", err)
+		}
+	}()
+
+	mutes, err := db.GetExpiredMutes()
+	if err != nil {
+		log.Printf("Error getting expired mutes %s\n", err)
+		return
+	}
+
+	for _, m := range mutes {
+		err = s.GuildMemberRoleRemove(m.GuildId, m.User, env.RoleMute)
 		if err != nil {
-			log.Printf("Error getting expired mutes %s\n", err)
+			log.Printf("Failed to remove role %s\n", err)
 			continue
 		}
+		unmutedMsg := "User <@" + m.User + "> is now unmuted."
+		s.ChannelMessageSend(env.ChannelBotlog, unmutedMsg)
+		s.ChannelMessageSend(env.ChannelModlog, unmutedMsg)
 
-		for _, m := range mutes {
-			err = s.GuildMemberRoleRemove(m.GuildId, m.User, env.RoleMute)
-			if err != nil {
-				log.Printf("Failed to remove role %s\n", err)
-				continue
-			}
-			unmutedMsg := "User <@" + m.User + "> is now unmuted."
-			s.ChannelMessageSend(env.ChannelBotlog, unmutedMsg)
-			s.ChannelMessageSend(env.ChannelModlog, unmutedMsg)
-
-			err = db.SetMuteInactive(m.Id)
-			if err != nil {
-				log.Printf("Error setting expired mutes inactive %s\n", err)
-				continue
-			}
+		err = db.SetMuteInactive(m.Id)
+		if err != nil {
+			log.Printf("Error setting expired mutes inactive %s\n", err)
+			continue
 		}
 	}
 }
