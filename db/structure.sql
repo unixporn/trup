@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS blocked_regexes (
     primary key (pattern)
 );
 
-CREATE TABLE IF NOT EXISTS image_log_files (
+CREATE TABLE IF NOT EXISTS attachment_log_cache (
 	channel_id bigint not null,
 	message_id bigint not null,
 	attachment_id bigint not null,

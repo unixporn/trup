@@ -123,7 +123,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	cache.add(m.ID, *m.Message)
 
 	for _, attachment := range m.Message.Attachments {
-		err := db.StoreImage(m.Message, attachment)
+		err := db.StoreAttachment(m.Message, attachment)
 		if err != nil {
 			log.Println(err)
 		}
@@ -265,7 +265,7 @@ func cleanupLoop(s *discordgo.Session) {
 }
 
 func cleanupImageLog(s *discordgo.Session) {
-	err := db.PruneExpiredImageLogs()
+	err := db.PruneExpiredAttachments()
 	if err != nil {
 		log.Printf("Error getting expired images %s\n", err)
 		return
