@@ -1,6 +1,7 @@
 package db
 
 import (
+	"bytes"
 	"context"
 	"io"
 	"log"
@@ -11,12 +12,13 @@ import (
 	"github.com/jackc/pgx/v4"
 )
 
-var (
-	fileExpiration = time.Minute
+const (
+	fileExpiration    = time.Hour * 3
+	maximumFilesizeMB = 10
 )
 
 func StoreAttachment(message *discordgo.Message, attachment *discordgo.MessageAttachment) error {
-	if !isAttachment(attachment) {
+	if !isAttachment(attachment) || attachment.Size > maximumFilesizeMB*1000000 {
 		return nil
 	}
 
@@ -66,7 +68,19 @@ func StoreAttachment(message *discordgo.Message, attachment *discordgo.MessageAt
 	return nil
 }
 
-func GetStoredAttachments(channelId string, messageId string) ([]*discordgo.File, func() error, error) {
+type StoredAttachment struct {
+	Filename string
+	Reader   io.Reader
+}
+
+func (storedAttachment *StoredAttachment) GetContentType() string {
+	contentTypeBuf := make([]byte, 512)
+	storedAttachment.Reader.Read(contentTypeBuf)
+	storedAttachment.Reader = io.MultiReader(bytes.NewReader(contentTypeBuf), storedAttachment.Reader)
+	return http.DetectContentType(contentTypeBuf)
+}
+
+func GetStoredAttachments(channelId string, messageId string) ([]*StoredAttachment, func() error, error) {
 	rows, err := db.Query(
 		context.Background(),
 		"SELECT object_id, filename FROM attachment_log_cache WHERE channel_id = $1 AND message_id = $2",
@@ -83,7 +97,7 @@ func GetStoredAttachments(channelId string, messageId string) ([]*discordgo.File
 		return nil, nil, err
 	}
 
-	files := []*discordgo.File{}
+	files := []*StoredAttachment{}
 	for rows.Next() {
 		values, err := rows.Values()
 		if err != nil {
@@ -92,16 +106,13 @@ func GetStoredAttachments(channelId string, messageId string) ([]*discordgo.File
 		objectId := values[0].(uint32)
 		filename := values[1].(string)
 
-		readCloser, err := loadBytesFromLargeObject(tx, objectId)
+		reader, err := loadBytesFromLargeObject(tx, objectId)
 		if err != nil {
 			log.Printf("Error loading reader from largeobject: %s\n", err)
 			continue
 		}
 
-		files = append(files, &discordgo.File{
-			Name:   filename,
-			Reader: readCloser,
-		})
+		files = append(files, &StoredAttachment{filename, reader})
 	}
 	onFinish := func() error {
 		return tx.Commit(context.Background())

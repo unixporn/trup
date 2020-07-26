@@ -272,13 +272,6 @@ func cleanupImageLog(s *discordgo.Session) {
 		log.Printf("Error getting expired images %s\n", err)
 		return
 	}
-	//for _, file := range files {
-	//err = os.Remove(file.Filepath)
-	//if err != nil {
-	//log.Printf("Failed to delete file %s: %s\n", file.Filepath, err)
-	//continue
-	//}
-	//}
 }
 
 func cleanupMutes(s *discordgo.Session) {
