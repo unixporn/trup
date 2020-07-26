@@ -17,13 +17,14 @@ import (
 var (
 	prefix = "!"
 	env    = command.Env{
-		RoleMod:         os.Getenv("ROLE_MOD"),
-		RoleColors:      strings.Split(os.Getenv("ROLE_COLORS"), ","),
-		ChannelShowcase: os.Getenv("CHANNEL_SHOWCASE"),
-		RoleMute:        os.Getenv("ROLE_MUTE"),
-		ChannelBotlog:   os.Getenv("CHANNEL_BOTLOG"),
-		ChannelFeedback: os.Getenv("CHANNEL_FEEDBACK"),
-		ChannelModlog:   os.Getenv("CHANNEL_MODLOG"),
+		RoleMod:            os.Getenv("ROLE_MOD"),
+		RoleColors:         strings.Split(os.Getenv("ROLE_COLORS"), ","),
+		ChannelShowcase:    os.Getenv("CHANNEL_SHOWCASE"),
+		RoleMute:           os.Getenv("ROLE_MUTE"),
+		ChannelBotlog:      os.Getenv("CHANNEL_BOTLOG"),
+		ChannelFeedback:    os.Getenv("CHANNEL_FEEDBACK"),
+		ChannelModlog:      os.Getenv("CHANNEL_MODLOG"),
+		CategoryModPrivate: os.Getenv("CATEGORY_MOD_PRIVATE"),
 	}
 	botId string
 	cache = newMessageCache(5000)
@@ -104,6 +105,19 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	if m.Author.Bot {
 		return
+	}
+
+	isByModerator := false
+	for _, r := range m.Member.Roles {
+		if r == env.RoleMod {
+			isByModerator = true
+		}
+	}
+
+	if !isByModerator {
+		if wasDeleted := runMessageFilter(s, m); wasDeleted {
+			return
+		}
 	}
 
 	cache.add(m.ID, *m.Message)
@@ -261,4 +275,46 @@ func cleanupMutesLoop(s *discordgo.Session) {
 			}
 		}
 	}
+}
+
+func runMessageFilter(s *discordgo.Session, m *discordgo.MessageCreate) (deleted bool) {
+	matchedString, err := db.FindBlockedWordMatch(m.Message.Content)
+	if err != nil {
+		log.Printf("Failed to check if message \"%s\" contains blocked words\n%s\n", m.Content, err)
+		return false
+	}
+
+	if matchedString != "" {
+		err := s.ChannelMessageDelete(m.ChannelID, m.ID)
+		if err != nil {
+			log.Printf("Failed to delete message by \"%s\" containing blocked words\n%s\n", m.Author.Username, err)
+			return false
+		}
+		logMessageAutodelete(s, m, matchedString)
+		return true
+	}
+	return false
+}
+
+func logMessageAutodelete(s *discordgo.Session, m *discordgo.MessageCreate, matchedString string) {
+	const dateFormat = "2006-01-02T15:04:05.0000Z"
+	messageCreationDate, _ := discordgo.SnowflakeTimestamp(m.ID)
+
+	var footer *discordgo.MessageEmbedFooter
+	if channel, err := s.State.Channel(m.ChannelID); err == nil {
+		footer = &discordgo.MessageEmbedFooter{
+			Text: "#" + channel.Name,
+		}
+	}
+
+	s.ChannelMessageSendEmbed(env.ChannelBotlog, &discordgo.MessageEmbed{
+		Author: &discordgo.MessageEmbedAuthor{
+			Name:    "Message Autodelete",
+			IconURL: m.Message.Author.AvatarURL("128"),
+		},
+		Title:       fmt.Sprintf("%s#%s(%s) - deleted because of `%s`", m.Message.Author.Username, m.Message.Author.Discriminator, m.Message.Author.ID, matchedString),
+		Description: m.Message.Content,
+		Timestamp:   messageCreationDate.UTC().Format(dateFormat),
+		Footer:      footer,
+	})
 }

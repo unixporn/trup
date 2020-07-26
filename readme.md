@@ -5,6 +5,7 @@ TOKEN=your_token
 ROLE_MOD=707318869445967872
 ROLE_COLORS=707318869445967872,707318869445967872
 CHANNEL_SHOWCASE=635625917623828520
+CATEGORY_MOD_PRIVATE=635627141123538966,
 CHANNEL_FEEDBACK=
 CHANNEL_BOTLOG=
 ```
@@ -46,3 +47,4 @@ export DATABASE_URL=postgresql://user@localhost/trup
 - [tteeoo](https://github.com/tteeoo) for commands git, desc and dotfiles
 - [kayew](https://github.com/kayew) for a more explicit setfetch message
 - [davidv171](https://github.com/davidv171) for mute command
+- [elkowar](https://github.com/elkowar) for blocklist command

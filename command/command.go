@@ -11,13 +11,14 @@ import (
 )
 
 type Env struct {
-	RoleMod         string
-	RoleMute        string
-	RoleColors      []string
-	ChannelShowcase string
-	ChannelBotlog   string
-	ChannelFeedback string
-	ChannelModlog   string
+	RoleMod            string
+	RoleMute           string
+	RoleColors         []string
+	ChannelShowcase    string
+	ChannelBotlog      string
+	ChannelFeedback    string
+	ChannelModlog      string
+	CategoryModPrivate string
 }
 
 type Context struct {
@@ -84,6 +85,11 @@ var Commands = map[string]Command{
 		Exec:  poll,
 		Usage: pollUsage,
 	},
+	"blocklist": moderatorOnly(modPrivateOnly(Command{
+		Exec:  blocklist,
+		Usage: blocklistUsage,
+		Help:  blocklistHelp,
+	})),
 	"purge": moderatorOnly(Command{
 		Exec:  purge,
 		Usage: purgeUsage,
@@ -182,6 +188,26 @@ func (ctx *Context) Reply(msg string) {
 func (ctx *Context) ReportError(msg string, err error) {
 	log.Printf("Error Message ID: %s; ChannelID: %s; GuildID: %s; Author ID: %s; msg: %s; error: %s\n", ctx.Message.ID, ctx.Message.ChannelID, ctx.Message.GuildID, ctx.Message.Author.ID, msg, err)
 	ctx.Reply(msg)
+}
+
+func modPrivateOnly(cmd Command) Command {
+	return Command{
+		Exec: func(ctx *Context, args []string) {
+			channel, err := ctx.Session.Channel(ctx.Message.ChannelID)
+			if err != nil {
+				return
+			}
+			if channel.ParentID == ctx.Env.CategoryModPrivate {
+				cmd.Exec(ctx, args)
+				return
+			}
+
+			ctx.Reply("this command may only be used in moderator-internal channels.")
+		},
+		Usage:         cmd.Usage,
+		Help:          cmd.Help,
+		ModeratorOnly: true,
+	}
 }
 
 func moderatorOnly(cmd Command) Command {
