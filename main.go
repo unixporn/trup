@@ -347,14 +347,48 @@ func logMessageAutodelete(s *discordgo.Session, m *discordgo.MessageCreate, matc
 		}
 	}
 
-	s.ChannelMessageSendEmbed(env.ChannelBotlog, &discordgo.MessageEmbed{
+	contextLink := ""
+	beforeMessages, err := s.ChannelMessages(m.ChannelID, 1, m.ID, "", "")
+	if err != nil {
+		log.Printf("Error fetching previous message for context of message deletion: %s\n", err)
+	} else {
+		if len(beforeMessages) > 0 {
+			contextLink = fmt.Sprintf("[(context)](%s)", makeMessageLink(m.GuildID, beforeMessages[0]))
+		}
+	}
+
+	botlogEntry, err := s.ChannelMessageSendEmbed(env.ChannelBotlog, &discordgo.MessageEmbed{
 		Author: &discordgo.MessageEmbedAuthor{
 			Name:    "Message Autodelete",
 			IconURL: m.Message.Author.AvatarURL("128"),
 		},
 		Title:       fmt.Sprintf("%s#%s(%s) - deleted because of `%s`", m.Message.Author.Username, m.Message.Author.Discriminator, m.Message.Author.ID, matchedString),
-		Description: m.Message.Content,
+		Description: fmt.Sprintf("%s %s", m.Message.Content, contextLink),
 		Timestamp:   messageCreationDate.UTC().Format(dateFormat),
 		Footer:      footer,
 	})
+	if err != nil {
+		log.Printf("Error writing botlog entry for message deletion: %s\n", err)
+	}
+
+	deletionNoticeMsg, err := s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("<@%s>, your message has been deleted and logged for containing a banned word or phrase.", m.Author.ID))
+	if err != nil {
+		log.Printf("Failed to send message deletion notice: %s\n", err)
+	}
+
+	time.AfterFunc(6*time.Second, func() {
+		s.ChannelMessageDelete(deletionNoticeMsg.ChannelID, deletionNoticeMsg.ID)
+	})
+
+	botlogEntryLink := makeMessageLink(m.Message.GuildID, botlogEntry)
+	note := db.NewNote(s.State.User.ID, m.Author.ID, fmt.Sprintf("Message deleted because of word `%s` [(source)](%s)", matchedString, botlogEntryLink), db.BlocklistViolation)
+	err = note.Save()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+}
+
+func makeMessageLink(guildID string, m *discordgo.Message) string {
+	return fmt.Sprintf("https://discord.com/channels/%s/%s/%s", guildID, m.ChannelID, m.ID)
 }

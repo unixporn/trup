@@ -49,7 +49,7 @@ func mute(ctx *Context, args []string) {
 	if reason != "" {
 		reasonText = " with reason: " + reason
 	}
-	err = db.NewNote(ctx.Message.Author.ID, user, "User was muted for "+duration+reasonText).Save()
+	err = db.NewNote(ctx.Message.Author.ID, user, "User was muted for "+duration+reasonText, db.ManualNote).Save()
 	if err != nil {
 		ctx.ReportError("Failed to set note about the user", err)
 	}
