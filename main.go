@@ -262,11 +262,16 @@ func cleanupLoop(s *discordgo.Session) {
 		time.Sleep(time.Minute)
 
 		cleanupMutes(s)
-		cleanupImageLog(s)
+		cleanupAttachmentCache(s)
 	}
 }
 
-func cleanupImageLog(s *discordgo.Session) {
+func cleanupAttachmentCache(s *discordgo.Session) {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Printf("Panicked in cleanupAttachmentLoop. Error: %v\n", err)
+		}
+	}()
 	err := db.PruneExpiredAttachments()
 	if err != nil {
 		log.Printf("Error getting expired images %s\n", err)
@@ -275,6 +280,12 @@ func cleanupImageLog(s *discordgo.Session) {
 }
 
 func cleanupMutes(s *discordgo.Session) {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Printf("Panicked in cleanupMutesLoop. Error: %v\n", err)
+		}
+	}()
+
 	mutes, err := db.GetExpiredMutes()
 	if err != nil {
 		log.Printf("Error getting expired mutes %s\n", err)
