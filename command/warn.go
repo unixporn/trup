@@ -42,7 +42,7 @@ func warn(ctx *Context, args []string) {
 	}
 
 	taker := ctx.Message.Author
-	err = db.NewNote(taker.ID, user, "User was warned for: "+reason, db.ManualNote).Save()
+	err = db.NewNote(taker.ID, user, fmt.Sprintf("User was warned for: %s %s", reason, warningMessageLink), db.ManualNote).Save()
 	if err != nil {
 		log.Printf("Failed to save warning note. Error: %s\n", err)
 	}
@@ -58,7 +58,7 @@ func warn(ctx *Context, args []string) {
 
 	_, err = ctx.Session.ChannelMessageSend(
 		ctx.Env.ChannelModlog,
-		fmt.Sprintf("<@%s> was warned by moderator %s%s. They've been warned%s. %s", user, taker.Username, r, nth, warningMessageLink),
+		fmt.Sprintf("<@%s> was warned by moderator %s%s. They've been warned%s.", user, taker.Username, r, nth),
 	)
 	if err != nil {
 		log.Printf("Error sending warning notice into modlog: %s\n", err)
