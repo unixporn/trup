@@ -47,4 +47,4 @@ export DATABASE_URL=postgresql://user@localhost/trup
 - [tteeoo](https://github.com/tteeoo) for commands git, desc and dotfiles
 - [kayew](https://github.com/kayew) for a more explicit setfetch message
 - [davidv171](https://github.com/davidv171) for mute command
-- [elkowar](https://github.com/elkowar) for blocklist command and media-logging in botlog
+- [elkowar](https://github.com/elkowar) for blocklist command, media-logging in botlog and !poll multi
