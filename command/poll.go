@@ -17,10 +17,11 @@ poll multi These are my options
 - option 2
 	`
 	questionMaxLength = 2047
+	pollTitleMaxLength = 255
 )
 
 var numbers = []string{"1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"}
-var pollOptionLineStartPattern = regexp.MustCompile("^\\s*-|^\\s*\\d\\.|^\\s*\\*")
+var pollOptionLineStartPattern = regexp.MustCompile(`^\s*-|^\s*\d\.|^\s*\*`)
 
 func poll(ctx *Context, args []string) {
 	if len(args) < 2 {
@@ -45,9 +46,12 @@ func poll(ctx *Context, args []string) {
 func multiPoll(ctx *Context, question string, lines []string) {
 	optionCount := len(lines)
 	if len([]rune(strings.Join(lines, "\n"))) > questionMaxLength {
-		ctx.Reply(fmt.Sprintf("Question's length can be max %d characters", questionMaxLength))
+		ctx.Reply(fmt.Sprintf("Poll's length can be max %d characters", questionMaxLength))
 		return
-	} else if optionCount > 10 {
+	} else if question > pollTitleMaxLength {
+		ctx.Reply(fmt.Sprintf("Question's length can be max %d characters", pollTitleMaxLength))
+		return
+	}else if optionCount > 10 {
 		ctx.Reply(fmt.Sprintf("You cannot have more than 10 different options in one poll"))
 		return
 	} else if optionCount < 2 {
