@@ -1,6 +1,7 @@
 package command
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -17,8 +18,7 @@ poll multi These are my options
 - option 1
 - option 2
 	`
-	questionMaxLength  = 2047
-	pollTitleMaxLength = 255
+	questionMaxLength = 2047
 )
 
 var numbers = []string{"1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"}
@@ -51,9 +51,6 @@ func multiPoll(ctx *Context, question string, lines []string) {
 	if len([]rune(strings.Join(lines, "\n"))) > questionMaxLength {
 		ctx.Reply(fmt.Sprintf("Poll's length can be max %d characters", questionMaxLength))
 		return
-	} else if len(question) > pollTitleMaxLength {
-		ctx.Reply(fmt.Sprintf("Question's length can be max %d characters", pollTitleMaxLength))
-		return
 	} else if optionCount > 10 {
 		ctx.Reply(fmt.Sprintf("You cannot have more than 10 different options in one poll"))
 		return
@@ -62,18 +59,26 @@ func multiPoll(ctx *Context, question string, lines []string) {
 		return
 	}
 
-	pollBody := ""
-	for idx, line := range lines {
-		pollBody += fmt.Sprintf("%s %s\n", numbers[idx], pollOptionLineStartPattern.ReplaceAllString(line, ""))
+	embed, err := makePollEmbed(ctx, question, "")
+	if err != nil {
+		ctx.Reply(err.Error())
+		return
+	}
+	for i, line := range lines {
+		option := pollOptionLineStartPattern.ReplaceAllString(line, "")
+		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
+			Name:  "Option " + numbers[i],
+			Value: option,
+		})
 	}
 
-	pollMessage, err := sendPollMessage(ctx, ctx.Message.Author, question, pollBody)
+	pollMessage, err := ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, embed)
 	if err != nil {
 		ctx.ReportError("Failed to post the poll", err)
 		return
 	}
 
-	for i := 0; i < optionCount && i < len(numbers); i++ {
+	for i := range embed.Fields {
 		ctx.Session.MessageReactionAdd(pollMessage.ChannelID, pollMessage.ID, numbers[i])
 	}
 	ctx.Session.MessageReactionAdd(pollMessage.ChannelID, pollMessage.ID, "🤷")
@@ -81,12 +86,17 @@ func multiPoll(ctx *Context, question string, lines []string) {
 }
 
 func yesNoPoll(ctx *Context, question string) {
-	if len([]rune(question)) > questionMaxLength {
+	if len(question) > questionMaxLength {
 		ctx.Reply(fmt.Sprintf("Question's length can be max %d characters", questionMaxLength))
 		return
 	}
 
-	pollMessage, err := sendPollMessage(ctx, ctx.Message.Author, "", question)
+	embed, err := makePollEmbed(ctx, "", question)
+	if err != nil {
+		ctx.Reply(err.Error())
+		return
+	}
+	pollMessage, err := ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, embed)
 	if err != nil {
 		ctx.ReportError("Failed to post the poll", err)
 		return
@@ -97,12 +107,16 @@ func yesNoPoll(ctx *Context, question string) {
 	ctx.Session.MessageReactionAdd(pollMessage.ChannelID, pollMessage.ID, "❎")
 }
 
-func sendPollMessage(ctx *Context, author *discordgo.User, pollTitle string, pollBody string) (*discordgo.Message, error) {
-	return ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &discordgo.MessageEmbed{
-		Title:       "Poll: " + pollTitle,
+func makePollEmbed(ctx *Context, question, pollBody string) (*discordgo.MessageEmbed, error) {
+	embedTitle := "Poll: " + question
+	if len(embedTitle) > 255 {
+		return nil, errors.New("The question is too long")
+	}
+	return &discordgo.MessageEmbed{
+		Title:       embedTitle,
 		Description: pollBody,
 		Footer: &discordgo.MessageEmbedFooter{
 			Text: fmt.Sprintf("from: %s#%s", ctx.Message.Author.Username, ctx.Message.Author.Discriminator),
 		},
-	})
+	}, nil
 }
