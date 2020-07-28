@@ -77,7 +77,7 @@ func messageReactionAdd(s *discordgo.Session, m *discordgo.MessageReactionAdd) {
 
 	isPoll := false
 	for _, embed := range message.Embeds {
-		if embed.Title == "Poll:" {
+		if strings.HasPrefix(embed.Title, "Poll:") {
 			isPoll = true
 		}
 	}

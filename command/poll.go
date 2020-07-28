@@ -5,6 +5,7 @@ import (
 	"log"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -29,10 +30,12 @@ func poll(ctx *Context, args []string) {
 		return
 	}
 
-	err := ctx.Session.ChannelMessageDelete(ctx.Message.ChannelID, ctx.Message.ID)
-	if err != nil {
-		log.Printf("error removing poll call message: %s\n", err)
-	}
+	time.AfterFunc(time.Second*30, func() {
+		err := ctx.Session.ChannelMessageDelete(ctx.Message.ChannelID, ctx.Message.ID)
+		if err != nil {
+			log.Printf("error removing poll call message: %s\n", err)
+		}
+	})
 
 	if args[1] == "multi" {
 		lines := strings.Split(ctx.Message.Content, "\n")
@@ -61,7 +64,7 @@ func multiPoll(ctx *Context, question string, lines []string) {
 
 	pollBody := ""
 	for idx, line := range lines {
-		pollBody += fmt.Sprintf("%d. %s\n", idx+1, pollOptionLineStartPattern.ReplaceAllString(line, ""))
+		pollBody += fmt.Sprintf("%s %s\n", numbers[idx], pollOptionLineStartPattern.ReplaceAllString(line, ""))
 	}
 
 	pollMessage, err := sendPollMessage(ctx, ctx.Message.Author, question, pollBody)
