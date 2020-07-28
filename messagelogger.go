@@ -41,6 +41,16 @@ func messageDelete(s *discordgo.Session, m *discordgo.MessageDelete) {
 		return
 	}
 
+	contextLink := ""
+	beforeMessages, err := s.ChannelMessages(m.ChannelID, 1, m.ID, "", "")
+	if err != nil {
+		log.Printf("Error fetching previous message for context of message deletion: %s\n", err)
+	} else {
+		if len(beforeMessages) > 0 {
+			contextLink = fmt.Sprintf("[(context)](%s)", makeMessageLink(m.GuildID, beforeMessages[0]))
+		}
+	}
+
 	var footer *discordgo.MessageEmbedFooter
 	if channel, err := s.State.Channel(m.ChannelID); err == nil {
 		footer = &discordgo.MessageEmbedFooter{
@@ -54,7 +64,7 @@ func messageDelete(s *discordgo.Session, m *discordgo.MessageDelete) {
 			IconURL: message.Author.AvatarURL("128"),
 		},
 		Title:       fmt.Sprintf("%s#%s(%s)", message.Author.Username, message.Author.Discriminator, message.Author.ID),
-		Description: message.Content,
+		Description: fmt.Sprintf("%s %s", message.Content, contextLink),
 		Timestamp:   messageCreationDate.UTC().Format(dateFormat),
 		Footer:      footer,
 	}
@@ -108,6 +118,8 @@ func messageUpdate(s *discordgo.Session, m *discordgo.MessageUpdate) {
 	cached.Content = m.Content
 	cache.m[m.ID] = cached
 
+	messageLink := fmt.Sprintf("[(context)](%s)", makeMessageLink(m.GuildID, m.Message))
+
 	var footer *discordgo.MessageEmbedFooter
 	if channel, err := s.State.Channel(m.ChannelID); err == nil {
 		footer = &discordgo.MessageEmbedFooter{
@@ -121,7 +133,7 @@ func messageUpdate(s *discordgo.Session, m *discordgo.MessageUpdate) {
 			IconURL: m.Author.AvatarURL("128"),
 		},
 		Title:       fmt.Sprintf("%s#%s(%s)", m.Author.Username, m.Author.Discriminator, m.Author.ID),
-		Description: "**Before:**\n" + before + "\n\n**Now:**\n" + m.Content,
+		Description: fmt.Sprintf("**Before:**\n%s\n\n**Now:**\n%s\n%s", before, m.Content, messageLink),
 		Timestamp:   messageCreationDate.UTC().Format(dateFormat),
 		Footer:      footer,
 	})
