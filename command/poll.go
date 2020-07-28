@@ -16,7 +16,7 @@ poll multi These are my options
 - option 1
 - option 2
 	`
-	questionMaxLength = 2047
+	questionMaxLength  = 2047
 	pollTitleMaxLength = 255
 )
 
@@ -48,10 +48,10 @@ func multiPoll(ctx *Context, question string, lines []string) {
 	if len([]rune(strings.Join(lines, "\n"))) > questionMaxLength {
 		ctx.Reply(fmt.Sprintf("Poll's length can be max %d characters", questionMaxLength))
 		return
-	} else if question > pollTitleMaxLength {
+	} else if len(question) > pollTitleMaxLength {
 		ctx.Reply(fmt.Sprintf("Question's length can be max %d characters", pollTitleMaxLength))
 		return
-	}else if optionCount > 10 {
+	} else if optionCount > 10 {
 		ctx.Reply(fmt.Sprintf("You cannot have more than 10 different options in one poll"))
 		return
 	} else if optionCount < 2 {
