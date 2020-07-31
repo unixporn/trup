@@ -43,7 +43,7 @@ func main() {
 
 	discord.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
 		botId = r.User.ID
-		s.UpdateStatus(0, "!help")
+		setStatus(s)
 		go cleanupLoop(s)
 	})
 	discord.AddHandler(memberJoin)
@@ -396,4 +396,10 @@ func logMessageAutodelete(s *discordgo.Session, m *discordgo.MessageCreate, matc
 
 func makeMessageLink(guildID string, m *discordgo.Message) string {
 	return fmt.Sprintf("https://discord.com/channels/%s/%s/%s", guildID, m.ChannelID, m.ID)
+}
+
+func setStatus(s *discordgo.Session) {
+	game := discordgo.Game { Type: discordgo.GameTypeWatching, Name: "for !help" }
+	update := discordgo.UpdateStatusData { Game: &game }
+	s.UpdateStatusComplex(update)
 }
