@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"regexp"
 	"strings"
 	"syscall"
 	"time"
@@ -310,6 +311,8 @@ func cleanupMutes(s *discordgo.Session) {
 	}
 }
 
+var emojiRegex = regexp.MustCompile(`<((@!?\d+)|(:.+?:\d+))>`)
+
 func runMessageFilter(s *discordgo.Session, m *discordgo.MessageCreate) (deleted bool) {
 	defer func() {
 		if err := recover(); err != nil {
@@ -318,7 +321,9 @@ func runMessageFilter(s *discordgo.Session, m *discordgo.MessageCreate) (deleted
 		}
 	}()
 
-	matchedString, err := db.FindBlockedWordMatch(m.Message.Content)
+	content := emojiRegex.ReplaceAllString(m.Message.Content, "")
+
+	matchedString, err := db.FindBlockedWordMatch(content)
 	if err != nil {
 		log.Printf("Failed to check if message \"%s\" contains blocked words\n%s\n", m.Content, err)
 		return false
