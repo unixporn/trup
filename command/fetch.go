@@ -254,7 +254,7 @@ func fetch(ctx *Context, args []string) {
 	if info.Info.Memory != 0 {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
 			"Memory",
-			humanize.IBytes(info.Info.Memory),
+			humanize.Bytes(info.Info.Memory),
 			inline,
 		})
 	}
