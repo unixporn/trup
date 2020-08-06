@@ -18,6 +18,7 @@ type Env struct {
 	ChannelBotlog      string
 	ChannelFeedback    string
 	ChannelModlog      string
+	ChannelRicing      string
 	CategoryModPrivate string
 }
 

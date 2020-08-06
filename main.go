@@ -25,6 +25,7 @@ var (
 		ChannelBotlog:      os.Getenv("CHANNEL_BOTLOG"),
 		ChannelFeedback:    os.Getenv("CHANNEL_FEEDBACK"),
 		ChannelModlog:      os.Getenv("CHANNEL_MODLOG"),
+		ChannelRicing:      os.Getenv("CHANNEL_RICING"),
 		CategoryModPrivate: os.Getenv("CATEGORY_MOD_PRIVATE"),
 	}
 	botId string
@@ -153,7 +154,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				return
 			}
 
-			s.ChannelMessageSend(ch.ID, "Your showcase submission was detected to be invalid. If you wanna comment on a rice, use the <#635625925748457482> channel.\nIf this is a mistake, contact the moderators or open an issue on https://github.com/unixporn/trup")
+			s.ChannelMessageSend(ch.ID, fmt.Sprintf("Your showcase submission was detected to be invalid. If you wanna comment on a rice, use the <#%s> channel.\nIf this is a mistake, contact the moderators or open an issue on https://github.com/unixporn/trup", env.ChannelModlog))
 			return
 		}
 
