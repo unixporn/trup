@@ -1,0 +1,21 @@
+version: '3'
+services:
+  trup:
+    image: trup
+    container_name: trup
+    depends_on: 
+      - postgres
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: "postgresql:///postgres/?host=postgres&database=trup"
+  postgres:
+    image: "postgres"
+    container_name: trup_postgres
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD:
+      POSTGRES_DB: trup
+      POSTGRES_HOST_AUTH_METHOD: trust
