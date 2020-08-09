@@ -19,15 +19,21 @@ func purge(ctx *Context, args []string) {
 		return
 	}
 
+	var duration time.Duration
+	isDuration := false
 	number, err := strconv.Atoi(args[1])
 	if err != nil {
-		ctx.ReportError("the first argument must be a number", err)
-		return
+		duration,err = time.ParseDuration(args[1])
+		if err != nil {
+		    ctx.ReportError("The first argument must be a number or duration", err)
+		    return;
+		}
+		isDuration = true
+		number = 100
 	} else if number > 100 || number < 2 {
 		ctx.Reply("the first argument must be comprised between 2 and 100")
 		return
 	}
-
 	from := parseMention(args[2])
 	if from == "" {
 		ctx.Reply("The second argument must be a user mention.")
@@ -53,13 +59,16 @@ Outer:
 			return
 		}
 		for _, message := range messages {
-			if created, _ := discordgo.SnowflakeTimestamp(message.ID); now.Sub(created) > tooOldThreshold {
+			created, _ := discordgo.SnowflakeTimestamp(message.ID)
+			if now.Sub(created) > tooOldThreshold {
 				break Outer
 			}
 			if message.Author.ID != from {
 				continue
 			}
-
+			if isDuration && !created.After(now.Add(-duration)) {
+				break Outer
+			}
 			toDelete = append(toDelete, message.ID)
 			if len(toDelete) >= number {
 				break Outer
