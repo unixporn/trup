@@ -23,10 +23,10 @@ func purge(ctx *Context, args []string) {
 	isDuration := false
 	number, err := strconv.Atoi(args[1])
 	if err != nil {
-		duration,err = time.ParseDuration(args[1])
+		duration, err = time.ParseDuration(args[1])
 		if err != nil {
-		    ctx.ReportError("The first argument must be a number or duration", err)
-		    return;
+			ctx.ReportError("The first argument must be a number or duration", err)
+			return
 		}
 		isDuration = true
 		number = 100
