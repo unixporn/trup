@@ -25,7 +25,7 @@ func purge(ctx *Context, args []string) {
 	if err != nil {
 		duration, err = time.ParseDuration(args[1])
 		if err != nil {
-		ctx.ReportError("The first argument must be a number (2-100) or duration (10s, 30m, 10m10s)", err)
+			ctx.ReportError("The first argument must be a number (2-100) or duration (10s, 30m, 10m10s)", err)
 			return
 		}
 		isDuration = true
