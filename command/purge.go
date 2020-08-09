@@ -66,7 +66,7 @@ Outer:
 			if message.Author.ID != from {
 				continue
 			}
-			if isDuration && !created.After(now.Sub(duration)) {
+			if isDuration && !created.After(now.Add(-duration)) {
 				break Outer
 			}
 			toDelete = append(toDelete, message.ID)
