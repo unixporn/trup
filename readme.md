@@ -3,11 +3,23 @@
 ```sh
 TOKEN=your_token
 ROLE_MOD=707318869445967872
+ROLE_MUTE=
 ROLE_COLORS=707318869445967872,707318869445967872
 CHANNEL_SHOWCASE=635625917623828520
-CATEGORY_MOD_PRIVATE=635627141123538966,
+CATEGORY_MOD_PRIVATE=635627141123538966
 CHANNEL_FEEDBACK=
 CHANNEL_BOTLOG=
+CHANNEL_MODLOG=
+```
+
+# Setup with Docker
+
+After cloning the repository, create a file called `.env` 
+containing the necessary environment variables (as shown above) in the project root.
+
+Afterwards you can initialize the docker services by running
+```sh
+docker-compose up -d
 ```
 
 # Automatic setup with Nix
