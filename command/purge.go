@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	purgeUsage = "purge <amount> <@user>"
-	purgeHelp  = "deletes <amount> messages sent by <user> in the current channel. Doesn't delete messages older than 14 days."
+	purgeUsage = "purge <amount OR duration> <@user>"
+	purgeHelp  = "deletes <amount> messages sent by <user> in the current channel or messages sent in the last <duration> by <user>. Doesn't delete messages older than 14 days."
 )
 
 func purge(ctx *Context, args []string) {
@@ -25,7 +25,7 @@ func purge(ctx *Context, args []string) {
 	if err != nil {
 		duration, err = time.ParseDuration(args[1])
 		if err != nil {
-			ctx.ReportError("The first argument must be a number or duration", err)
+		ctx.ReportError("The first argument must be a number (2-100) or duration (10s, 30m, 10m10s)", err)
 			return
 		}
 		isDuration = true

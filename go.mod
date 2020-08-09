@@ -8,4 +8,5 @@ require (
 	github.com/jackc/pgx v3.6.2+incompatible
 	github.com/jackc/pgx/v4 v4.6.0
 	github.com/mattn/go-shellwords v1.0.10
+	golang.org/x/tools v0.0.0-20200809012840-6f4f008689da // indirect
 )
