@@ -376,15 +376,6 @@ func logMessageAutodelete(s *discordgo.Session, m *discordgo.MessageCreate, matc
 		log.Printf("Error writing botlog entry for message deletion: %s\n", err)
 	}
 
-	deletionNoticeMsg, err := s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("<@%s>, your message has been deleted and logged for containing a banned word or phrase.", m.Author.ID))
-	if err != nil {
-		log.Printf("Failed to send message deletion notice: %s\n", err)
-	}
-
-	time.AfterFunc(6*time.Second, func() {
-		s.ChannelMessageDelete(deletionNoticeMsg.ChannelID, deletionNoticeMsg.ID)
-	})
-
 	botlogEntryLink := makeMessageLink(m.Message.GuildID, botlogEntry)
 	note := db.NewNote(s.State.User.ID, m.Author.ID, fmt.Sprintf("Message deleted because of word `%s` [(source)](%s)", matchedString, botlogEntryLink), db.BlocklistViolation)
 	err = note.Save()
