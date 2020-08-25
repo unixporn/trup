@@ -22,10 +22,12 @@ var (
 		RoleColors:         strings.Split(os.Getenv("ROLE_COLORS"), ","),
 		ChannelShowcase:    os.Getenv("CHANNEL_SHOWCASE"),
 		RoleMute:           os.Getenv("ROLE_MUTE"),
-		ChannelBotlog:      os.Getenv("CHANNEL_BOTLOG"),
 		ChannelFeedback:    os.Getenv("CHANNEL_FEEDBACK"),
 		ChannelModlog:      os.Getenv("CHANNEL_MODLOG"),
 		CategoryModPrivate: os.Getenv("CATEGORY_MOD_PRIVATE"),
+		ChannelAutoMod:     os.Getenv("CHANNEL_AUTO_MOD"),
+		ChannelBotMessages: os.Getenv("CHANNEL_BOT_MESSAGES"),
+		ChannelBotTraffic:  os.Getenv("CHANNEL_BOT_TRAFFIC"),
 	}
 	botId string
 	cache = newMessageCache(5000)
@@ -231,9 +233,9 @@ func memberJoin(s *discordgo.Session, m *discordgo.GuildMemberAdd) {
 		},
 	}
 
-	_, err := s.ChannelMessageSendEmbed(env.ChannelBotlog, &embed)
+	_, err := s.ChannelMessageSendEmbed(env.ChannelBotTraffic, &embed)
 	if err != nil {
-		log.Printf("Failed to send embed to channel %s of user(%s) join. Error: %s\n", env.ChannelBotlog, m.User.ID, err)
+		log.Printf("Failed to send embed to channel %s of user(%s) join. Error: %s\n", env.ChannelBotTraffic, m.User.ID, err)
 	}
 }
 
@@ -252,9 +254,9 @@ func memberLeave(s *discordgo.Session, m *discordgo.GuildMemberRemove) {
 		Title: fmt.Sprintf("%s#%s(%s)", m.User.Username, m.User.Discriminator, m.User.ID),
 	}
 
-	_, err := s.ChannelMessageSendEmbed(env.ChannelBotlog, &embed)
+	_, err := s.ChannelMessageSendEmbed(env.ChannelBotTraffic, &embed)
 	if err != nil {
-		log.Printf("Failed to send embed to channel %s of user(%s) leave. Error: %s\n", env.ChannelBotlog, m.User.ID, err)
+		log.Printf("Failed to send embed to channel %s of user(%s) leave. Error: %s\n", env.ChannelBotTraffic, m.User.ID, err)
 	}
 }
 
@@ -300,7 +302,6 @@ func cleanupMutes(s *discordgo.Session) {
 			continue
 		}
 		unmutedMsg := "User <@" + m.User + "> is now unmuted."
-		s.ChannelMessageSend(env.ChannelBotlog, unmutedMsg)
 		s.ChannelMessageSend(env.ChannelModlog, unmutedMsg)
 
 		err = db.SetMuteInactive(m.Id)
@@ -362,7 +363,7 @@ func logMessageAutodelete(s *discordgo.Session, m *discordgo.MessageCreate, matc
 		}
 	}
 
-	botlogEntry, err := s.ChannelMessageSendEmbed(env.ChannelBotlog, &discordgo.MessageEmbed{
+	botlogEntry, err := s.ChannelMessageSendEmbed(env.ChannelAutoMod, &discordgo.MessageEmbed{
 		Author: &discordgo.MessageEmbedAuthor{
 			Name:    "Message Autodelete",
 			IconURL: m.Message.Author.AvatarURL("128"),
@@ -390,7 +391,7 @@ func makeMessageLink(guildID string, m *discordgo.Message) string {
 }
 
 func setStatus(s *discordgo.Session) {
-	game := discordgo.Game { Type: discordgo.GameTypeWatching, Name: "for !help" }
-	update := discordgo.UpdateStatusData { Game: &game }
+	game := discordgo.Game{Type: discordgo.GameTypeWatching, Name: "for !help"}
+	update := discordgo.UpdateStatusData{Game: &game}
 	s.UpdateStatusComplex(update)
 }

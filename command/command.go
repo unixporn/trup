@@ -11,11 +11,15 @@ import (
 )
 
 type Env struct {
-	RoleMod            string
-	RoleMute           string
-	RoleColors         []string
-	ChannelShowcase    string
-	ChannelBotlog      string
+	RoleMod         string
+	RoleMute        string
+	RoleColors      []string
+	ChannelShowcase string
+
+	ChannelAutoMod     string
+	ChannelBotMessages string
+	ChannelBotTraffic  string
+
 	ChannelFeedback    string
 	ChannelModlog      string
 	CategoryModPrivate string

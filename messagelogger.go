@@ -72,7 +72,7 @@ func messageDelete(s *discordgo.Session, m *discordgo.MessageDelete) {
 	mediaFiles, finish, err := db.GetStoredAttachments(m.ChannelID, m.Message.ID)
 	defer finish()
 	if err != nil || len(mediaFiles) == 0 {
-		s.ChannelMessageSendEmbed(env.ChannelBotlog, messageEmbed)
+		s.ChannelMessageSendEmbed(env.ChannelBotMessages, messageEmbed)
 		return
 	}
 
@@ -91,7 +91,7 @@ func messageDelete(s *discordgo.Session, m *discordgo.MessageDelete) {
 		messageEmbed.Image = &discordgo.MessageEmbedImage{URL: "attachment://" + mediaFiles[0].Filename}
 	}
 
-	_, err = s.ChannelMessageSendComplex(env.ChannelBotlog, &discordgo.MessageSend{
+	_, err = s.ChannelMessageSendComplex(env.ChannelBotMessages, &discordgo.MessageSend{
 		Embed: messageEmbed,
 		Files: discordFiles,
 	})
@@ -127,7 +127,7 @@ func messageUpdate(s *discordgo.Session, m *discordgo.MessageUpdate) {
 		}
 	}
 
-	s.ChannelMessageSendEmbed(env.ChannelBotlog, &discordgo.MessageEmbed{
+	s.ChannelMessageSendEmbed(env.ChannelBotMessages, &discordgo.MessageEmbed{
 		Author: &discordgo.MessageEmbedAuthor{
 			Name:    "Message Edit",
 			IconURL: m.Author.AvatarURL("128"),
