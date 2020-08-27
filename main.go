@@ -230,6 +230,10 @@ func memberJoin(s *discordgo.Session, m *discordgo.GuildMemberAdd) {
 				Name:  "Account Creation Date",
 				Value: accountCreateDate.UTC().Format("2006-01-02 15:04"),
 			},
+			{
+				Name: "Join Date",
+				Value: time.Now().UTC().Format("2006-01-02 15:04"),
+			},
 		},
 	}
 
@@ -252,6 +256,12 @@ func memberLeave(s *discordgo.Session, m *discordgo.GuildMemberRemove) {
 			Name:    "Member Leave",
 		},
 		Title: fmt.Sprintf("%s#%s(%s)", m.User.Username, m.User.Discriminator, m.User.ID),
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name: "Leave Date",
+				Value: time.Now().UTC().Format("2006-01-02 15:04"),
+			},
+		},
 	}
 
 	_, err := s.ChannelMessageSendEmbed(env.ChannelBotTraffic, &embed)
