@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
+	"github.com/bwmarrin/discordgo"
 	"log"
 	"strings"
 	"trup/db"
-
-	"github.com/bwmarrin/discordgo"
 )
+
+var lastAuditIds = make(map[string]string)
 
 type messageCache struct {
 	queue []string
@@ -32,12 +33,36 @@ func messageDelete(s *discordgo.Session, m *discordgo.MessageDelete) {
 			log.Println("Recovered from panic in messageDelete", r)
 		}
 	}()
-
+	var deleter string
+	// get audit log info
+	auditLog, err := s.GuildAuditLog(m.GuildID, "", "", discordgo.AuditLogActionMessageDelete, 1)
+	if err != nil {
+		log.Printf("Failed to check audit log: %s", err.Error())
+	} else {
+		// get audit log entries
+		for _, v := range auditLog.AuditLogEntries {
+			if lastAuditIds[m.GuildID] == v.ID {
+				//the message probably was a self-delete
+			} else {
+				lastAuditIds[m.GuildID] = v.ID
+				//get users from audit log
+				for _, u := range auditLog.Users {
+					if u.ID == v.UserID {
+						deleter = u.Username + "#" + u.Discriminator
+					}
+				}
+			}
+		}
+	}
+	//if deleter is empty i.e the message was self deleted, then assign the value "self"
+	if deleter == "" {
+		deleter = "self"
+	}
 	const dateFormat = "2006-01-02T15:04:05.0000Z"
 	messageCreationDate, _ := discordgo.SnowflakeTimestamp(m.ID)
 	message, inCache := cache.m[m.ID]
 	if !inCache {
-		log.Printf("Unknown user deleted message %s(not in cache), message creation date: %s\n", m.ID, messageCreationDate.UTC().Format(dateFormat))
+		log.Printf("%s deleted message %s(not in cache), message creation date: %s\n", deleter, m.ID, messageCreationDate.UTC().Format(dateFormat))
 		return
 	}
 
@@ -64,7 +89,7 @@ func messageDelete(s *discordgo.Session, m *discordgo.MessageDelete) {
 			IconURL: message.Author.AvatarURL("128"),
 		},
 		Title:       fmt.Sprintf("%s#%s(%s)", message.Author.Username, message.Author.Discriminator, message.Author.ID),
-		Description: fmt.Sprintf("%s %s", message.Content, contextLink),
+		Description: fmt.Sprintf("%s %s\nBy: %s", message.Content, contextLink, deleter),
 		Timestamp:   messageCreationDate.UTC().Format(dateFormat),
 		Footer:      footer,
 	}
