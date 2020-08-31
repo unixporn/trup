@@ -43,10 +43,11 @@ func main() {
 		log.Fatalf("Failed on discordgo.New(): %s\n", err)
 	}
 
+	go cleanupLoop(discord)
+
 	discord.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
 		botId = r.User.ID
 		setStatus(s)
-		go cleanupLoop(s)
 	})
 	discord.AddHandler(memberJoin)
 	discord.AddHandler(memberLeave)
