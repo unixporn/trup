@@ -299,10 +299,11 @@ func cleanupMutes(s *discordgo.Session) {
 		err = s.GuildMemberRoleRemove(m.GuildId, m.User, env.RoleMute)
 		if err != nil {
 			log.Printf("Failed to remove role %s\n", err)
-			continue
+			s.ChannelMessageSend(env.ChannelModlog, fmt.Sprintf("Failed to remove role Mute from user <@%s>. Error: %s", m.User, err))
+		} else {
+			unmutedMsg := "User <@" + m.User + "> is now unmuted."
+			s.ChannelMessageSend(env.ChannelModlog, unmutedMsg)
 		}
-		unmutedMsg := "User <@" + m.User + "> is now unmuted."
-		s.ChannelMessageSend(env.ChannelModlog, unmutedMsg)
 
 		err = db.SetMuteInactive(m.Id)
 		if err != nil {
