@@ -60,6 +60,11 @@ var Commands = map[string]Command{
 		Exec:  move,
 		Usage: moveUsage,
 	},
+	"info": {
+		Exec:  info,
+		Usage: infoUsage,
+		Help:  infoHelp,
+	},
 	"git": {
 		Exec:  git,
 		Usage: gitUsage,
