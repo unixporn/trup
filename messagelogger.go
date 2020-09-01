@@ -54,15 +54,11 @@ func messageDelete(s *discordgo.Session, m *discordgo.MessageDelete) {
 			}
 		}
 	}
-	//if deleter is empty i.e the message was self deleted, then assign the value "self"
-	if deleter == "" {
-		deleter = "self"
-	}
 	const dateFormat = "2006-01-02T15:04:05.0000Z"
 	messageCreationDate, _ := discordgo.SnowflakeTimestamp(m.ID)
 	message, inCache := cache.m[m.ID]
 	if !inCache {
-		log.Printf("%s deleted message %s(not in cache), message creation date: %s\n", deleter, m.ID, messageCreationDate.UTC().Format(dateFormat))
+		log.Printf("Unknown user deleted message %s(not in cache), message creation date: %s\n", m.ID, messageCreationDate.UTC().Format(dateFormat))
 		return
 	}
 
@@ -78,8 +74,14 @@ func messageDelete(s *discordgo.Session, m *discordgo.MessageDelete) {
 
 	var footer *discordgo.MessageEmbedFooter
 	if channel, err := s.State.Channel(m.ChannelID); err == nil {
-		footer = &discordgo.MessageEmbedFooter{
-			Text: "#" + channel.Name,
+		if deleter == "" {
+			footer = &discordgo.MessageEmbedFooter{
+				Text: "#" + channel.Name,
+			}
+		} else {
+			footer = &discordgo.MessageEmbedFooter{
+				Text: "By " + deleter + "\n#" + channel.Name,
+			}
 		}
 	}
 
@@ -89,8 +91,8 @@ func messageDelete(s *discordgo.Session, m *discordgo.MessageDelete) {
 			IconURL: message.Author.AvatarURL("128"),
 		},
 		Title:       fmt.Sprintf("%s#%s(%s)", message.Author.Username, message.Author.Discriminator, message.Author.ID),
-		Description: fmt.Sprintf("%s %s\nBy: %s", message.Content, contextLink, deleter),
-		Timestamp:   messageCreationDate.UTC().Format(dateFormat),
+		Description: fmt.Sprintf("%s %s", message.Content, contextLink),
+		Timestamp:   messageCreationDate.UTC().Format(dateFormat) + "\n",
 		Footer:      footer,
 	}
 
