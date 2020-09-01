@@ -92,7 +92,7 @@ func messageDelete(s *discordgo.Session, m *discordgo.MessageDelete) {
 		},
 		Title:       fmt.Sprintf("%s#%s(%s)", message.Author.Username, message.Author.Discriminator, message.Author.ID),
 		Description: fmt.Sprintf("%s %s", message.Content, contextLink),
-		Timestamp:   messageCreationDate.UTC().Format(dateFormat) + "\n",
+		Timestamp:   messageCreationDate.UTC().Format(dateFormat),
 		Footer:      footer,
 	}
 
