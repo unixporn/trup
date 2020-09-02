@@ -1,7 +1,6 @@
 package command
 
 import (
-	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/dustin/go-humanize"
 	"log"
