@@ -1,6 +1,7 @@
 package command
 
 import (
+	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/dustin/go-humanize"
 	"log"
@@ -9,7 +10,7 @@ import (
 
 const (
 	infoUsage = "info [url]"
-	infoHelp  = "displaysExtrainfo"
+	infoHelp  = "displays additional info"
 )
 
 // struct for getting user roles
@@ -61,7 +62,6 @@ func info(ctx *Context, args []string) {
 			return
 		}
 		r := discordRole{
-
 			Name: role.Name,
 		}
 		discordRoles = append(discordRoles, r)
@@ -74,12 +74,13 @@ func info(ctx *Context, args []string) {
 
 	const inline = false
 	embed := discordgo.MessageEmbed{
-		Author: &discordgo.MessageEmbedAuthor{
-			IconURL: user.AvatarURL("128"),
-			Name:    "Info",
-		},
 		Title:  user.Username + "#" + user.Discriminator,
 		Fields: []*discordgo.MessageEmbedField{},
+	}
+
+	//embed Thumbnail
+	embed.Thumbnail = &discordgo.MessageEmbedThumbnail{
+		URL: user.AvatarURL("128"),
 	}
 
 	//embed color
