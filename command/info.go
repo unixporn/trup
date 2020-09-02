@@ -19,7 +19,11 @@ type discordRole struct {
 
 func info(ctx *Context, args []string) {
 	var user *discordgo.User
-	g, _ := ctx.Session.State.Guild(ctx.Message.GuildID)
+	g, err := ctx.Session.State.Guild(ctx.Message.GuildID)
+	if err != nil {
+		ctx.ReportError("Failed to find Server details. Error: ", err)
+		return
+	}
 	if len(args) < 2 {
 		user = ctx.Message.Author
 	} else {
@@ -30,11 +34,22 @@ func info(ctx *Context, args []string) {
 		}
 		user = usr.User
 	}
-	member, _ := ctx.Session.GuildMember(g.ID, user.ID)
-
+	member, err := ctx.Session.GuildMember(g.ID, user.ID)
+	if err != nil {
+		ctx.ReportError("Failed to find member info.", err)
+		return
+	}
 	//dates
-	accountCreateDate, _ := discordgo.SnowflakeTimestamp(user.ID)
-	joinDate, _ := member.JoinedAt.Parse()
+	accountCreateDate, err := discordgo.SnowflakeTimestamp(user.ID)
+	if err != nil {
+		log.Println("Failed to find Account Creation Date. ", err)
+	}
+
+	joinDate, err := member.JoinedAt.Parse()
+	if err != nil {
+		log.Println("Failed to find Server Join Date. ", err)
+	}
+	// no error handling here because for Non-Boosters premiumDate would always give error
 	premiumDate, _ := member.PremiumSince.Parse()
 
 	// all roles
@@ -42,7 +57,8 @@ func info(ctx *Context, args []string) {
 	for _, role := range member.Roles {
 		role, err := ctx.Session.State.Role(ctx.Message.GuildID, role)
 		if err != nil {
-			log.Println("getDiscordRoles Failed to get user roles from discord server.")
+			log.Println("Failed to get user roles from discord server.")
+			return
 		}
 		r := discordRole{
 
@@ -100,5 +116,9 @@ func info(ctx *Context, args []string) {
 		})
 	}
 
-	ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed)
+	_, err = ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed)
+	if err != nil {
+		ctx.ReportError("Failed to send info", err)
+		return
+	}
 }
