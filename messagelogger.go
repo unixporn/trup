@@ -38,18 +38,18 @@ func messageDelete(s *discordgo.Session, m *discordgo.MessageDelete) {
 	auditLog, err := s.GuildAuditLog(m.GuildID, "", "", discordgo.AuditLogActionMessageDelete, 1)
 	if err != nil {
 		log.Printf("Failed to check audit log: %s", err.Error())
-	} else {
-		// get audit log entries
-		for _, v := range auditLog.AuditLogEntries {
-			if lastAuditIds[m.GuildID] == v.ID {
-				//the message probably was a self-delete
-			} else {
-				lastAuditIds[m.GuildID] = v.ID
-				//get users from audit log
-				for _, u := range auditLog.Users {
-					if u.ID == v.UserID {
-						deleter = u.Username + "#" + u.Discriminator
-					}
+		return
+	}
+	// get audit log entries
+	for _, v := range auditLog.AuditLogEntries {
+		if lastAuditIds[m.GuildID] == v.ID {
+			//the message probably was a self-delete
+		} else {
+			lastAuditIds[m.GuildID] = v.ID
+			//get users from audit log
+			for _, u := range auditLog.Users {
+				if u.ID == v.UserID {
+					deleter = u.Username + "#" + u.Discriminator
 				}
 			}
 		}
