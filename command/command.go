@@ -144,15 +144,27 @@ func hasPrefixFold(s, prefix string) bool {
 	return len(s) >= len(prefix) && strings.EqualFold(s[:len(prefix)], prefix)
 }
 
+func (ctx *Context) uniqueMembers() []*discordgo.Member {
+	guild, err := ctx.Session.Guild(ctx.Message.GuildID)
+	if err != nil {
+		ctx.ReportError("Failed to fetch guild "+ctx.Message.GuildID, err)
+		return []*discordgo.Member{}
+	}
+	var unique []*discordgo.Member
+	mm := make(map[string]*discordgo.Member)
+	for _, member := range guild.Members {
+		if _, ok := mm[member.User.ID]; !ok {
+			mm[member.User.ID] = nil
+			unique = append(unique, member)
+		}
+	}
+	return unique
+}
+
 func (ctx *Context) userFromString(str string) (*discordgo.Member, error) {
 	if m := parseMention(str); m != "" {
 		mem, err := ctx.Session.GuildMember(ctx.Message.GuildID, m)
 		return mem, err
-	}
-
-	guild, err := ctx.Session.State.Guild(ctx.Message.GuildID)
-	if err != nil {
-		return nil, err
 	}
 
 	discriminator := ""
@@ -163,7 +175,7 @@ func (ctx *Context) userFromString(str string) (*discordgo.Member, error) {
 
 	matches := []*discordgo.Member{}
 
-	for _, m := range guild.Members {
+	for _, m := range ctx.uniqueMembers() {
 		if discriminator != "" {
 			if m.User.Discriminator == discriminator && strings.EqualFold(m.User.Username, str) {
 				matches = append(matches, m)
