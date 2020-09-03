@@ -123,7 +123,7 @@ func info(ctx *Context, args []string) {
 			inline,
 		})
 	}
-	if strings.Join(userRoles, ", ") != "" {
+	if len(roles) > 0 {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
 			"Roles",
 			strings.Join(roles, ", "),
