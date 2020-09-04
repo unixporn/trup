@@ -5,8 +5,7 @@ import (
 )
 
 func Help(ctx *Context, args []string) {
-
-	const inline = true
+	const inline = false
 	embed := discordgo.MessageEmbed{
 		Title:  "Help",
 		Fields: []*discordgo.MessageEmbedField{},
@@ -18,35 +17,20 @@ func Help(ctx *Context, args []string) {
 			continue
 		}
 
+		fieldName := "**" + name + "**"
 		if cmd.Usage != "" {
-			if cmd.Help != "" {
-				embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-					name + " - Usage " + cmd.Usage,
-					cmd.Help,
-					inline,
-				})
-			} else {
-				embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-					name + " - Usage " + cmd.Usage,
-					"\u200b",
-					inline,
-				})
-			}
-		} else {
-			if cmd.Help != "" {
-				embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-					name,
-					cmd.Help,
-					inline,
-				})
-			} else {
-				embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-					name,
-					"\u200b",
-					inline,
-				})
-			}
+			fieldName += " - Usage " + cmd.Usage
 		}
+		fieldValue := cmd.Help
+		if fieldValue == "" {
+			fieldValue = "\u200b"
+		}
+
+		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
+			fieldName,
+			fieldValue,
+			inline,
+		})
 	}
 	ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed)
 }

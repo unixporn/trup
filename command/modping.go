@@ -21,7 +21,7 @@ func modping(ctx *Context, args []string) {
 	reason := strings.Join(args[1:], " ")
 
 	mods := []string{}
-	for _, mem := range ctx.uniqueMembers() {
+	for _, mem := range ctx.members() {
 		for _, r := range mem.Roles {
 			if r == ctx.Env.RoleMod {
 				p, err := ctx.Session.State.Presence(ctx.Message.GuildID, mem.User.ID)

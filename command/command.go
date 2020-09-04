@@ -144,7 +144,8 @@ func hasPrefixFold(s, prefix string) bool {
 	return len(s) >= len(prefix) && strings.EqualFold(s[:len(prefix)], prefix)
 }
 
-func (ctx *Context) uniqueMembers() []*discordgo.Member {
+// members returns unique members from discordgo's state, because discordgo's state has duplicates.
+func (ctx *Context) members() []*discordgo.Member {
 	guild, err := ctx.Session.Guild(ctx.Message.GuildID)
 	if err != nil {
 		ctx.ReportError("Failed to fetch guild "+ctx.Message.GuildID, err)
@@ -175,7 +176,7 @@ func (ctx *Context) userFromString(str string) (*discordgo.Member, error) {
 
 	matches := []*discordgo.Member{}
 
-	for _, m := range ctx.uniqueMembers() {
+	for _, m := range ctx.members() {
 		if discriminator != "" {
 			if m.User.Discriminator == discriminator && strings.EqualFold(m.User.Username, str) {
 				matches = append(matches, m)
