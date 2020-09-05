@@ -56,12 +56,12 @@ if [ "$kernel" = "Linux" ]; then
 	[ ! "$wm" ] && [ "$DISPLAY" ] && command -v xprop >/dev/null && {
 		id=$(xprop -root -notype _NET_SUPPORTING_WM_CHECK)
 		id=${id##* }
-		wm="$(xprop -id "$id" -notype -len 100 -f _NET_WM_NAME 8t | \
-			grep WM_NAME | cut -d' ' -f 3 | tr -d '"')"
+		wm=$(xprop -id "$id" -notype -len 100 -f _NET_WM_NAME 8t \
+			| grep '^_NET_WM_NAME' | cut -d\" -f 2)
 	}
 
 	# for non-EWMH WMs
-	[ "$wm" ] ||
+	[ ! "$wm" ] || [ "$wm" = "LG3D" ] &&
 		wm=$(ps -e | grep -m 1 -o \
 			-e "sway" \
 			-e "kiwmi" \
