@@ -12,7 +12,7 @@ including the image, but not !git or !dotfiles
 !setfetch
 Distro: ${NAME:-$DISTRIB_ID} $ver
 Kernel: $(uname -sr)
-Terminal:$term
+Terminal: $term
 DE/WM: $wm
 Display protocol: $displayprot
 Editor: $EDITOR
@@ -129,6 +129,7 @@ if [ "$kernel" = "Linux" ]; then
 		-e " st$" \
 		-e " xst$" \
 		-e " tilda$")
+	term="$(echo "$term" | tr -d " ")"
 
 	print
 elif [ "$kernel"  = "Darwin" ]; then
