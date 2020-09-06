@@ -104,19 +104,7 @@ func setFetch(ctx *Context, args []string) {
 
 const fetchUsage = "fetch [user]"
 
-func fetch(ctx *Context, args []string) {
-	var user *discordgo.User
-	if len(args) < 2 {
-		user = ctx.Message.Author
-	} else {
-		usr, err := ctx.userFromString(strings.Join(args[1:], " "))
-		if err != nil {
-			ctx.Reply("failed to find the user. Error: " + err.Error())
-			return
-		}
-		user = usr.User
-	}
-
+func doFetch(ctx *Context, user *discordgo.User) {
 	const inline = true
 	embed := discordgo.MessageEmbed{
 		Title:  "Fetch " + user.Username + "#" + user.Discriminator,
@@ -294,6 +282,21 @@ sysinfoEnd:
 	}
 }
 
+func fetch(ctx *Context, args []string) {
+	if len(args) < 2 {
+		doFetch(ctx, ctx.Message.Author)
+	} else {
+		err := ctx.requestUserByName(strings.Join(args[1:], " "), func(member *discordgo.Member) error {
+			doFetch(ctx, member.User)
+			return nil
+		})
+		if err != nil {
+			ctx.Reply("failed to find the user. Error: " + err.Error())
+			return
+		}
+	}
+}
+
 func getDistroImage(name string) string {
 	name = strings.ToLower(name)
 	for _, d := range distroImages {
@@ -315,7 +318,7 @@ var distroImages = []struct {
 	{name: "artix", image: "https://artixlinux.org/img/artix-logo.png"},
 	{name: "alpine", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Alpine_Linux.svg/250px-Alpine_Linux.svg.png"},
 	{name: "alt", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/AltLinux500Desktop.png/250px-AltLinux500Desktop.png"},
-	{name: "antergos", image: "https://upload.wikimedia.org/wikipedia/en/thumb/9/93/Antergos_logo_github.png/150px-Antergos_logo_github.png"},	
+	{name: "antergos", image: "https://upload.wikimedia.org/wikipedia/en/thumb/9/93/Antergos_logo_github.png/150px-Antergos_logo_github.png"},
 	{name: "backbox", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/BackBox_4.4_Screenshot.png/250px-BackBox_4.4_Screenshot.png"},
 	{name: "boss", image: "https://upload.wikimedia.org/wikipedia/en/f/f2/Bharat_Operating_System_Solutions_logo%2C_Sept_2015.png"},
 	{name: "bodhi", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Bodhi_Linux_Logo.png/250px-Bodhi_Linux_Logo.png"},

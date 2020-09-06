@@ -74,6 +74,12 @@ func messageReactionAdd(s *discordgo.Session, m *discordgo.MessageReactionAdd) {
 	if m.UserID == botID {
 		return
 	}
+
+	didHandle, err := command.HandleMessageReaction(m.MessageReaction)
+	if didHandle || err != nil {
+		return
+	}
+
 	message, err := s.ChannelMessage(m.ChannelID, m.MessageID)
 	if err != nil {
 		return

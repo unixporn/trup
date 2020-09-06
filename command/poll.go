@@ -21,7 +21,6 @@ poll multi These are my options
 	questionMaxLength = 2047
 )
 
-var numbers = []string{"1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"}
 var pollOptionLineStartPattern = regexp.MustCompile(`^\s*-|^\s*\d\.|^\s*\*`)
 
 func poll(ctx *Context, args []string) {
