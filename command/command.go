@@ -164,7 +164,7 @@ func parseMention(mention string) string {
 var snowflakeRegex = regexp.MustCompile(`\d+`);
 
 func parseSnowflake(snowflake string) string {
-	if snowflakeRegex.Match([]byte(snowflake)) {
+	if snowflakeRegex.MatchString(snowflake) {
 		return snowflake
 	}
 
