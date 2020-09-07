@@ -18,10 +18,16 @@ func warn(ctx *Context, args []string) {
 		return
 	}
 
-	var (
-		user   = parseMention(args[1])
-		reason = strings.Join(args[2:], " ")
-	)
+	user := parseMention(args[1])
+	if user == "" {
+		user = parseSnowflake(args[1])
+	}
+	if user == "" {
+		ctx.Reply("The first argument must be a user mention.")
+		return
+	}
+
+	reason := strings.Join(args[2:], " ")
 
 	warningMessageLink := fmt.Sprintf("[(warning)](%s)", makeMessageLink(ctx.Message.GuildID, ctx.Message))
 
