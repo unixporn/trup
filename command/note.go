@@ -19,6 +19,9 @@ func note(ctx *Context, args []string) {
 
 	about := parseMention(args[1])
 	if about == "" {
+		about = parseSnowflake(args[1])
+	}
+	if about == "" {
 		ctx.Reply("The first argument must be a user mention.")
 		return
 	}

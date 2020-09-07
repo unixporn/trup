@@ -161,6 +161,16 @@ func parseMention(mention string) string {
 	return res[1]
 }
 
+var snowflakeRegex = regexp.MustCompile(`\d+`);
+
+func parseSnowflake(snowflake string) string {
+	if snowflakeRegex.MatchString(snowflake) {
+		return snowflake
+	}
+
+	return ""
+}
+
 var parseChannelMentionRegexp = regexp.MustCompile(`<#(\d+)>`)
 
 func parseChannelMention(mention string) string {
@@ -235,6 +245,15 @@ func (ctx *Context) resolveAmbiguousUser(options []*discordgo.Member, callback f
 // searches for a user by the name, asking the user to select one if the name is ambiguous
 func (ctx *Context) requestUserByName(str string, callback func(*discordgo.Member) error) error {
 	if m := parseMention(str); m != "" {
+		mem, err := ctx.Session.GuildMember(ctx.Message.GuildID, m)
+		if err != nil {
+			return err
+		}
+		callback(mem)
+		return nil
+	}
+
+	if m := parseSnowflake(str); m != "" {
 		mem, err := ctx.Session.GuildMember(ctx.Message.GuildID, m)
 		if err != nil {
 			return err
