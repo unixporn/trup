@@ -76,7 +76,11 @@ func messageReactionAdd(s *discordgo.Session, m *discordgo.MessageReactionAdd) {
 	}
 
 	didHandle, err := command.HandleMessageReaction(m.MessageReaction)
-	if didHandle || err != nil {
+	if didHandle {
+		return
+	}
+	if err != nil {
+		log.Printf("Failed to handle message reaction: %v\n", err)
 		return
 	}
 
