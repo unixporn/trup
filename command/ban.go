@@ -38,7 +38,7 @@ func ban(ctx *Context, args []string) {
 
 	_, err = ctx.Session.ChannelMessageSend(
 		ctx.Env.ChannelModlog,
-		fmt.Sprintf("<%s> has been banned by %s%s for %s.", user, ctx.Message.Author, reason),
+		fmt.Sprintf("<@%s> has been banned by %s for %s.", user, ctx.Message.Author, reason),
 	)
 	if err != nil {
 		log.Printf("Error sending ban notice into modlog: %s\n", err)
