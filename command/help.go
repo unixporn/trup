@@ -1,25 +1,36 @@
 package command
 
-import "strings"
+import (
+	"github.com/bwmarrin/discordgo"
+)
 
 func Help(ctx *Context, args []string) {
-	var text strings.Builder
-
+	const inline = false
+	embed := discordgo.MessageEmbed{
+		Title:  "Help",
+		Fields: []*discordgo.MessageEmbedField{},
+		Color:  ctx.Session.State.UserColor(ctx.Message.Author.ID, ctx.Message.ChannelID),
+	}
 	isCallerModerator := ctx.isModerator()
 	for name, cmd := range Commands {
 		if cmd.ModeratorOnly && !isCallerModerator {
 			continue
 		}
 
-		text.WriteString("**" + name + "**")
+		fieldName := "**" + name + "**"
 		if cmd.Usage != "" {
-			text.WriteString(" - Usage: " + cmd.Usage)
+			fieldName += " - Usage " + cmd.Usage
 		}
-		if cmd.Help != "" {
-			text.WriteString("\n> " + cmd.Help)
+		fieldValue := cmd.Help
+		if fieldValue == "" {
+			fieldValue = "\u200b"
 		}
-		text.WriteByte('\n')
-	}
 
-	ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, "\n"+text.String())
+		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
+			fieldName,
+			fieldValue,
+			inline,
+		})
+	}
+	ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed)
 }

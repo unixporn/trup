@@ -104,19 +104,7 @@ func setFetch(ctx *Context, args []string) {
 
 const fetchUsage = "fetch [user]"
 
-func fetch(ctx *Context, args []string) {
-	var user *discordgo.User
-	if len(args) < 2 {
-		user = ctx.Message.Author
-	} else {
-		usr, err := ctx.userFromString(strings.Join(args[1:], " "))
-		if err != nil {
-			ctx.Reply("failed to find the user. Error: " + err.Error())
-			return
-		}
-		user = usr.User
-	}
-
+func doFetch(ctx *Context, user *discordgo.User) {
 	const inline = true
 	embed := discordgo.MessageEmbed{
 		Title:  "Fetch " + user.Username + "#" + user.Discriminator,
@@ -290,6 +278,21 @@ sysinfoEnd:
 
 		if retry {
 			ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed)
+		}
+	}
+}
+
+func fetch(ctx *Context, args []string) {
+	if len(args) < 2 {
+		doFetch(ctx, ctx.Message.Author)
+	} else {
+		err := ctx.requestUserByName(strings.Join(args[1:], " "), func(member *discordgo.Member) error {
+			doFetch(ctx, member.User)
+			return nil
+		})
+		if err != nil {
+			ctx.Reply("failed to find the user. Error: " + err.Error())
+			return
 		}
 	}
 }

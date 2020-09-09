@@ -21,12 +21,7 @@ func modping(ctx *Context, args []string) {
 	reason := strings.Join(args[1:], " ")
 
 	mods := []string{}
-	g, err := ctx.Session.State.Guild(ctx.Message.GuildID)
-	if err != nil {
-		ctx.ReportError("Failed to fetch guild "+ctx.Message.GuildID, err)
-		return
-	}
-	for _, mem := range g.Members {
+	for _, mem := range ctx.members() {
 		for _, r := range mem.Roles {
 			if r == ctx.Env.RoleMod {
 				p, err := ctx.Session.State.Presence(ctx.Message.GuildID, mem.User.ID)
