@@ -12,14 +12,13 @@ const (
 	infoHelp  = "displays additional info"
 )
 
-// struct for getting user roles
 type discordRole struct {
 	ID    string `json:"id"`
 	Color string `json:"color"`
 }
+
 func info(ctx *Context, args []string) {
 	callback := func(member *discordgo.Member) error {
-		// dates
 		accountCreateDate, err := discordgo.SnowflakeTimestamp(member.User.ID)
 		if err != nil {
 			ctx.ReportError("Failed to find Account Creation Date. ", err)
@@ -34,7 +33,6 @@ func info(ctx *Context, args []string) {
 		// no error handling here because for Non-Boosters premiumDate would always give error
 		premiumDate, _ := member.PremiumSince.Parse()
 
-		// all roles
 		var discordRoles []discordRole
 		for _, role := range member.Roles {
 			role, err := ctx.Session.State.Role(ctx.Message.GuildID, role)
@@ -51,7 +49,6 @@ func info(ctx *Context, args []string) {
 			}
 			discordRoles = append(discordRoles, r)
 		}
-		// roles of user
 		var userRoles []string
 		var userColors []string
 		var roles []string
@@ -60,7 +57,6 @@ func info(ctx *Context, args []string) {
 			userColors = append(userColors, r.Color)
 		}
 		for i := range userRoles {
-			// check for no color
 			if userColors[i] == "0" {
 				roles = append(roles, userRoles[i])
 			} else {
@@ -73,39 +69,34 @@ func info(ctx *Context, args []string) {
 			Fields: []*discordgo.MessageEmbedField{},
 		}
 
-		// embed Thumbnail
 		embed.Thumbnail = &discordgo.MessageEmbedThumbnail{
 			URL: member.User.AvatarURL("128"),
 		}
 
-		// embed color
 		embed.Color = ctx.Session.State.UserColor(member.User.ID, ctx.Message.ChannelID)
 
-		// Embed Fields :-
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-			"Account Creation Date",
-			accountCreateDate.UTC().Format("2006-01-02 15:04") + " (" + humanize.Time((accountCreateDate)) + ")",
-			inline,
+			Name:   "Account Creation Date",
+			Value:  accountCreateDate.UTC().Format("2006-01-02 15:04") + " (" + humanize.Time((accountCreateDate)) + ")",
+			Inline: inline,
 		})
-
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-			"Join Date",
-			joinDate.UTC().Format("2006-01-02 15:04") + " (" + humanize.Time((joinDate)) + ")",
-			inline,
+			Name:   "Join Date",
+			Value:  joinDate.UTC().Format("2006-01-02 15:04") + " (" + humanize.Time((joinDate)) + ")",
+			Inline: inline,
 		})
-
 		if premiumDate.IsZero() != true {
 			embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-				"Booster Since",
-				premiumDate.UTC().Format("2006-01-02 15:04") + " (" + humanize.Time((premiumDate)) + ")",
-				inline,
+				Name:   "Booster Since",
+				Value:  premiumDate.UTC().Format("2006-01-02 15:04") + " (" + humanize.Time((premiumDate)) + ")",
+				Inline: inline,
 			})
 		}
 		if len(roles) > 0 {
 			embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-				"Roles",
-				strings.Join(roles, ", "),
-				inline,
+				Name:   "Roles",
+				Value:  strings.Join(roles, ", "),
+				Inline: inline,
 			})
 		}
 
@@ -124,4 +115,3 @@ func info(ctx *Context, args []string) {
 		ctx.requestUserByName(strings.Join(args[1:], " "), callback)
 	}
 }
-
