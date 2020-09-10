@@ -62,6 +62,11 @@ var Commands = map[string]Command{
 		Exec:  move,
 		Usage: moveUsage,
 	},
+	"info": {
+		Exec:  info,
+		Usage: infoUsage,
+		Help:  infoHelp,
+	},
 	"git": {
 		Exec:  git,
 		Usage: gitUsage,
@@ -165,7 +170,7 @@ func parseMention(mention string) string {
 	return res[1]
 }
 
-var snowflakeRegex = regexp.MustCompile(`^\d+$`);
+var snowflakeRegex = regexp.MustCompile(`^\d+$`)
 
 func parseSnowflake(snowflake string) string {
 	if snowflakeRegex.MatchString(snowflake) {

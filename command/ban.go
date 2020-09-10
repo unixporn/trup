@@ -1,8 +1,8 @@
 package command
 
 import (
-	"log"
 	"fmt"
+	"log"
 	"strings"
 )
 
