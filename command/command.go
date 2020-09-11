@@ -258,8 +258,7 @@ func (ctx *Context) requestUserByName(str string, callback func(*discordgo.Membe
 		if err != nil {
 			return err
 		}
-		callback(mem)
-		return nil
+		return callback(mem)
 	}
 
 	if m := parseSnowflake(str); m != "" {
@@ -267,8 +266,7 @@ func (ctx *Context) requestUserByName(str string, callback func(*discordgo.Membe
 		if err != nil {
 			return err
 		}
-		callback(mem)
-		return nil
+		return callback(mem)
 	}
 
 	discriminator := ""
@@ -296,7 +294,7 @@ func (ctx *Context) requestUserByName(str string, callback func(*discordgo.Membe
 	if len(matches) > 1 {
 		ctx.resolveAmbiguousUser(matches, callback)
 	} else {
-		callback(matches[0])
+		return callback(matches[0])
 	}
 
 	return nil
