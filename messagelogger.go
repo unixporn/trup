@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
+	"github.com/bwmarrin/discordgo"
 	"log"
 	"strings"
 	"trup/db"
-
-	"github.com/bwmarrin/discordgo"
 )
+
+var lastAuditIds = make(map[string]string)
 
 type messageCache struct {
 	queue []string
@@ -32,7 +33,29 @@ func messageDelete(s *discordgo.Session, m *discordgo.MessageDelete) {
 			log.Println("Recovered from panic in messageDelete", r)
 		}
 	}()
+	var deleter string
+	// get audit log info
+	auditLog, err := s.GuildAuditLog(m.GuildID, "", "", discordgo.AuditLogActionMessageDelete, 1)
+	if err != nil {
+		log.Printf("Failed to check audit log: %s", err.Error())
+		return
+	}
+	// get audit log entries
+	if len(auditLog.AuditLogEntries) == 0 {
+		log.Printf("Received no audit-log entries")
+	}
+	lastEntry := auditLog.AuditLogEntries[0]
+	if lastAuditIds[m.GuildID] == lastEntry.ID {
+		deleter = ""
+	} else {
+		lastAuditIds[m.GuildID] = lastEntry.ID
 
+		for _, u := range auditLog.Users {
+			if u.ID == lastEntry.UserID {
+				deleter = u.Username + "#" + u.Discriminator
+			}
+		}
+	}
 	const dateFormat = "2006-01-02T15:04:05.0000Z"
 	messageCreationDate, _ := discordgo.SnowflakeTimestamp(m.ID)
 	message, inCache := cache.m[m.ID]
@@ -53,8 +76,14 @@ func messageDelete(s *discordgo.Session, m *discordgo.MessageDelete) {
 
 	var footer *discordgo.MessageEmbedFooter
 	if channel, err := s.State.Channel(m.ChannelID); err == nil {
-		footer = &discordgo.MessageEmbedFooter{
-			Text: "#" + channel.Name,
+		if deleter == "" {
+			footer = &discordgo.MessageEmbedFooter{
+				Text: "#" + channel.Name,
+			}
+		} else {
+			footer = &discordgo.MessageEmbedFooter{
+				Text: "By " + deleter + "\n#" + channel.Name,
+			}
 		}
 	}
 
