@@ -14,6 +14,7 @@ type SysinfoData struct {
 	Kernel          string
 	Distro          string
 	DeWm            string
+	Resolution      string
 	DisplayProtocol string
 	Gtk3Theme       string
 	GtkIconTheme    string

@@ -40,6 +40,7 @@ func setFetch(ctx *Context, args []string) {
 		"Kernel":           &data.Kernel,
 		"Distro":           &data.Distro,
 		"DE/WM":            &data.DeWm,
+		"Resolution":       &data.Resolution,
 		"Display Protocol": &data.DisplayProtocol,
 		"GTK3 Theme":       &data.Gtk3Theme,
 		"GTK Icon Theme":   &data.GtkIconTheme,
@@ -180,6 +181,13 @@ func doFetch(ctx *Context, user *discordgo.User) {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
 			"Distro",
 			info.Info.Distro,
+			inline,
+		})
+	}
+	if info.Info.Resolution != "" {
+		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
+			"Resolution",
+			info.Info.Resolution,
 			inline,
 		})
 	}
