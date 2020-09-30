@@ -13,9 +13,11 @@ including the image, but not !git or !dotfiles
 Distro: $NAME $ver
 Kernel: $(uname -sr)
 Terminal: $term
-DE/WM: $wm
-Display protocol: $displayprot
 Editor: ${EDITOR##*/}
+DE/WM: $wm
+Bar: $bar
+Resolution: $resolution
+Display Protocol: $displayprot
 GTK3 Theme: $theme
 GTK Icon Theme: $icons
 CPU: $cpu
@@ -121,6 +123,30 @@ if [ "$kernel" = "Linux" ]; then
 
 	# remove leading space
 	term=${term# }
+
+	# Screen resolution
+	unset i resolution
+
+	command -v xrandr >/dev/null && {
+		for i in $(xrandr --current | grep ' connected' | grep -o '[0-9]\+x[0-9]\+'); do
+			resolution="$resolution$i, "
+		done
+		resolution=${resolution%, }
+	}
+
+	# bar
+	bar=$(ps -e | grep -m 1 -o \
+		-e " i3bar$" \
+		-e " dzen2$" \
+		-e " tint2$" \
+		-e " xmobar$"   \
+		-e " swaybar$"  \
+		-e " polybar$"  \
+		-e " lemonbar$" \
+		-e " taffybar$"
+	)
+
+	bar=${bar# }
 
 	print
 elif [ "$kernel"  = "Darwin" ]; then

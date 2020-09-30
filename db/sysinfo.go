@@ -9,16 +9,18 @@ import (
 )
 
 type SysinfoData struct {
-	Cpu             string
-	Gpu             string
-	Kernel          string
 	Distro          string
+	Kernel          string
+	Terminal        string
+	Editor          string
 	DeWm            string
+	Bar             string
+	Resolution      string
 	DisplayProtocol string
 	Gtk3Theme       string
 	GtkIconTheme    string
-	Terminal        string
-	Editor          string
+	Cpu             string
+	Gpu             string
 	Memory          uint64
 	Image           string
 }

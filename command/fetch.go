@@ -35,16 +35,18 @@ func setFetch(ctx *Context, args []string) {
 	}
 
 	m := map[string]*string{
-		"CPU":              &data.Cpu,
-		"GPU":              &data.Gpu,
-		"Kernel":           &data.Kernel,
 		"Distro":           &data.Distro,
-		"DE/WM":            &data.DeWm,
-		"Display protocol": &data.DisplayProtocol,
-		"GTK3 Theme":       &data.Gtk3Theme,
-		"GTK Icon Theme":   &data.GtkIconTheme,
+		"Kernel":           &data.Kernel,
 		"Terminal":         &data.Terminal,
 		"Editor":           &data.Editor,
+		"DE/WM":            &data.DeWm,
+		"Bar":              &data.Bar,
+		"Resolution":       &data.Resolution,
+		"Display Protocol": &data.DisplayProtocol,
+		"GTK3 Theme":       &data.Gtk3Theme,
+		"GTK Icon Theme":   &data.GtkIconTheme,
+		"CPU":              &data.Cpu,
+		"GPU":              &data.Gpu,
 	}
 	for i := 1; i < len(lines); i++ {
 		kI := strings.Index(lines[i], ":")
@@ -169,13 +171,6 @@ func doFetch(ctx *Context, user *discordgo.User) {
 		}
 	}
 
-	if info.Info.Kernel != "" {
-		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-			"Kernel",
-			info.Info.Kernel,
-			inline,
-		})
-	}
 	if info.Info.Distro != "" {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
 			"Distro",
@@ -183,24 +178,10 @@ func doFetch(ctx *Context, user *discordgo.User) {
 			inline,
 		})
 	}
-	if info.Info.DeWm != "" {
+	if info.Info.Kernel != "" {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-			"DE/WM",
-			info.Info.DeWm,
-			inline,
-		})
-	}
-	if info.Info.Gtk3Theme != "" {
-		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-			"GTK3 Theme",
-			info.Info.Gtk3Theme,
-			inline,
-		})
-	}
-	if info.Info.GtkIconTheme != "" {
-		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-			"GTK Icon Theme",
-			info.Info.GtkIconTheme,
+			"Kernel",
+			info.Info.Kernel,
 			inline,
 		})
 	}
@@ -218,10 +199,45 @@ func doFetch(ctx *Context, user *discordgo.User) {
 			inline,
 		})
 	}
+	if info.Info.DeWm != "" {
+		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
+			"DE/WM",
+			info.Info.DeWm,
+			inline,
+		})
+	}
+	if info.Info.Bar != "" {
+		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
+			"Bar",
+			info.Info.Bar,
+			inline,
+		})
+	}
+	if info.Info.Resolution != "" {
+		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
+			"Resolution",
+			info.Info.Resolution,
+			inline,
+		})
+	}
 	if info.Info.DisplayProtocol != "" {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
 			"Display Protocol",
 			info.Info.DisplayProtocol,
+			inline,
+		})
+	}
+	if info.Info.Gtk3Theme != "" {
+		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
+			"GTK3 Theme",
+			info.Info.Gtk3Theme,
+			inline,
+		})
+	}
+	if info.Info.GtkIconTheme != "" {
+		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
+			"GTK Icon Theme",
+			info.Info.GtkIconTheme,
 			inline,
 		})
 	}
