@@ -40,7 +40,7 @@ func setFetch(ctx *Context, args []string) {
 		"Kernel":           &data.Kernel,
 		"Distro":           &data.Distro,
 		"DE/WM":            &data.DeWm,
-		"Display protocol": &data.DisplayProtocol,
+		"Display Protocol": &data.DisplayProtocol,
 		"GTK3 Theme":       &data.Gtk3Theme,
 		"GTK Icon Theme":   &data.GtkIconTheme,
 		"Terminal":         &data.Terminal,
