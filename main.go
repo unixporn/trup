@@ -365,7 +365,7 @@ func runMessageFilter(s *discordgo.Session, m *discordgo.MessageCreate) (deleted
 					Description: m.Content,
 				})
 			if err != nil {
-				log.Printf("Error Sending a DM\n")
+				log.Printf("Error sending a DM\n")
 			}
 		}
 		err = s.ChannelMessageDelete(m.ChannelID, m.ID)
