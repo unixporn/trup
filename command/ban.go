@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+	"github.com/bwmarrin/discordgo"
 	"log"
 	"strings"
 )
@@ -25,7 +26,33 @@ func ban(ctx *Context, args []string) {
 
 	reason := strings.Join(args[2:], " ")
 
-	err := ctx.Session.GuildBanCreateWithReason(
+	guild, err := ctx.Session.Guild(ctx.Message.GuildID)
+	if err != nil {
+		log.Printf("Failed to fetch guild %s\n", err)
+	} else {
+		userChannel, err := ctx.Session.UserChannelCreate(user)
+
+		if err != nil {
+			log.Printf("Error Creating a User Channel Error: %s\n", err)
+		} else {
+			_, err := ctx.Session.ChannelMessageSendEmbed(
+				userChannel.ID,
+				&discordgo.MessageEmbed{
+					Title: fmt.Sprintf("You were Banned from %s", guild.Name),
+					Fields: []*discordgo.MessageEmbedField{
+						{
+							Name:  "Reason",
+							Value: reason,
+						},
+					},
+				})
+			if err != nil {
+				log.Printf("Error Sending DM\n")
+			}
+		}
+	}
+
+	err = ctx.Session.GuildBanCreateWithReason(
 		ctx.Message.GuildID,
 		user,
 		reason,
