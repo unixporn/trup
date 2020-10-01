@@ -3,7 +3,7 @@
 kernel="$(uname -s)"
 
 print() {
-cat << EOF
+	cat <<EOF
 Copy and paste the command below in the server.
 You can also attach an image to the message, be it your screenshot or wallpaper.
 Note that '!setfetch' without 'update' overwrites almost everything,
@@ -28,7 +28,7 @@ EOF
 
 if [ "$kernel" = "Linux" ]; then
 	# get distro
-	if [ -f /etc/os-release  ]; then
+	if [ -f /etc/os-release ]; then
 		. /etc/os-release
 	elif [ -f /etc/lsb-release ]; then
 		. /etc/lsb-release
@@ -44,10 +44,10 @@ if [ "$kernel" = "Linux" ]; then
 	# get gtk theme
 	while read -r line; do
 		case $line in
-			gtk-theme*) theme=${line##*=};;
-			gtk-icon-theme*) icons=${line##*=}
+		gtk-theme*) theme=${line##*=} ;;
+		gtk-icon-theme*) icons=${line##*=} ;;
 		esac
-	done < "${XDG_CONFIG_HOME:-$HOME/.config}/gtk-3.0/settings.ini"
+	done <"${XDG_CONFIG_HOME:-$HOME/.config}/gtk-3.0/settings.ini"
 
 	# WMs/DEs
 	# usually set by GUI display managers and DEs
@@ -58,8 +58,8 @@ if [ "$kernel" = "Linux" ]; then
 	[ ! "$wm" ] && [ "$DISPLAY" ] && command -v xprop >/dev/null && {
 		id=$(xprop -root -notype _NET_SUPPORTING_WM_CHECK)
 		id=${id##* }
-		wm=$(xprop -id "$id" -notype -len 100 -f _NET_WM_NAME 8t \
-			| grep '^_NET_WM_NAME' | cut -d\" -f 2)
+		wm=$(xprop -id "$id" -notype -len 100 -f _NET_WM_NAME 8t |
+			grep '^_NET_WM_NAME' | cut -d\" -f 2)
 	}
 
 	# for non-EWMH WMs
@@ -80,11 +80,14 @@ if [ "$kernel" = "Linux" ]; then
 	# hardware
 	while read -r a b _ model; do
 		case "$a $b" in
-			"model name") cpu=$model; break
+		"model name")
+			cpu=$model
+			break
+			;;
 		esac
-	done < /proc/cpuinfo
+	done </proc/cpuinfo
 
-	read -r _ ram < /proc/meminfo
+	read -r _ ram </proc/meminfo
 
 	# GPU
 	# other option was 'lspci | grep | grep | tr | grep | sed' then
@@ -96,11 +99,11 @@ if [ "$kernel" = "Linux" ]; then
 		gpu=${gpu%%\]*}
 		gpu=${gpu##*\[}
 		gpu=${gpu#*\"}
-		set -- ${gpu%%\"*}
+		set -- "${gpu%%\"*}"
 		case $* in
-			*/*Mobile*) gpu="$1 $2 Mobile";;
-			*/*) gpu="$1 $2";;
-			*) gpu="$*";;
+		*/*Mobile*) gpu="$1 $2 Mobile" ;;
+		*/*) gpu="$1 $2" ;;
+		*) gpu="$*" ;;
 		esac
 	}
 
@@ -135,21 +138,22 @@ if [ "$kernel" = "Linux" ]; then
 	}
 
 	# bar
-	bar=$(ps -e | grep -m 1 -o \
-		-e " i3bar$" \
-		-e " dzen2$" \
-		-e " tint2$" \
-		-e " xmobar$"   \
-		-e " swaybar$"  \
-		-e " polybar$"  \
-		-e " lemonbar$" \
-		-e " taffybar$"
+	bar=$(
+		ps -e | grep -m 1 -o \
+			-e " i3bar$" \
+			-e " dzen2$" \
+			-e " tint2$" \
+			-e " xmobar$" \
+			-e " swaybar$" \
+			-e " polybar$" \
+			-e " lemonbar$" \
+			-e " taffybar$"
 	)
 
 	bar=${bar# }
 
 	print
-elif [ "$kernel"  = "Darwin" ]; then
+elif [ "$kernel" = "Darwin" ]; then
 	NAME="macOS"
 
 	# get MacOS version
@@ -173,9 +177,9 @@ elif [ "$kernel"  = "Darwin" ]; then
 	ram="$(sysctl -n hw.memsize)"
 
 	case $TERM_PROGRAM in
-		"Terminal.app" | "Apple_Terminal") term="Apple Terminal";;
-		"iTerm.app") term="iTerm2";;
-		*) term="${TERM_PROGRAM%.app}";;
+	"Terminal.app" | "Apple_Terminal") term="Apple Terminal" ;;
+	"iTerm.app") term="iTerm2" ;;
+	*) term="${TERM_PROGRAM%.app}" ;;
 	esac
 
 	print
