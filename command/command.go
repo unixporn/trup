@@ -126,9 +126,12 @@ var Commands = map[string]Command{
 
 var parseMentionRegexp = regexp.MustCompile(`<@!?(\d+)>`)
 
-var INVALID_CALLBACK_IDX = -1
 var memberSelectionCallbacks = make(map[MemberSelectionKey]func(int) error)
 var numbers = []string{"1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"}
+
+const invalidCallbackIdx = -1
+const cancelReaction = "❌"
+const cancelIdx = 11
 
 type MemberSelectionKey struct {
 	ChannelID        string
@@ -142,7 +145,7 @@ func indexOfStringList(list []string, searched string) int {
 			return idx
 		}
 	}
-	return INVALID_CALLBACK_IDX
+	return invalidCallbackIdx
 }
 
 func HandleMessageReaction(reaction *discordgo.MessageReaction) (bool, error) {
@@ -151,9 +154,11 @@ func HandleMessageReaction(reaction *discordgo.MessageReaction) (bool, error) {
 	if callback == nil {
 		return false, nil
 	}
-	emojiIndex := indexOfStringList(numbers, reaction.Emoji.Name)
-	if emojiIndex == INVALID_CALLBACK_IDX {
-		return false, nil
+	var emojiIndex int
+	if reaction.Emoji.Name == cancelReaction {
+		emojiIndex = cancelIdx
+	} else {
+		emojiIndex = indexOfStringList(numbers, reaction.Emoji.Name)
 	}
 	err := callback(emojiIndex)
 	delete(memberSelectionCallbacks, key)
@@ -227,6 +232,7 @@ func (ctx *Context) resolveAmbiguousUser(options []*discordgo.Member, callback f
 			membersString += fmt.Sprintf("%s - %s (%s)\n", numbers[idx], option.Nick, option.User.String())
 		}
 	}
+	membersString += fmt.Sprintf("%s - Cancel\n", cancelReaction)
 
 	message, err := ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID,
 		&discordgo.MessageEmbed{Description: membersString})
@@ -237,7 +243,7 @@ func (ctx *Context) resolveAmbiguousUser(options []*discordgo.Member, callback f
 	key := MemberSelectionKey{ChannelID: ctx.Message.ChannelID, MessageID: message.ID, RequestingUserID: ctx.Message.Author.ID}
 	memberSelectionCallbacks[key] = func(idx int) error {
 		ctx.Session.ChannelMessageDelete(message.ChannelID, message.ID)
-		if idx == INVALID_CALLBACK_IDX || idx > len(options) {
+		if idx == cancelIdx || idx == invalidCallbackIdx || idx > len(options) {
 			return nil
 		}
 		return callback(options[idx])
@@ -245,6 +251,8 @@ func (ctx *Context) resolveAmbiguousUser(options []*discordgo.Member, callback f
 	for idx := range options {
 		ctx.Session.MessageReactionAdd(message.ChannelID, message.ID, numbers[idx])
 	}
+	ctx.Session.MessageReactionAdd(message.ChannelID, message.ID, cancelReaction)
+
 	time.AfterFunc(10*time.Second, func() {
 		ctx.Session.ChannelMessageDelete(message.ChannelID, message.ID)
 		delete(memberSelectionCallbacks, key)
@@ -252,7 +260,7 @@ func (ctx *Context) resolveAmbiguousUser(options []*discordgo.Member, callback f
 }
 
 // searches for a user by the name, asking the user to select one if the name is ambiguous
-func (ctx *Context) requestUserByName(str string, callback func(*discordgo.Member) error) error {
+func (ctx *Context) requestUserByName(alwaysAsk bool, str string, callback func(*discordgo.Member) error) error {
 	if m := parseMention(str); m != "" {
 		mem, err := ctx.Session.GuildMember(ctx.Message.GuildID, m)
 		if err != nil {
@@ -291,7 +299,7 @@ func (ctx *Context) requestUserByName(str string, callback func(*discordgo.Membe
 	if len(matches) < 1 {
 		return userNotFound
 	}
-	if len(matches) > 1 {
+	if alwaysAsk || len(matches) > 1 {
 		ctx.resolveAmbiguousUser(matches, callback)
 	} else {
 		return callback(matches[0])

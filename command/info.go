@@ -112,6 +112,6 @@ func info(ctx *Context, args []string) {
 		}
 		callback(member)
 	} else {
-		ctx.requestUserByName(strings.Join(args[1:], " "), callback)
+		ctx.requestUserByName(false, strings.Join(args[1:], " "), callback)
 	}
 }
