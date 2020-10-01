@@ -358,7 +358,12 @@ func runMessageFilter(s *discordgo.Session, m *discordgo.MessageCreate) (deleted
 		if err != nil {
 			log.Printf("Error Creating a User Channel Error: %s\n", err)
 		} else {
-			_, err := s.ChannelMessageSend(userChannel.ID, fmt.Sprintf("Your Message was deleted Because of a Blocklist Violation `%s`\n Please Edit it and resend it\n ```\n%s\n```", matchedString, m.Content))
+			var lines = strings.Split(m.Content, "\n")
+			for i, line := range lines {
+				lines[i] = "> " + line
+			}
+			content = strings.Join(lines, "\n")
+			_, err := s.ChannelMessageSend(userChannel.ID, fmt.Sprintf("Your message has been deleted for containing a blocked word (<%s>)\n%s", matchedString, content))
 			if err != nil {
 				log.Printf("Error Sending a DM\n")
 			}
