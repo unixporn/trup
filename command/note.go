@@ -2,7 +2,6 @@ package command
 
 import (
 	"fmt"
-	"log"
 	"strings"
 	"trup/db"
 
@@ -18,44 +17,40 @@ func note(ctx *Context, args []string) {
 		return
 	}
 
-	about := parseMention(args[1])
-	if about == "" {
-		about = parseSnowflake(args[1])
-	}
+	err := ctx.requestUserByName(len(args) > 2, args[1], func(m *discordgo.Member) error {
+		user := m.User
+		if len(args) == 2 {
+			getNotes(ctx, user)
+		} else {
+			content := strings.Join(args[2:], " ")
+			note := db.NewNote(ctx.Message.Author.ID, user.ID, content, db.ManualNote)
 
-	if about == "" {
-		ctx.Reply("The first argument must be a user mention.")
-		return
-	}
+			err := note.Save()
+			if err != nil {
+				ctx.ReportError(fmt.Sprintf("Failed to save note %#v", note), err)
+				return nil
+			}
 
-	if len(args) > 2 {
-		content := strings.Join(args[2:], " ")
-		note := db.NewNote(ctx.Message.Author.ID, about, content, db.ManualNote)
-
-		err := note.Save()
-		if err != nil {
-			ctx.ReportError(fmt.Sprintf("Failed to save note %#v", note), err)
-			return
+			ctx.Reply("Success.")
 		}
-
-		ctx.Reply("Success.")
-
-		return
-	}
-
-	aboutMember, err := ctx.Session.GuildMember(ctx.Message.GuildID, about)
+		return nil
+	})
 	if err != nil {
-		ctx.ReportError("Failed to retrieve guild member given ID", err)
+		ctx.ReportError("Failed to find the user", err)
 		return
 	}
-	notes, err := db.GetNotes(aboutMember.User.ID)
+	return
+}
+
+func getNotes(ctx *Context, aboutUser *discordgo.User) {
+	notes, err := db.GetNotes(aboutUser.ID)
 	if err != nil {
 		ctx.ReportError("Failed to retrieve notes.", err)
 		return
 	}
 
 	embed := discordgo.MessageEmbed{
-		Title:       fmt.Sprintf("Notes for %s#%s(%s)", aboutMember.User.Username, aboutMember.User.Discriminator, aboutMember.User.ID),
+		Title:       fmt.Sprintf("Notes for %s#%s(%s)", aboutUser.Username, aboutUser.Discriminator, aboutUser.ID),
 		Description: "",
 		Color:       0,
 		Fields:      make([]*discordgo.MessageEmbedField, 0, len(notes)),
@@ -88,7 +83,5 @@ func note(ctx *Context, args []string) {
 		})
 	}
 
-	if _, err = ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed); err != nil {
-		log.Println("Failed to send message embed: " + err.Error())
-	}
+	ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed)
 }

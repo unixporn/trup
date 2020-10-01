@@ -34,7 +34,7 @@ func pfp(ctx *Context, args []string) {
 			log.Println("Failed to execute profile picture callback: " + err.Error())
 		}
 	} else {
-		err := ctx.requestUserByName(strings.Join(args[1:], " "), func(m *discordgo.Member) error { return callback(m.User) })
+		err := ctx.requestUserByName(false, strings.Join(args[1:], " "), func(m *discordgo.Member) error { return callback(m.User) })
 		if err != nil {
 			ctx.ReportError("Failed to find the user", err)
 			return

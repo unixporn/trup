@@ -330,7 +330,7 @@ func fetch(ctx *Context, args []string) {
 	if len(args) < 2 {
 		doFetch(ctx, ctx.Message.Author)
 	} else {
-		err := ctx.requestUserByName(strings.Join(args[1:], " "), func(member *discordgo.Member) error {
+		err := ctx.requestUserByName(false, strings.Join(args[1:], " "), func(member *discordgo.Member) error {
 			doFetch(ctx, member.User)
 			return nil
 		})

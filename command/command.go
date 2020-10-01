@@ -132,6 +132,10 @@ var (
 	numbers                  = []string{"1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"}
 )
 
+const invalidCallbackIdx = -1
+const cancelReaction = "❌"
+const cancelIdx = 11
+
 type MemberSelectionKey struct {
 	ChannelID        string
 	MessageID        string
@@ -247,6 +251,7 @@ func (ctx *Context) resolveAmbiguousUser(options []*discordgo.Member, callback f
 			membersString += fmt.Sprintf("%s - %s (%s)\n", numbers[idx], option.Nick, option.User.String())
 		}
 	}
+	membersString += fmt.Sprintf("%s - Cancel\n", cancelReaction)
 
 	message, err := ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID,
 		&discordgo.MessageEmbed{Description: membersString})
@@ -265,7 +270,7 @@ func (ctx *Context) resolveAmbiguousUser(options []*discordgo.Member, callback f
 			log.Println("Failed to delete member selection message: " + err.Error())
 		}
 
-		if idx == InvalidCallbackIDX || idx > len(options) {
+		if idx == cancelIdx || idx == InvalidCallbackIDX || idx > len(options) {
 			return nil
 		}
 
@@ -277,6 +282,7 @@ func (ctx *Context) resolveAmbiguousUser(options []*discordgo.Member, callback f
 			log.Println("Failed to react to selection message: " + err.Error())
 		}
 	}
+	ctx.Session.MessageReactionAdd(message.ChannelID, message.ID, cancelReaction)
 
 	time.AfterFunc(10*time.Second, func() {
 		if err := ctx.Session.ChannelMessageDelete(message.ChannelID, message.ID); err != nil {
@@ -287,7 +293,7 @@ func (ctx *Context) resolveAmbiguousUser(options []*discordgo.Member, callback f
 }
 
 // searches for a user by the name, asking the user to select one if the name is ambiguous.
-func (ctx *Context) requestUserByName(str string, callback func(*discordgo.Member) error) error {
+func (ctx *Context) requestUserByName(alwaysAsk bool, str string, callback func(*discordgo.Member) error) error {
 	if m := parseMention(str); m != "" {
 		mem, err := ctx.Session.GuildMember(ctx.Message.GuildID, m)
 		if err != nil {
@@ -329,7 +335,7 @@ func (ctx *Context) requestUserByName(str string, callback func(*discordgo.Membe
 		return userNotFound
 	}
 
-	if len(matches) > 1 {
+	if alwaysAsk || len(matches) > 1 {
 		ctx.resolveAmbiguousUser(matches, callback)
 	} else {
 		return callback(matches[0])
