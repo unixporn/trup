@@ -22,6 +22,7 @@ func mute(ctx *Context, args []string) {
 		start    = time.Now()
 		reason   = ""
 	)
+
 	if len(args) > 3 {
 		reason = strings.Join(args[3:], " ")
 	}
@@ -50,16 +51,20 @@ func mute(ctx *Context, args []string) {
 	if reason != "" {
 		reasonText = " with reason: " + reason
 	}
+
 	err = db.NewNote(ctx.Message.Author.ID, user, "User was muted for "+duration+reasonText, db.ManualNote).Save()
+
 	if err != nil {
 		ctx.ReportError("Failed to set note about the user", err)
 	}
+
 	ctx.Reply("User successfully muted.")
 
 	r := ""
 	if reason != "" {
 		r = " with reason: " + reason
 	}
+
 	if _, err := ctx.Session.ChannelMessageSend(ctx.Env.ChannelModlog, fmt.Sprintf("User <@%s> was muted by %s for %s%s.", user, ctx.Message.Author.Username, duration, r)); err != nil {
 		log.Println("Failed to send mod log message: " + err.Error())
 	}

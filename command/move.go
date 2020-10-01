@@ -2,7 +2,6 @@ package command
 
 import (
 	"fmt"
-	"log"
 	"strings"
 )
 
@@ -34,8 +33,8 @@ func move(ctx *Context, args []string) {
 		ctx.ReportError("error sending to channel (might not exist or no access)", err)
 		return
 	}
+
 	redirect := fmt.Sprintf("<https://discord.com/channels/%s/%s/%s>", ctx.Message.GuildID, m.ChannelID, m.ID)
-	if _, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, fmt.Sprintf("Continued at <#%s> - %s (%s)", target, mentionsString, redirect)); err != nil {
-		log.Println("Failed to send channel redirection message: " + err.Error())
-	}
+
+	ctx.Reply(fmt.Sprintf("Continued at <#%s> - %s (%s)", target, mentionsString, redirect))
 }

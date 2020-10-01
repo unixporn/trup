@@ -161,16 +161,19 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				log.Println("Failed to delete message with ID: " + m.ID + ": " + err.Error())
 			}
 
-			ch, err := s.UserChannelCreate(m.Author.ID)
+			_, err := s.UserChannelCreate(m.Author.ID)
 			if err != nil {
 				log.Println("Failed to create user channel with " + m.Author.ID)
 				return
 			}
 
-			if _, err = s.ChannelMessageSend(ch.ID, "Your showcase submission was detected to be invalid. If you wanna comment on a rice, use the #ricing-theming channel.\nIf this is a mistake, contact the moderators or open an issue on https://github.com/unixporn/trup"); err != nil {
-				log.Println("Failed to send submission validity message: " + err.Error())
-				return
+			context := command.Context{
+				Env:     &env,
+				Session: s,
+				Message: m.Message,
 			}
+
+			context.Reply("Your showcase submission was detected to be invalid. If you wanna comment on a rice, use the #ricing-theming channel.\nIf this is a mistake, contact the moderators or open an issue on https://github.com/unixporn/trup")
 			return
 		}
 
@@ -226,11 +229,15 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			break
 		}
 	}
+
 	if mentionsBot {
-		if _, err := s.ChannelMessageSend(m.ChannelID, m.Author.Mention()+" need help? Type `!help`"); err != nil {
-			log.Println("Failed to send bot mention help message: " + err.Error())
-			return
+		context := command.Context{
+			Env:     &env,
+			Session: s,
+			Message: m.Message,
 		}
+
+		context.Reply(m.Author.Mention() + " need help? Type `!help`")
 		return
 	}
 }
@@ -335,7 +342,6 @@ func cleanupMutes(s *discordgo.Session) {
 			log.Printf("Failed to remove role %s\n", err)
 			if _, nestedErr := s.ChannelMessageSend(env.ChannelModlog, fmt.Sprintf("Failed to remove role Mute from user <@%s>. Error: %s", m.User, err)); nestedErr != nil {
 				log.Println("Failed to send Mute role removal message: " + err.Error())
-				return
 			}
 		} else {
 			unmutedMsg := "User <@" + m.User + "> is now unmuted."

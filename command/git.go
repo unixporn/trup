@@ -1,7 +1,6 @@
 package command
 
 import (
-	"log"
 	"trup/db"
 
 	"github.com/jackc/pgx"
@@ -27,20 +26,19 @@ func git(ctx *Context, args []string) {
 				return
 			}
 		}
+
 		if profile.Git == "" {
 			ctx.Reply(setItFirstMsg)
 			return
 		}
 
-		if _, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, profile.Git); err != nil {
-			log.Println("Failed to set git URL message :" + err.Error())
-		}
+		ctx.Reply(profile.Git)
 		return
 	}
 
 	url := args[1]
 
-	if !isValidUrl(url) {
+	if !isValidURL(url) {
 		ctx.Reply("provide a valid url")
 		return
 	}

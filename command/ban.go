@@ -18,6 +18,7 @@ func ban(ctx *Context, args []string) {
 	if user == "" {
 		user = parseSnowflake(args[1])
 	}
+
 	if user == "" {
 		ctx.Reply("The first argument must be a user mention.")
 		return
@@ -33,6 +34,7 @@ func ban(ctx *Context, args []string) {
 	)
 	if err != nil {
 		ctx.ReportError(fmt.Sprintf("Failed to ban %s.", user), err)
+
 		return
 	}
 
@@ -40,6 +42,7 @@ func ban(ctx *Context, args []string) {
 		ctx.Env.ChannelModlog,
 		fmt.Sprintf("<@%s> has been banned by %s for %s.", user, ctx.Message.Author, reason),
 	)
+
 	if err != nil {
 		log.Printf("Error sending ban notice into modlog: %s\n", err)
 	}

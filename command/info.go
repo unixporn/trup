@@ -51,13 +51,16 @@ func info(ctx *Context, args []string) {
 			}
 			discordRoles = append(discordRoles, r)
 		}
+
 		var userRoles []string
 		var userColors []string
 		var roles []string
+
 		for _, r := range discordRoles {
 			userRoles = append(userRoles, r.ID)
 			userColors = append(userColors, r.Color)
 		}
+
 		for i := range userRoles {
 			if userColors[i] == "0" {
 				roles = append(roles, userRoles[i])
@@ -65,6 +68,7 @@ func info(ctx *Context, args []string) {
 				roles = append(roles, userRoles[i]+"(#"+userColors[i]+")")
 			}
 		}
+
 		const inline = false
 		embed := discordgo.MessageEmbed{
 			Title:  member.User.Username + "#" + member.User.Discriminator,
@@ -87,6 +91,7 @@ func info(ctx *Context, args []string) {
 			Value:  joinDate.UTC().Format("2006-01-02 15:04") + " (" + humanize.Time((joinDate)) + ")",
 			Inline: inline,
 		})
+
 		if !premiumDate.IsZero() {
 			embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
 				Name:   "Booster Since",
@@ -94,6 +99,7 @@ func info(ctx *Context, args []string) {
 				Inline: inline,
 			})
 		}
+
 		if len(roles) > 0 {
 			embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
 				Name:   "Roles",
@@ -103,6 +109,7 @@ func info(ctx *Context, args []string) {
 		}
 
 		_, err = ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed)
+
 		return err
 	}
 
@@ -112,6 +119,7 @@ func info(ctx *Context, args []string) {
 			ctx.ReportError("Failed to find member info.", err)
 			return
 		}
+
 		if err := callback(member); err != nil {
 			log.Println("Info callback failed: " + err.Error())
 		}

@@ -29,9 +29,11 @@ func modping(ctx *Context, args []string) {
 					log.Printf("Failed to fetch presence. Error: %s\n", err)
 					break
 				}
+
 				if p.Status != discordgo.StatusOffline {
 					mods = append(mods, mem.Mention())
 				}
+
 				break
 			}
 		}
@@ -44,7 +46,6 @@ func modping(ctx *Context, args []string) {
 	if reason != "" {
 		reasonText = " for reason: " + reason
 	}
-	if _, err := ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" pinged moderators "+strings.Join(mods, " ")+reasonText); err != nil {
-		log.Println("Failed to send moderator ping notification: " + err.Error())
-	}
+
+	ctx.Reply(ctx.Message.Author.Mention() + " pinged moderators " + strings.Join(mods, " ") + reasonText)
 }

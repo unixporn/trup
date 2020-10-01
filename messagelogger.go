@@ -101,6 +101,7 @@ func messageDelete(s *discordgo.Session, m *discordgo.MessageDelete) {
 
 	mediaFiles, finish, err := db.GetStoredAttachments(m.ChannelID, m.Message.ID)
 	defer finish()
+	
 	if err != nil || len(mediaFiles) == 0 {
 		if _, err := s.ChannelMessageSendEmbed(env.ChannelBotMessages, messageEmbed); err != nil {
 			log.Println("Failed to send file embed: " + err.Error())

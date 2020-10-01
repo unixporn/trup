@@ -22,6 +22,7 @@ func warn(ctx *Context, args []string) {
 	if user == "" {
 		user = parseSnowflake(args[1])
 	}
+
 	if user == "" {
 		ctx.Reply("The first argument must be a user mention.")
 		return
@@ -53,10 +54,7 @@ func warn(ctx *Context, args []string) {
 		log.Printf("Failed to save warning note. Error: %s\n", err)
 	}
 
-	_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, fmt.Sprintf("<@%s> Has been warned%s with reason: %s.", user, nth, reason))
-	if err != nil {
-		log.Printf("Error sending warning notice: %s\n", err)
-	}
+	ctx.Reply(fmt.Sprintf("<@%s> Has been warned%s with reason: %s.", user, nth, reason))
 	r := ""
 	if reason != "" {
 		r = " with reason: " + reason

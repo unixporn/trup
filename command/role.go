@@ -30,6 +30,7 @@ func role(ctx *Context, args []string) {
 		}); err != nil {
 			log.Println("Failed to send role embed: " + err.Error())
 		}
+
 		return
 	}
 
