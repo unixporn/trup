@@ -2,8 +2,9 @@ package db
 
 import (
 	"context"
-	"github.com/jackc/pgx/pgtype"
 	"time"
+
+	"github.com/jackc/pgx/pgtype"
 )
 
 type Warn struct {

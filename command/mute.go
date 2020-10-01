@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+	"log"
 	"strings"
 	"time"
 	"trup/db"
@@ -31,7 +32,7 @@ func mute(ctx *Context, args []string) {
 		return
 	}
 
-	end := start.Add(time.Duration(i))
+	end := start.Add(i)
 	w := db.NewMute(ctx.Message.GuildID, ctx.Message.Author.ID, user, reason, start, end)
 	err = w.Save()
 	if err != nil {
@@ -59,5 +60,7 @@ func mute(ctx *Context, args []string) {
 	if reason != "" {
 		r = " with reason: " + reason
 	}
-	ctx.Session.ChannelMessageSend(ctx.Env.ChannelModlog, fmt.Sprintf("User <@%s> was muted by %s for %s%s.", user, ctx.Message.Author.Username, duration, r))
+	if _, err := ctx.Session.ChannelMessageSend(ctx.Env.ChannelModlog, fmt.Sprintf("User <@%s> was muted by %s for %s%s.", user, ctx.Message.Author.Username, duration, r)); err != nil {
+		log.Println("Failed to send mod log message: " + err.Error())
+	}
 }

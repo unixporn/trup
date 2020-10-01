@@ -64,7 +64,10 @@ func StoreAttachment(message *discordgo.Message, attachment *discordgo.MessageAt
 	if err != nil {
 		return err
 	}
-	tx.Commit(context.Background())
+	err = tx.Commit(context.Background())
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -75,7 +78,10 @@ type StoredAttachment struct {
 
 func (storedAttachment *StoredAttachment) GetContentType() string {
 	contentTypeBuf := make([]byte, 512)
-	storedAttachment.Reader.Read(contentTypeBuf)
+	_, err := storedAttachment.Reader.Read(contentTypeBuf)
+	if err != nil {
+		return err.Error()
+	}
 	storedAttachment.Reader = io.MultiReader(bytes.NewReader(contentTypeBuf), storedAttachment.Reader)
 	return http.DetectContentType(contentTypeBuf)
 }

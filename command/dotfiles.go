@@ -1,6 +1,7 @@
 package command
 
 import (
+	"log"
 	"trup/db"
 
 	"github.com/jackc/pgx"
@@ -30,7 +31,9 @@ func dotfiles(ctx *Context, args []string) {
 			return
 		}
 
-		ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, profile.Dotfiles)
+		if _, err := ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, profile.Dotfiles); err != nil {
+			log.Println("Failed to send dotfile message: " + err.Error())
+		}
 		return
 	}
 

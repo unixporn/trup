@@ -44,5 +44,7 @@ func modping(ctx *Context, args []string) {
 	if reason != "" {
 		reasonText = " for reason: " + reason
 	}
-	ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" pinged moderators "+strings.Join(mods, " ")+reasonText)
+	if _, err := ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" pinged moderators "+strings.Join(mods, " ")+reasonText); err != nil {
+		log.Println("Failed to send moderator ping notification: " + err.Error())
+	}
 }

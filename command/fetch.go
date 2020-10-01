@@ -128,16 +128,16 @@ func doFetch(ctx *Context, user *discordgo.User) {
 		}
 		if profile.Git != "" {
 			profileFields = append(profileFields, &discordgo.MessageEmbedField{
-				"Git",
-				profile.Git,
-				inline,
+				Name:   "Git",
+				Value:  profile.Git,
+				Inline: inline,
 			})
 		}
 		if profile.Dotfiles != "" {
 			profileFields = append(profileFields, &discordgo.MessageEmbedField{
-				"Dotfiles",
-				profile.Dotfiles,
-				inline,
+				Name:   "Dotfiles",
+				Value:  profile.Dotfiles,
+				Inline: inline,
 			})
 		}
 	}
@@ -173,93 +173,93 @@ func doFetch(ctx *Context, user *discordgo.User) {
 
 	if info.Info.Distro != "" {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-			"Distro",
-			info.Info.Distro,
-			inline,
+			Name:   "Distro",
+			Value:  info.Info.Distro,
+			Inline: inline,
 		})
 	}
 	if info.Info.Kernel != "" {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-			"Kernel",
-			info.Info.Kernel,
-			inline,
+			Name:   "Kernel",
+			Value:  info.Info.Kernel,
+			Inline: inline,
 		})
 	}
 	if info.Info.Terminal != "" {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-			"Terminal",
-			info.Info.Terminal,
-			inline,
+			Name:   "Terminal",
+			Value:  info.Info.Terminal,
+			Inline: inline,
 		})
 	}
 	if info.Info.Editor != "" {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-			"Editor",
-			info.Info.Editor,
-			inline,
+			Name:   "Editor",
+			Value:  info.Info.Editor,
+			Inline: inline,
 		})
 	}
 	if info.Info.DeWm != "" {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-			"DE/WM",
-			info.Info.DeWm,
-			inline,
+			Name:   "DE/WM",
+			Value:  info.Info.DeWm,
+			Inline: inline,
 		})
 	}
 	if info.Info.Bar != "" {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-			"Bar",
-			info.Info.Bar,
-			inline,
+			Name:   "Bar",
+			Value:  info.Info.Bar,
+			Inline: inline,
 		})
 	}
 	if info.Info.Resolution != "" {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-			"Resolution",
-			info.Info.Resolution,
-			inline,
+			Name:   "Resolution",
+			Value:  info.Info.Resolution,
+			Inline: inline,
 		})
 	}
 	if info.Info.DisplayProtocol != "" {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-			"Display Protocol",
-			info.Info.DisplayProtocol,
-			inline,
+			Name:   "Display Protocol",
+			Value:  info.Info.DisplayProtocol,
+			Inline: inline,
 		})
 	}
 	if info.Info.Gtk3Theme != "" {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-			"GTK3 Theme",
-			info.Info.Gtk3Theme,
-			inline,
+			Name:   "GTK3 Theme",
+			Value:  info.Info.Gtk3Theme,
+			Inline: inline,
 		})
 	}
 	if info.Info.GtkIconTheme != "" {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-			"GTK Icon Theme",
-			info.Info.GtkIconTheme,
-			inline,
+			Name:   "GTK Icon Theme",
+			Value:  info.Info.GtkIconTheme,
+			Inline: inline,
 		})
 	}
 	if info.Info.Cpu != "" {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-			"CPU",
-			info.Info.Cpu,
-			inline,
+			Name:   "CPU",
+			Value:  info.Info.Cpu,
+			Inline: inline,
 		})
 	}
 	if info.Info.Gpu != "" {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-			"GPU",
-			info.Info.Gpu,
-			inline,
+			Name:   "GPU",
+			Value:  info.Info.Gpu,
+			Inline: inline,
 		})
 	}
 	if info.Info.Memory != 0 {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-			"Memory",
-			humanize.Bytes(info.Info.Memory),
-			inline,
+			Name:   "Memory",
+			Value:  humanize.Bytes(info.Info.Memory),
+			Inline: inline,
 		})
 	}
 	if info.Info.Image != "" {
@@ -293,7 +293,9 @@ sysinfoEnd:
 		}
 
 		if retry {
-			ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed)
+			if _, err = ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed); err != nil {
+				log.Println("Failed to send channel embed: " + err.Error())
+			}
 		}
 	}
 }

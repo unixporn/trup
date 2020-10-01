@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+	"log"
 	"strings"
 	"trup/db"
 )
@@ -69,8 +70,9 @@ func blocklistRemove(ctx *Context, pattern string) {
 		ctx.Reply(fmt.Sprintf("Couldn't find `%s` in the blocklist", pattern))
 		return
 	}
-	ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, fmt.Sprintf("the pattern `%s` has been removed from the blocklist", pattern))
-
+	if _, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, fmt.Sprintf("the pattern `%s` has been removed from the blocklist", pattern)); err != nil {
+		log.Println("Failed to send blocklist removal message: " + err.Error())
+	}
 }
 
 func blocklistGet(ctx *Context) {
@@ -79,5 +81,7 @@ func blocklistGet(ctx *Context) {
 		ctx.ReportError("Failed to fetch patterns", err)
 		return
 	}
-	ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, fmt.Sprintf("Patterns in the blocklist:\n```\n%s\n```", strings.Join(patterns, "\n")))
+	if _, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, fmt.Sprintf("Patterns in the blocklist:\n```\n%s\n```", strings.Join(patterns, "\n"))); err != nil {
+		log.Println("Failed to send blocklist retrieval message: " + err.Error())
+	}
 }

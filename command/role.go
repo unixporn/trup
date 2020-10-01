@@ -21,13 +21,15 @@ func role(ctx *Context, args []string) {
 			roles.WriteString(fmt.Sprintf("`%d` - <@&%s>\n", i, role))
 		}
 
-		ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &discordgo.MessageEmbed{
+		if _, err := ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &discordgo.MessageEmbed{
 			Title:       "Color List",
 			Description: roles.String(),
 			Footer: &discordgo.MessageEmbedFooter{
 				Text: roleUsage,
 			},
-		})
+		}); err != nil {
+			log.Println("Failed to send role embed: " + err.Error())
+		}
 		return
 	}
 

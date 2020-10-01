@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+	"log"
 	"strings"
 	"trup/db"
 
@@ -41,6 +42,10 @@ func note(ctx *Context, args []string) {
 	}
 
 	aboutMember, err := ctx.Session.GuildMember(ctx.Message.GuildID, about)
+	if err != nil {
+		ctx.ReportError("Failed to retrieve guild member given ID", err)
+		return
+	}
 	notes, err := db.GetNotes(aboutMember.User.ID)
 	if err != nil {
 		ctx.ReportError("Failed to retrieve notes.", err)
@@ -81,5 +86,7 @@ func note(ctx *Context, args []string) {
 		})
 	}
 
-	ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed)
+	if _, err = ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed); err != nil {
+		log.Println("Failed to send message embed: " + err.Error())
+	}
 }

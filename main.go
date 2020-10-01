@@ -34,9 +34,7 @@ var (
 )
 
 func main() {
-	var (
-		token = os.Getenv("TOKEN")
-	)
+	token := os.Getenv("TOKEN")
 
 	discord, err := discordgo.New("Bot " + token)
 	if err != nil {
@@ -63,7 +61,7 @@ func main() {
 
 	fmt.Println("Bot is now running.  Press CTRL-c to exit.")
 	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	<-sc
 
 	discord.Close()
@@ -159,14 +157,20 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 
 		if !validSubmission {
-			s.ChannelMessageDelete(m.ChannelID, m.ID)
+			if err := s.ChannelMessageDelete(m.ChannelID, m.ID); err != nil {
+				log.Println("Failed to delete message with ID: " + m.ID + ": " + err.Error())
+			}
+
 			ch, err := s.UserChannelCreate(m.Author.ID)
 			if err != nil {
 				log.Println("Failed to create user channel with " + m.Author.ID)
 				return
 			}
 
-			s.ChannelMessageSend(ch.ID, "Your showcase submission was detected to be invalid. If you wanna comment on a rice, use the #ricing-theming channel.\nIf this is a mistake, contact the moderators or open an issue on https://github.com/unixporn/trup")
+			if _, err = s.ChannelMessageSend(ch.ID, "Your showcase submission was detected to be invalid. If you wanna comment on a rice, use the #ricing-theming channel.\nIf this is a mistake, contact the moderators or open an issue on https://github.com/unixporn/trup"); err != nil {
+				log.Println("Failed to send submission validity message: " + err.Error())
+				return
+			}
 			return
 		}
 
@@ -178,8 +182,14 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	if m.ChannelID == env.ChannelFeedback {
-		s.MessageReactionAdd(m.ChannelID, m.ID, "👍")
-		s.MessageReactionAdd(m.ChannelID, m.ID, "👎")
+		if err := s.MessageReactionAdd(m.ChannelID, m.ID, "👍"); err != nil {
+			log.Println("Failed to react to message with 👍: " + err.Error())
+			return
+		}
+		if err := s.MessageReactionAdd(m.ChannelID, m.ID, "👎"); err != nil {
+			log.Println("Failed to react to message with 👎: " + err.Error())
+			return
+		}
 		return
 	}
 
@@ -217,7 +227,10 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 	}
 	if mentionsBot {
-		s.ChannelMessageSend(m.ChannelID, m.Author.Mention()+" need help? Type `!help`")
+		if _, err := s.ChannelMessageSend(m.ChannelID, m.Author.Mention()+" need help? Type `!help`"); err != nil {
+			log.Println("Failed to send bot mention help message: " + err.Error())
+			return
+		}
 		return
 	}
 }
@@ -286,11 +299,11 @@ func cleanupLoop(s *discordgo.Session) {
 		time.Sleep(time.Minute)
 
 		cleanupMutes(s)
-		cleanupAttachmentCache(s)
+		cleanupAttachmentCache()
 	}
 }
 
-func cleanupAttachmentCache(s *discordgo.Session) {
+func cleanupAttachmentCache() {
 	defer func() {
 		if err := recover(); err != nil {
 			log.Printf("Panicked in cleanupAttachmentCache. Error: %v\n", err)
@@ -320,10 +333,15 @@ func cleanupMutes(s *discordgo.Session) {
 		err = s.GuildMemberRoleRemove(m.GuildId, m.User, env.RoleMute)
 		if err != nil {
 			log.Printf("Failed to remove role %s\n", err)
-			s.ChannelMessageSend(env.ChannelModlog, fmt.Sprintf("Failed to remove role Mute from user <@%s>. Error: %s", m.User, err))
+			if _, nestedErr := s.ChannelMessageSend(env.ChannelModlog, fmt.Sprintf("Failed to remove role Mute from user <@%s>. Error: %s", m.User, err)); nestedErr != nil {
+				log.Println("Failed to send Mute role removal message: " + err.Error())
+				return
+			}
 		} else {
 			unmutedMsg := "User <@" + m.User + "> is now unmuted."
-			s.ChannelMessageSend(env.ChannelModlog, unmutedMsg)
+			if _, nestedErr := s.ChannelMessageSend(env.ChannelModlog, unmutedMsg); nestedErr != nil {
+				log.Println("Failed to send user unmuted message: " + err.Error())
+			}
 		}
 
 		err = db.SetMuteInactive(m.Id)
@@ -415,5 +433,7 @@ func makeMessageLink(guildID string, m *discordgo.Message) string {
 func setStatus(s *discordgo.Session) {
 	game := discordgo.Game{Type: discordgo.GameTypeWatching, Name: "for !help"}
 	update := discordgo.UpdateStatusData{Game: &game}
-	s.UpdateStatusComplex(update)
+	if err := s.UpdateStatusComplex(update); err != nil {
+		log.Println("Failed to update status: " + err.Error())
+	}
 }

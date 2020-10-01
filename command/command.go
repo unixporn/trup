@@ -126,9 +126,11 @@ var Commands = map[string]Command{
 
 var parseMentionRegexp = regexp.MustCompile(`<@!?(\d+)>`)
 
-var INVALID_CALLBACK_IDX = -1
-var memberSelectionCallbacks = make(map[MemberSelectionKey]func(int) error)
-var numbers = []string{"1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"}
+var (
+	INVALID_CALLBACK_IDX     = -1
+	memberSelectionCallbacks = make(map[MemberSelectionKey]func(int) error)
+	numbers                  = []string{"1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"}
+)
 
 type MemberSelectionKey struct {
 	ChannelID        string
@@ -161,7 +163,7 @@ func HandleMessageReaction(reaction *discordgo.MessageReaction) (bool, error) {
 }
 
 // parseMention takes a Discord mention string and returns the id
-// returns empty string if id was not found
+// returns empty string if id was not found.
 func parseMention(mention string) string {
 	res := parseMentionRegexp.FindStringSubmatch(mention)
 	if len(res) < 2 {
@@ -190,10 +192,7 @@ func parseChannelMention(mention string) string {
 	return res[1]
 }
 
-var (
-	userNotFound     = errors.New("User not found")
-	moreThanOneMatch = errors.New("Matched more than one user, try using username#0000")
-)
+var userNotFound = errors.New("User not found")
 
 // members returns unique members from discordgo's state, because discordgo's state has duplicates.
 func (ctx *Context) members() []*discordgo.Member {
@@ -213,7 +212,7 @@ func (ctx *Context) members() []*discordgo.Member {
 	return unique
 }
 
-// asks the user to select one user. Once a user made a selection, deletes the messages and callback entry
+// asks the user to select one user. Once a user made a selection, deletes the messages and callback entry.
 func (ctx *Context) resolveAmbiguousUser(options []*discordgo.Member, callback func(*discordgo.Member) error) {
 	if len(options) > 10 {
 		ctx.Reply("More than ten possible users, I can't deal with that much uncertainty 😕")
@@ -236,22 +235,28 @@ func (ctx *Context) resolveAmbiguousUser(options []*discordgo.Member, callback f
 
 	key := MemberSelectionKey{ChannelID: ctx.Message.ChannelID, MessageID: message.ID, RequestingUserID: ctx.Message.Author.ID}
 	memberSelectionCallbacks[key] = func(idx int) error {
-		ctx.Session.ChannelMessageDelete(message.ChannelID, message.ID)
+		if err := ctx.Session.ChannelMessageDelete(message.ChannelID, message.ID); err != nil {
+			log.Println("Failed to delete member selection message: " + err.Error())
+		}
 		if idx == INVALID_CALLBACK_IDX || idx > len(options) {
 			return nil
 		}
 		return callback(options[idx])
 	}
 	for idx := range options {
-		ctx.Session.MessageReactionAdd(message.ChannelID, message.ID, numbers[idx])
+		if err := ctx.Session.MessageReactionAdd(message.ChannelID, message.ID, numbers[idx]); err != nil {
+			log.Println("Failed to react to selection message: " + err.Error())
+		}
 	}
 	time.AfterFunc(10*time.Second, func() {
-		ctx.Session.ChannelMessageDelete(message.ChannelID, message.ID)
+		if err := ctx.Session.ChannelMessageDelete(message.ChannelID, message.ID); err != nil {
+			log.Println("Failed to delete selection message: " + err.Error())
+		}
 		delete(memberSelectionCallbacks, key)
 	})
 }
 
-// searches for a user by the name, asking the user to select one if the name is ambiguous
+// searches for a user by the name, asking the user to select one if the name is ambiguous.
 func (ctx *Context) requestUserByName(str string, callback func(*discordgo.Member) error) error {
 	if m := parseMention(str); m != "" {
 		mem, err := ctx.Session.GuildMember(ctx.Message.GuildID, m)
