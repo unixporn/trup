@@ -75,7 +75,6 @@ func warn(ctx *Context, args []string) {
 		ctx.ReportError("Failed to find the user", err)
 		return
 	}
-
 }
 
 func makeMessageLink(guildID string, m *discordgo.Message) string {

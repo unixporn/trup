@@ -127,14 +127,15 @@ var Commands = map[string]Command{
 var parseMentionRegexp = regexp.MustCompile(`<@!?(\d+)>`)
 
 var (
-	InvalidCallbackIDX       = -1
+	invalidCallbackIDX       = -1
 	memberSelectionCallbacks = make(map[MemberSelectionKey]func(int) error)
 	numbers                  = []string{"1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"}
 )
 
-const invalidCallbackIdx = -1
-const cancelReaction = "❌"
-const cancelIdx = 11
+const (
+	cancelReaction = "❌"
+	cancelIdx      = 11
+)
 
 type MemberSelectionKey struct {
 	ChannelID        string
@@ -149,7 +150,7 @@ func indexOfStringList(list []string, searched string) int {
 		}
 	}
 
-	return InvalidCallbackIDX
+	return invalidCallbackIDX
 }
 
 func HandleMessageReaction(reaction *discordgo.MessageReaction) (bool, error) {
@@ -165,7 +166,7 @@ func HandleMessageReaction(reaction *discordgo.MessageReaction) (bool, error) {
 	}
 
 	emojiIndex := indexOfStringList(numbers, reaction.Emoji.Name)
-	if emojiIndex == InvalidCallbackIDX {
+	if emojiIndex == invalidCallbackIDX {
 		return false, nil
 	}
 
@@ -270,7 +271,7 @@ func (ctx *Context) resolveAmbiguousUser(options []*discordgo.Member, callback f
 			log.Println("Failed to delete member selection message: " + err.Error())
 		}
 
-		if idx == cancelIdx || idx == InvalidCallbackIDX || idx > len(options) {
+		if idx == cancelIdx || idx == invalidCallbackIDX || idx > len(options) {
 			return nil
 		}
 
@@ -282,7 +283,10 @@ func (ctx *Context) resolveAmbiguousUser(options []*discordgo.Member, callback f
 			log.Println("Failed to react to selection message: " + err.Error())
 		}
 	}
-	ctx.Session.MessageReactionAdd(message.ChannelID, message.ID, cancelReaction)
+
+	if err = ctx.Session.MessageReactionAdd(message.ChannelID, message.ID, cancelReaction); err != nil {
+		log.Println("Failed to add reaction to message" + err.Error())
+	}
 
 	time.AfterFunc(10*time.Second, func() {
 		if err := ctx.Session.ChannelMessageDelete(message.ChannelID, message.ID); err != nil {

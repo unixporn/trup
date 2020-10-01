@@ -51,16 +51,13 @@ func info(ctx *Context, args []string) {
 			}
 			discordRoles = append(discordRoles, r)
 		}
-
 		var userRoles []string
 		var userColors []string
 		var roles []string
-
 		for _, r := range discordRoles {
 			userRoles = append(userRoles, r.ID)
 			userColors = append(userColors, r.Color)
 		}
-
 		for i := range userRoles {
 			if userColors[i] == "0" {
 				roles = append(roles, userRoles[i])
@@ -68,7 +65,6 @@ func info(ctx *Context, args []string) {
 				roles = append(roles, userRoles[i]+"(#"+userColors[i]+")")
 			}
 		}
-
 		const inline = false
 		embed := discordgo.MessageEmbed{
 			Title:  member.User.Username + "#" + member.User.Discriminator,
@@ -99,7 +95,6 @@ func info(ctx *Context, args []string) {
 				Inline: inline,
 			})
 		}
-
 		if len(roles) > 0 {
 			embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
 				Name:   "Roles",
@@ -109,7 +104,6 @@ func info(ctx *Context, args []string) {
 		}
 
 		_, err = ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed)
-
 		return err
 	}
 
@@ -120,12 +114,13 @@ func info(ctx *Context, args []string) {
 			return
 		}
 
-		if err := callback(member); err != nil {
-			log.Println("Info callback failed: " + err.Error())
+		if err = callback(member); err != nil {
+			log.Println("Failed to execute info callback: " + err.Error())
 		}
+
 	} else {
-		if err := ctx.requestUserByName(strings.Join(args[1:], " "), callback); err != nil {
-			log.Println("Failed to request username: " + err.Error())
+		if err := ctx.requestUserByName(false, strings.Join(args[1:], " "), callback); err != nil {
+			log.Println("Failed to request user by name: " + err.Error())
 		}
 	}
 }

@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+	"log"
 	"strings"
 	"trup/db"
 
@@ -39,7 +40,6 @@ func note(ctx *Context, args []string) {
 		ctx.ReportError("Failed to find the user", err)
 		return
 	}
-	return
 }
 
 func getNotes(ctx *Context, aboutUser *discordgo.User) {
@@ -83,5 +83,7 @@ func getNotes(ctx *Context, aboutUser *discordgo.User) {
 		})
 	}
 
-	ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed)
+	if _, err = ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed); err != nil {
+		log.Println("Failed to send note embed: " + err.Error())
+	}
 }

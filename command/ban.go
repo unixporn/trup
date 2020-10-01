@@ -2,9 +2,10 @@ package command
 
 import (
 	"fmt"
-	"github.com/bwmarrin/discordgo"
 	"log"
 	"strings"
+
+	"github.com/bwmarrin/discordgo"
 )
 
 const banUsage = "ban <@user> <reason>"
