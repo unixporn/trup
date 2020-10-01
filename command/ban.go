@@ -47,7 +47,7 @@ func ban(ctx *Context, args []string) {
 					},
 				})
 			if err != nil {
-				log.Printf("Error Sending DM")
+				log.Printf("Error Sending DM\n")
 			}
 		}
 	}
