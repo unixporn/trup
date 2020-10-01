@@ -23,7 +23,7 @@ func pfp(ctx *Context, args []string) {
 				URL: avatar,
 			},
 		}); err != nil {
-			return err
+			log.Println("Failed to send profile picture embed: " + err.Error())
 		}
 
 		return nil
