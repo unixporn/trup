@@ -35,7 +35,7 @@ func ban(ctx *Context, args []string) {
 	if err != nil {
 		log.Printf("Error Creating a User Channel Error: %s\n", err)
 	} else {
-		ctx.Session.ChannelMessageSendEmbed(
+		_, err := ctx.Session.ChannelMessageSendEmbed(
 			userchannel.ID,
 			&discordgo.MessageEmbed{
 				Title: fmt.Sprintf("You were Banned from %s", guild.Name),
@@ -46,6 +46,9 @@ func ban(ctx *Context, args []string) {
 					},
 				},
 			})
+		if err != nil {
+			log.Printf("Error Sending DM")
+		}
 	}
 
 	err = ctx.Session.GuildBanCreateWithReason(
