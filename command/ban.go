@@ -23,31 +23,32 @@ func ban(ctx *Context, args []string) {
 		ctx.Reply("The first argument must be a user mention.")
 		return
 	}
-	guild, err := ctx.Session.Guild(ctx.Message.GuildID)
-	if err != nil {
-		log.Printf("Failed to fetch guild "+ctx.Message.GuildID, err)
-	}
 
 	reason := strings.Join(args[2:], " ")
 
-	userchannel, err := ctx.Session.UserChannelCreate(user)
-
+	guild, err := ctx.Session.Guild(ctx.Message.GuildID)
 	if err != nil {
-		log.Printf("Error Creating a User Channel Error: %s\n", err)
+		log.Printf("Failed to fetch guild %s\n", err)
 	} else {
-		_, err := ctx.Session.ChannelMessageSendEmbed(
-			userchannel.ID,
-			&discordgo.MessageEmbed{
-				Title: fmt.Sprintf("You were Banned from %s", guild.Name),
-				Fields: []*discordgo.MessageEmbedField{
-					{
-						Name:  "Reason",
-						Value: reason,
-					},
-				},
-			})
+		userChannel, err := ctx.Session.UserChannelCreate(user)
+
 		if err != nil {
-			log.Printf("Error Sending DM")
+			log.Printf("Error Creating a User Channel Error: %s\n", err)
+		} else {
+			_, err := ctx.Session.ChannelMessageSendEmbed(
+				userChannel.ID,
+				&discordgo.MessageEmbed{
+					Title: fmt.Sprintf("You were Banned from %s", guild.Name),
+					Fields: []*discordgo.MessageEmbedField{
+						{
+							Name:  "Reason",
+							Value: reason,
+						},
+					},
+				})
+			if err != nil {
+				log.Printf("Error Sending DM")
+			}
 		}
 	}
 
