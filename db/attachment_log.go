@@ -86,7 +86,7 @@ func (storedAttachment *StoredAttachment) GetContentType() string {
 	return http.DetectContentType(contentTypeBuf)
 }
 
-func GetStoredAttachments(channelId string, messageId string) ([]*StoredAttachment, func() error, error) {
+func GetStoredAttachments(channelId, messageId string) ([]*StoredAttachment, func() error, error) {
 	rows, err := db.Query(
 		context.Background(),
 		"SELECT object_id, filename FROM attachment_log_cache WHERE channel_id = $1 AND message_id = $2",
