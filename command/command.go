@@ -129,9 +129,9 @@ var parseMentionRegexp = regexp.MustCompile(`<@!?(\d+)>`)
 var memberSelectionCallbacks = make(map[MemberSelectionKey]func(int) error)
 var numbers = []string{"1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"}
 
-const INVALID_CALLBACK_IDX = -1
-const CANCEL_REACTION = "❌"
-const CANCEL_IDX = 11
+const invalidCallbackIdx = -1
+const cancelReaction = "❌"
+const cancelIdx = 11
 
 type MemberSelectionKey struct {
 	ChannelID        string
@@ -145,7 +145,7 @@ func indexOfStringList(list []string, searched string) int {
 			return idx
 		}
 	}
-	return INVALID_CALLBACK_IDX
+	return invalidCallbackIdx
 }
 
 func HandleMessageReaction(reaction *discordgo.MessageReaction) (bool, error) {
@@ -155,8 +155,8 @@ func HandleMessageReaction(reaction *discordgo.MessageReaction) (bool, error) {
 		return false, nil
 	}
 	var emojiIndex int
-	if reaction.Emoji.Name == CANCEL_REACTION {
-		emojiIndex = CANCEL_IDX
+	if reaction.Emoji.Name == cancelReaction {
+		emojiIndex = cancelIdx
 	} else {
 		emojiIndex = indexOfStringList(numbers, reaction.Emoji.Name)
 	}
@@ -232,7 +232,7 @@ func (ctx *Context) resolveAmbiguousUser(options []*discordgo.Member, callback f
 			membersString += fmt.Sprintf("%s - %s (%s)\n", numbers[idx], option.Nick, option.User.String())
 		}
 	}
-	membersString += fmt.Sprintf("%s - Cancel\n", CANCEL_REACTION)
+	membersString += fmt.Sprintf("%s - Cancel\n", cancelReaction)
 
 	message, err := ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID,
 		&discordgo.MessageEmbed{Description: membersString})
@@ -243,7 +243,7 @@ func (ctx *Context) resolveAmbiguousUser(options []*discordgo.Member, callback f
 	key := MemberSelectionKey{ChannelID: ctx.Message.ChannelID, MessageID: message.ID, RequestingUserID: ctx.Message.Author.ID}
 	memberSelectionCallbacks[key] = func(idx int) error {
 		ctx.Session.ChannelMessageDelete(message.ChannelID, message.ID)
-		if idx == CANCEL_IDX || idx == INVALID_CALLBACK_IDX || idx > len(options) {
+		if idx == cancelIdx || idx == invalidCallbackIdx || idx > len(options) {
 			return nil
 		}
 		return callback(options[idx])
@@ -251,7 +251,7 @@ func (ctx *Context) resolveAmbiguousUser(options []*discordgo.Member, callback f
 	for idx := range options {
 		ctx.Session.MessageReactionAdd(message.ChannelID, message.ID, numbers[idx])
 	}
-	ctx.Session.MessageReactionAdd(message.ChannelID, message.ID, CANCEL_REACTION)
+	ctx.Session.MessageReactionAdd(message.ChannelID, message.ID, cancelReaction)
 
 	time.AfterFunc(10*time.Second, func() {
 		ctx.Session.ChannelMessageDelete(message.ChannelID, message.ID)
