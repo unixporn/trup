@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	roleUsage = "role [number/name/prefix of name]"
+	roleUsage = "role [number/name/first char of name]"
 	roleHelp  = "Use without arguments to see available roles"
 )
 
@@ -37,7 +37,7 @@ func role(ctx *Context, args []string) {
 	var colorRoles []colorRole
 	for i, _ := range ctx.Env.RoleColors {
 		color, _ := ctx.Session.State.Role(ctx.Message.GuildID, ctx.Env.RoleColors[i])
-		name := fmt.Sprintf("%s", (color.Name))
+		name := color.Name
 		r := colorRole{
 			ID:   color.ID,
 			Name: name,
@@ -47,13 +47,13 @@ func role(ctx *Context, args []string) {
 	}
 	var roleID string
 	var addRole bool
-
 	for _, r := range colorRoles {
-		if args[1][0:1] == r.Name[0:1] || args[1] == r.Name {
+		if strings.HasPrefix(r.Name, args[1][0:1]) && len(args[1]) == 1 || r.Name == args[1] {
 			roleID = r.ID
 			addRole = true
 			break
 		}
+
 	}
 	if len(roleID) == 0 {
 		number, err := strconv.Atoi(args[1])
