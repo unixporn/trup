@@ -1,24 +1,22 @@
 package command
 
 import (
-	"fmt"
 	"log"
-	"strconv"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
 )
 
 const (
-	roleUsage = "role [number/name/first char of name]"
+	roleUsage = "role [name]"
 	roleHelp  = "Use without arguments to see available roles"
 )
 
 func role(ctx *Context, args []string) {
 	if len(args) < 2 {
 		var roles strings.Builder
-		for i, role := range ctx.Env.RoleColors {
-			roles.WriteString(fmt.Sprintf("`%d` - <@&%s>\n", i, role))
+		for _, role := range ctx.Env.RoleColors {
+			roles.WriteString("<@&" + role + ">\n")
 		}
 		ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &discordgo.MessageEmbed{
 			Title:       "Color List",
@@ -47,27 +45,22 @@ func role(ctx *Context, args []string) {
 	}
 	var roleID string
 	var addRole bool
+	var possibleRoles []string
 	for _, r := range colorRoles {
-		if strings.HasPrefix(r.Name, args[1][0:1]) && len(args[1]) == 1 || r.Name == args[1] {
-			roleID = r.ID
-			addRole = true
-			break
+		if strings.HasPrefix(r.Name, args[1]) {
+			possibleRoles = append(possibleRoles, r.ID)
 		}
-
 	}
-	if len(roleID) == 0 {
-		number, err := strconv.Atoi(args[1])
-		if err != nil {
-			ctx.ReportError("Invalid number or role name", err)
-			return
-		} else if number < 0 || number >= len(ctx.Env.RoleColors) {
-			ctx.Reply("Invalid number or role name")
-			return
-		}
-		roleID = ctx.Env.RoleColors[number]
+	if len(possibleRoles) == 0 {
+		ctx.Reply("Invalid role name")
+		return
+	} else if len(possibleRoles) == 1 {
+		roleID = possibleRoles[0]
 		addRole = true
+	} else if len(possibleRoles) > 1 {
+		ctx.Reply("Found more than 1 roles, try a more descriptive name")
+		return
 	}
-
 	for _, r := range ctx.Message.Member.Roles {
 		if r == roleID {
 			addRole = false
