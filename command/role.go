@@ -38,13 +38,12 @@ func role(ctx *Context, args []string) {
 	if len(possibleRoles) == 0 {
 		ctx.Reply("Invalid role name")
 		return
-	} else if len(possibleRoles) == 1 {
-		roleID = possibleRoles[0]
-		addRole = true
 	} else if len(possibleRoles) > 1 {
 		ctx.Reply("Found more than 1 roles, try a more descriptive name")
 		return
 	}
+	roleID = possibleRoles[0]
+	addRole = true
 	for _, r := range ctx.Message.Member.Roles {
 		if r == roleID {
 			addRole = false

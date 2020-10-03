@@ -432,9 +432,13 @@ func setStatus(s *discordgo.Session) {
 	s.UpdateStatusComplex(update)
 }
 
-func rolesStuff(s *discordgo.Session, m *discordgo.MessageCreate) {
+func rolesStuff(s *discordgo.Session, g *discordgo.GuildCreate) {
 	for _, colorID := range strings.Split(os.Getenv("ROLE_COLORS"), ",") {
-		color, _ := s.State.Role(m.GuildID, colorID)
+		color, err := s.State.Role(g.ID, colorID)
+		if err != nil {
+			log.Printf("role not found in Session State, %s\n", err)
+			return
+		}
 		name := color.Name
 		r := command.ColorRole{
 			ID:   color.ID,
