@@ -2,19 +2,19 @@ package command
 
 import (
 	"fmt"
-	"github.com/bwmarrin/discordgo"
 	"log"
 	"strings"
+
+	"github.com/bwmarrin/discordgo"
 )
 
-const banUsage = "ban <@user> <reason>"
+const kickUsage = "kick <@user> <reason>"
 
-func ban(ctx *Context, args []string) {
+func kick(ctx *Context, args []string) {
 	if len(args) < 3 {
-		ctx.Reply("not enough arguments.")
+		ctx.Reply("not enough arguments")
 		return
 	}
-
 	user := parseMention(args[1])
 	if user == "" {
 		user = parseSnowflake(args[1])
@@ -23,7 +23,6 @@ func ban(ctx *Context, args []string) {
 		ctx.Reply("The first argument must be a user mention.")
 		return
 	}
-
 	reason := strings.Join(args[2:], " ")
 
 	guild, err := ctx.Session.Guild(ctx.Message.GuildID)
@@ -31,14 +30,13 @@ func ban(ctx *Context, args []string) {
 		log.Printf("Failed to fetch guild %s\n", err)
 	} else {
 		userChannel, err := ctx.Session.UserChannelCreate(user)
-
 		if err != nil {
-			log.Printf("Error Creating a User Channel Error: %s\n", err)
+			log.Printf("Error in Creating a User Channel Error: %s\n", err)
 		} else {
 			_, err := ctx.Session.ChannelMessageSendEmbed(
 				userChannel.ID,
 				&discordgo.MessageEmbed{
-					Title: fmt.Sprintf("You were Banned from %s", guild.Name),
+					Title: fmt.Sprintf("You were kicked from %s", guild.Name),
 					Fields: []*discordgo.MessageEmbedField{
 						{
 							Name:  "Reason",
@@ -47,28 +45,25 @@ func ban(ctx *Context, args []string) {
 					},
 				})
 			if err != nil {
-				log.Printf("Error Sending DM\n")
+				log.Printf("Error sending DM\n")
 			}
 		}
 	}
-
-	err = ctx.Session.GuildBanCreateWithReason(
+	err = ctx.Session.GuildMemberDeleteWithReason(
 		ctx.Message.GuildID,
 		user,
 		reason,
-		1,
 	)
 	if err != nil {
-		ctx.ReportError(fmt.Sprintf("Failed to ban %s.", user), err)
+		ctx.ReportError(fmt.Sprintf("Failed to kick %s.", user), err)
 		return
 	}
-
 	_, err = ctx.Session.ChannelMessageSend(
 		ctx.Env.ChannelModlog,
-		fmt.Sprintf("<@%s> has been banned by %s for %s.", user, ctx.Message.Author, reason),
+		fmt.Sprintf("<@%s> has been kicked by %s for %s.", user, ctx.Message.Author, reason),
 	)
 	if err != nil {
-		log.Printf("Error sending ban notice into modlog: %s\n", err)
+		log.Printf("Error sending kick notice into modlog: %s\n", err)
 	}
 
 	ctx.Reply("Success")

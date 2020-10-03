@@ -55,6 +55,21 @@ psql trup <db/structure.sql
 export DATABASE_URL=postgresql://user@localhost/trup
 ```
 
+# Bot Commands 
+
+Bot flag is !. 
+The list of bot commands is : 
+- dotfiles - Adds a dotfiles link to your fetch.
+- git - Adds a git link to your fetch.
+- setfetch - Run wihout arguments to see instructions.
+- role - Use without arguments to see available roles.
+- poll - Creates a poll.
+- repo - Sends a link to the bot's repository.
+- info - Displays additional informations.
+- pfp Displays the user's profile picture in highest resolution.
+- modping - Pings online mods. (Don't abuse.)
+- desc - Sets or clears your descriptions, displays it with fetch.
+
 ## Kudos to:
 - [davidv171](https://github.com/davidv171) & [GaugeK](https://github.com/GaugeK) for fetcher.sh
 - [aosync](https://github.com/aosync) for commands purge and move
