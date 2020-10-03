@@ -2,9 +2,10 @@ package command
 
 import (
 	"fmt"
-	"github.com/bwmarrin/discordgo"
 	"log"
 	"strings"
+
+	"github.com/bwmarrin/discordgo"
 )
 
 const banUsage = "ban <@user> <reason>"
@@ -56,7 +57,7 @@ func ban(ctx *Context, args []string) {
 		ctx.Message.GuildID,
 		user,
 		reason,
-		1,
+		0,
 	)
 	if err != nil {
 		ctx.ReportError(fmt.Sprintf("Failed to ban %s.", user), err)
