@@ -12,10 +12,15 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+type ColorRole struct {
+	ID   string
+	Name string
+}
+
 type Env struct {
 	RoleMod         string
 	RoleMute        string
-	RoleColors      []string
+	RoleColors      []ColorRole
 	ChannelShowcase string
 
 	ChannelAutoMod     string

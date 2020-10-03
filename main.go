@@ -19,7 +19,7 @@ var (
 	prefix = "!"
 	env    = command.Env{
 		RoleMod:            os.Getenv("ROLE_MOD"),
-		RoleColors:         strings.Split(os.Getenv("ROLE_COLORS"), ","),
+		RoleColors:         []command.ColorRole{},
 		ChannelShowcase:    os.Getenv("CHANNEL_SHOWCASE"),
 		RoleMute:           os.Getenv("ROLE_MUTE"),
 		ChannelFeedback:    os.Getenv("CHANNEL_FEEDBACK"),
@@ -37,7 +37,6 @@ func main() {
 	var (
 		token = os.Getenv("TOKEN")
 	)
-
 	discord, err := discordgo.New("Bot " + token)
 	if err != nil {
 		log.Fatalf("Failed on discordgo.New(): %s\n", err)
@@ -55,7 +54,7 @@ func main() {
 	discord.AddHandler(messageDelete)
 	discord.AddHandler(messageUpdate)
 	discord.AddHandler(messageReactionAdd)
-
+	discord.AddHandlerOnce(rolesStuff)
 	err = discord.Open()
 	if err != nil {
 		log.Fatalf("Failed on discord.Open(): %s\n", err)
@@ -431,4 +430,16 @@ func setStatus(s *discordgo.Session) {
 	game := discordgo.Game{Type: discordgo.GameTypeWatching, Name: "for !help"}
 	update := discordgo.UpdateStatusData{Game: &game}
 	s.UpdateStatusComplex(update)
+}
+
+func rolesStuff(s *discordgo.Session, m *discordgo.MessageCreate) {
+	for _, colorID := range strings.Split(os.Getenv("ROLE_COLORS"), ",") {
+		color, _ := s.State.Role(m.GuildID, colorID)
+		name := color.Name
+		r := command.ColorRole{
+			ID:   color.ID,
+			Name: name,
+		}
+		env.RoleColors = append(env.RoleColors, r)
+	}
 }

@@ -1,10 +1,9 @@
 package command
 
 import (
+	"github.com/bwmarrin/discordgo"
 	"log"
 	"strings"
-
-	"github.com/bwmarrin/discordgo"
 )
 
 const (
@@ -16,7 +15,7 @@ func role(ctx *Context, args []string) {
 	if len(args) < 2 {
 		var roles strings.Builder
 		for _, role := range ctx.Env.RoleColors {
-			roles.WriteString("<@&" + role + ">\n")
+			roles.WriteString("<@&" + role.ID + ">\n")
 		}
 		ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &discordgo.MessageEmbed{
 			Title:       "Color List",
@@ -28,25 +27,10 @@ func role(ctx *Context, args []string) {
 		return
 	}
 
-	type colorRole struct {
-		ID   string `json:"id"`
-		Name string `json:"color"`
-	}
-	var colorRoles []colorRole
-	for i, _ := range ctx.Env.RoleColors {
-		color, _ := ctx.Session.State.Role(ctx.Message.GuildID, ctx.Env.RoleColors[i])
-		name := color.Name
-		r := colorRole{
-			ID:   color.ID,
-			Name: name,
-		}
-		colorRoles = append(colorRoles, r)
-
-	}
 	var roleID string
 	var addRole bool
 	var possibleRoles []string
-	for _, r := range colorRoles {
+	for _, r := range ctx.Env.RoleColors {
 		if strings.HasPrefix(r.Name, args[1]) {
 			possibleRoles = append(possibleRoles, r.ID)
 		}
@@ -67,7 +51,7 @@ func role(ctx *Context, args []string) {
 		}
 
 		for _, cr := range ctx.Env.RoleColors {
-			if r == cr {
+			if r == cr.ID {
 				err := ctx.Session.GuildMemberRoleRemove(ctx.Message.GuildID, ctx.Message.Author.ID, r)
 				if err != nil {
 					log.Printf("Failed to remove user(%s)'s color role(%s)\n", ctx.Message.Author.ID, cr)
