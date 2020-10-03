@@ -57,7 +57,7 @@ export DATABASE_URL=postgresql://user@localhost/trup
 
 # Bot Commands 
 
-Bot flag is ! /
+Bot flag is ! .
 The list of bot commands is : 
 - dotfiles - Adds a dotfiles link to your fetch.
 - git - Adds a git link to your fetch.
