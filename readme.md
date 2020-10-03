@@ -57,7 +57,7 @@ export DATABASE_URL=postgresql://user@localhost/trup
 
 # Bot Commands 
 
-Bot flag is !. 
+Bot flag is ! /
 The list of bot commands is : 
 - dotfiles - Adds a dotfiles link to your fetch.
 - git - Adds a git link to your fetch.
@@ -69,6 +69,7 @@ The list of bot commands is :
 - pfp Displays the user's profile picture in highest resolution.
 - modping - Pings online mods. (Don't abuse.)
 - desc - Sets or clears your descriptions, displays it with fetch.
+- help - Shows the list of commands and their usage.
 
 ## Kudos to:
 - [davidv171](https://github.com/davidv171) & [GaugeK](https://github.com/GaugeK) for fetcher.sh
