@@ -56,7 +56,7 @@ func ban(ctx *Context, args []string) {
 		ctx.Message.GuildID,
 		user,
 		reason,
-		1,
+		0,
 	)
 	if err != nil {
 		ctx.ReportError(fmt.Sprintf("Failed to ban %s.", user), err)
