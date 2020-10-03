@@ -8,24 +8,9 @@ import (
 )
 
 const banUsage = "ban <@user> <reason>"
+const delbanUsage = "delban <@user> <reason"
 
-func ban(ctx *Context, args []string) {
-	if len(args) < 3 {
-		ctx.Reply("not enough arguments.")
-		return
-	}
-
-	user := parseMention(args[1])
-	if user == "" {
-		user = parseSnowflake(args[1])
-	}
-	if user == "" {
-		ctx.Reply("The first argument must be a user mention.")
-		return
-	}
-
-	reason := strings.Join(args[2:], " ")
-
+func banUser(ctx *Context, user string, reason string, removeDays int) {
 	guild, err := ctx.Session.Guild(ctx.Message.GuildID)
 	if err != nil {
 		log.Printf("Failed to fetch guild %s\n", err)
@@ -56,7 +41,7 @@ func ban(ctx *Context, args []string) {
 		ctx.Message.GuildID,
 		user,
 		reason,
-		0,
+		removeDays,
 	)
 	if err != nil {
 		ctx.ReportError(fmt.Sprintf("Failed to ban %s.", user), err)
@@ -72,4 +57,44 @@ func ban(ctx *Context, args []string) {
 	}
 
 	ctx.Reply("Success")
+}
+
+func ban(ctx *Context, args []string) {
+	if len(args) < 3 {
+		ctx.Reply("not enough arguments.")
+		return
+	}
+
+	user := parseMention(args[1])
+	if user == "" {
+		user = parseSnowflake(args[1])
+	}
+	if user == "" {
+		ctx.Reply("The first argument must be a user mention.")
+		return
+	}
+
+	reason := strings.Join(args[2:], " ")
+
+	banUser(ctx, user, reason, 0)
+}
+
+func delban(ctx *Context, args []string) {
+	if len(args) < 3 {
+		ctx.Reply("not enough arguments.")
+		return
+	}
+
+	user := parseMention(args[1])
+	if user == "" {
+		user = parseSnowflake(args[1])
+	}
+	if user == "" {
+		ctx.Reply("The first argument must be a user mention.")
+		return
+	}
+
+	reason := strings.Join(args[2:], " ")
+
+	banUser(ctx, user, reason, 1)
 }
