@@ -57,7 +57,7 @@ export DATABASE_URL=postgresql://user@localhost/trup
 ```
 
 ## Kudos to:
-- [davidv171](https://github.com/davidv171) & [GaugeK](https://github.com/6gk) for fetcher.sh
+- [davidv171](https://github.com/davidv171) & [6gk](https://github.com/6gk) for fetcher.sh
 - [aosync](https://github.com/aosync) for commands purge and move
 - [tteeoo](https://github.com/tteeoo) for commands git, desc and dotfiles
 - [kayew](https://github.com/kayew) for a more explicit setfetch message

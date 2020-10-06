@@ -107,6 +107,10 @@ var Commands = map[string]Command{
 		Exec:  ban,
 		Usage: banUsage,
 	}),
+	"delban": moderatorOnly(Command{
+		Exec:  delban,
+		Usage: delbanUsage,
+	}),
 	"purge": moderatorOnly(Command{
 		Exec:  purge,
 		Usage: purgeUsage,
