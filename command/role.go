@@ -1,9 +1,10 @@
 package command
 
 import (
-	"github.com/bwmarrin/discordgo"
 	"log"
 	"strings"
+
+	"github.com/bwmarrin/discordgo"
 )
 
 const (
@@ -57,7 +58,7 @@ func role(ctx *Context, args []string) {
 			if r == cr.ID {
 				err := ctx.Session.GuildMemberRoleRemove(ctx.Message.GuildID, ctx.Message.Author.ID, r)
 				if err != nil {
-					log.Printf("Failed to remove user(%s)'s color role(%s)\n", ctx.Message.Author.ID, cr)
+					log.Printf("Failed to remove user(%s)'s color role(%s)\n", ctx.Message.Author.ID, cr.ID)
 				}
 			}
 		}
