@@ -19,7 +19,7 @@ var (
 	prefix = "!"
 	env    = command.Env{
 		RoleMod:            os.Getenv("ROLE_MOD"),
-		RoleColors:         strings.Split(os.Getenv("ROLE_COLORS"), ","),
+		RoleColors:         []discordgo.Role{},
 		ChannelShowcase:    os.Getenv("CHANNEL_SHOWCASE"),
 		RoleMute:           os.Getenv("ROLE_MUTE"),
 		ChannelFeedback:    os.Getenv("CHANNEL_FEEDBACK"),
@@ -28,6 +28,7 @@ var (
 		ChannelAutoMod:     os.Getenv("CHANNEL_AUTO_MOD"),
 		ChannelBotMessages: os.Getenv("CHANNEL_BOT_MESSAGES"),
 		ChannelBotTraffic:  os.Getenv("CHANNEL_BOT_TRAFFIC"),
+		Guild:              os.Getenv("GUILD"),
 	}
 	botId string
 	cache = newMessageCache(5000)
@@ -53,7 +54,7 @@ func main() {
 	discord.AddHandler(messageDelete)
 	discord.AddHandler(messageUpdate)
 	discord.AddHandler(messageReactionAdd)
-
+	discord.AddHandlerOnce(initializeRoles)
 	err = discord.Open()
 	if err != nil {
 		log.Fatalf("Failed on discord.Open(): %s\n", err)
@@ -114,7 +115,6 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			log.Printf("Recovered from panic in messageCreate. r: %#v; Message(%s): %s;\n", r, m.ID, m.Content)
 		}
 	}()
-
 	if m.Author.Bot {
 		return
 	}
@@ -456,5 +456,20 @@ func setStatus(s *discordgo.Session) {
 	update := discordgo.UpdateStatusData{Game: &game}
 	if err := s.UpdateStatusComplex(update); err != nil {
 		log.Println("Failed to update status: " + err.Error())
+	}
+}
+
+func initializeRoles(s *discordgo.Session, r *discordgo.Ready) {
+	guild, err := s.Guild(env.Guild)
+	if err != nil {
+		log.Printf("Failed to get Guild Details, %s\n", err)
+		return
+	}
+	for _, colorID := range strings.Split(os.Getenv("ROLE_COLORS"), ",") {
+		for _, role := range guild.Roles {
+			if role.ID == colorID {
+				env.RoleColors = append(env.RoleColors, *role)
+			}
+		}
 	}
 }

@@ -15,7 +15,7 @@ import (
 type Env struct {
 	RoleMod         string
 	RoleMute        string
-	RoleColors      []string
+	RoleColors      []discordgo.Role
 	ChannelShowcase string
 
 	ChannelAutoMod     string
@@ -25,6 +25,8 @@ type Env struct {
 	ChannelFeedback    string
 	ChannelModlog      string
 	CategoryModPrivate string
+
+	Guild string
 }
 
 type Context struct {

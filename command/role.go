@@ -1,24 +1,21 @@
 package command
 
 import (
-	"fmt"
-	"log"
-	"strconv"
-	"strings"
-
 	"github.com/bwmarrin/discordgo"
+	"log"
+	"strings"
 )
 
 const (
-	roleUsage = "role [number]"
+	roleUsage = "role [name]"
 	roleHelp  = "Use without arguments to see available roles"
 )
 
 func role(ctx *Context, args []string) {
 	if len(args) < 2 {
 		var roles strings.Builder
-		for i, role := range ctx.Env.RoleColors {
-			roles.WriteString(fmt.Sprintf("`%d` - <@&%s>\n", i, role))
+		for _, role := range ctx.Env.RoleColors {
+			roles.WriteString("<@&" + role.ID + ">\n")
 		}
 
 		if _, err := ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &discordgo.MessageEmbed{
@@ -34,25 +31,31 @@ func role(ctx *Context, args []string) {
 		return
 	}
 
-	number, err := strconv.Atoi(args[1])
-	if err != nil {
-		ctx.ReportError("Invalid number", err)
+	var roleID string
+	var addRole bool
+	var possibleRoles []string
+	for _, r := range ctx.Env.RoleColors {
+		if strings.HasPrefix(r.Name, args[1]) {
+			possibleRoles = append(possibleRoles, r.ID)
+		}
+	}
+	if len(possibleRoles) == 0 {
+		ctx.Reply("Invalid role name")
 		return
-	} else if number < 0 || number >= len(ctx.Env.RoleColors) {
-		ctx.Reply("Invalid number")
+	} else if len(possibleRoles) > 1 {
+		ctx.Reply("Found more than 1 roles, try a more descriptive name")
 		return
 	}
-	roleID := ctx.Env.RoleColors[number]
-	addRole := true
-
+	roleID = possibleRoles[0]
+	addRole = true
 	for _, r := range ctx.Message.Member.Roles {
 		if r == roleID {
 			addRole = false
 		}
 
 		for _, cr := range ctx.Env.RoleColors {
-			if r == cr {
-				err = ctx.Session.GuildMemberRoleRemove(ctx.Message.GuildID, ctx.Message.Author.ID, r)
+			if r == cr.ID {
+				err := ctx.Session.GuildMemberRoleRemove(ctx.Message.GuildID, ctx.Message.Author.ID, r)
 				if err != nil {
 					log.Printf("Failed to remove user(%s)'s color role(%s)\n", ctx.Message.Author.ID, cr)
 				}
@@ -61,7 +64,7 @@ func role(ctx *Context, args []string) {
 	}
 
 	if addRole {
-		err = ctx.Session.GuildMemberRoleAdd(ctx.Message.GuildID, ctx.Message.Author.ID, roleID)
+		err := ctx.Session.GuildMemberRoleAdd(ctx.Message.GuildID, ctx.Message.Author.ID, roleID)
 		if err != nil {
 			ctx.ReportError("Failed to assign you the role", err)
 			return
