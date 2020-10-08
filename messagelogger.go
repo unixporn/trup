@@ -100,7 +100,12 @@ func messageDelete(s *discordgo.Session, m *discordgo.MessageDelete) {
 	}
 
 	mediaFiles, finish, err := db.GetStoredAttachments(m.ChannelID, m.Message.ID)
-	defer finish()
+	defer func() {
+		err := finish()
+		if err != nil {
+			log.Println("Failed to finish db.GetStoredAttachments. Err:", err);
+		}
+	}()
 
 	if err != nil || len(mediaFiles) == 0 {
 		if _, err := s.ChannelMessageSendEmbed(env.ChannelBotMessages, messageEmbed); err != nil {
