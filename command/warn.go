@@ -18,11 +18,7 @@ func warn(ctx *Context, args []string) {
 		return
 	}
 
-	user := parseMention(args[1])
-	if user == "" {
-		user = parseSnowflake(args[1])
-	}
-
+	user := parseUser(args[1])
 	if user == "" {
 		ctx.Reply("The first argument must be a user mention.")
 		return

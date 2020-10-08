@@ -181,6 +181,15 @@ func HandleMessageReaction(reaction *discordgo.MessageReaction) (bool, error) {
 	return true, err
 }
 
+func parseUser(user string) string {
+    res := parseMention(user)
+    if res == "" {
+        return parseSnowflake(user)
+    }
+
+    return res
+}
+
 // parseMention takes a Discord mention string and returns the id
 // returns empty string if id was not found.
 func parseMention(mention string) string {
