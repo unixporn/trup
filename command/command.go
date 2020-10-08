@@ -130,12 +130,16 @@ var Commands = map[string]Command{
 
 var parseMentionRegexp = regexp.MustCompile(`<@!?(\d+)>`)
 
-var memberSelectionCallbacks = make(map[MemberSelectionKey]func(int) error)
-var numbers = []string{"1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"}
+var (
+	invalidCallbackIDX       = -1
+	memberSelectionCallbacks = make(map[MemberSelectionKey]func(int) error)
+	numbers                  = []string{"1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"}
+)
 
-const invalidCallbackIdx = -1
-const cancelReaction = "❌"
-const cancelIdx = 11
+const (
+	cancelReaction = "❌"
+	cancelIdx      = 11
+)
 
 type MemberSelectionKey struct {
 	ChannelID        string
@@ -149,33 +153,42 @@ func indexOfStringList(list []string, searched string) int {
 			return idx
 		}
 	}
-	return invalidCallbackIdx
+
+	return invalidCallbackIDX
 }
 
 func HandleMessageReaction(reaction *discordgo.MessageReaction) (bool, error) {
-	key := MemberSelectionKey{ChannelID: reaction.ChannelID, MessageID: reaction.MessageID, RequestingUserID: reaction.UserID}
+	key := MemberSelectionKey{
+		ChannelID:        reaction.ChannelID,
+		MessageID:        reaction.MessageID,
+		RequestingUserID: reaction.UserID,
+	}
 	callback := memberSelectionCallbacks[key]
+
 	if callback == nil {
 		return false, nil
 	}
-	var emojiIndex int
-	if reaction.Emoji.Name == cancelReaction {
-		emojiIndex = cancelIdx
-	} else {
-		emojiIndex = indexOfStringList(numbers, reaction.Emoji.Name)
+
+	emojiIndex := indexOfStringList(numbers, reaction.Emoji.Name)
+	if emojiIndex == invalidCallbackIDX {
+		return false, nil
 	}
+
 	err := callback(emojiIndex)
+
 	delete(memberSelectionCallbacks, key)
+
 	return true, err
 }
 
 // parseMention takes a Discord mention string and returns the id
-// returns empty string if id was not found
+// returns empty string if id was not found.
 func parseMention(mention string) string {
 	res := parseMentionRegexp.FindStringSubmatch(mention)
 	if len(res) < 2 {
 		return ""
 	}
+
 	return res[1]
 }
 
@@ -196,39 +209,46 @@ func parseChannelMention(mention string) string {
 	if len(res) < 2 {
 		return ""
 	}
+
 	return res[1]
 }
 
-var (
-	userNotFound     = errors.New("User not found")
-	moreThanOneMatch = errors.New("Matched more than one user, try using username#0000")
-)
+var userNotFound = errors.New("User not found")
 
 // members returns unique members from discordgo's state, because discordgo's state has duplicates.
 func (ctx *Context) members() []*discordgo.Member {
 	guild, err := ctx.Session.Guild(ctx.Message.GuildID)
 	if err != nil {
 		ctx.ReportError("Failed to fetch guild "+ctx.Message.GuildID, err)
+
 		return []*discordgo.Member{}
 	}
+
 	var unique []*discordgo.Member
+
 	mm := make(map[string]*discordgo.Member)
+
 	for _, member := range guild.Members {
 		if _, ok := mm[member.User.ID]; !ok {
 			mm[member.User.ID] = nil
+
 			unique = append(unique, member)
 		}
 	}
+
 	return unique
 }
 
-// asks the user to select one user. Once a user made a selection, deletes the messages and callback entry
+// asks the user to select one user. Once a user made a selection, deletes the messages and callback entry.
 func (ctx *Context) resolveAmbiguousUser(options []*discordgo.Member, callback func(*discordgo.Member) error) {
 	if len(options) > 10 {
 		ctx.Reply("More than ten possible users, I can't deal with that much uncertainty 😕")
+
 		return
 	}
+
 	membersString := ""
+
 	for idx, option := range options {
 		if len(option.Nick) == 0 {
 			membersString += fmt.Sprintf("%s - %s\n", numbers[idx], option.User.String())
@@ -244,32 +264,50 @@ func (ctx *Context) resolveAmbiguousUser(options []*discordgo.Member, callback f
 		log.Printf("Failed to send user-disambiguation message.")
 	}
 
-	key := MemberSelectionKey{ChannelID: ctx.Message.ChannelID, MessageID: message.ID, RequestingUserID: ctx.Message.Author.ID}
+	key := MemberSelectionKey{
+		ChannelID:        ctx.Message.ChannelID,
+		MessageID:        message.ID,
+		RequestingUserID: ctx.Message.Author.ID,
+	}
+
 	memberSelectionCallbacks[key] = func(idx int) error {
-		ctx.Session.ChannelMessageDelete(message.ChannelID, message.ID)
-		if idx == cancelIdx || idx == invalidCallbackIdx || idx > len(options) {
+		if err := ctx.Session.ChannelMessageDelete(message.ChannelID, message.ID); err != nil {
+			log.Println("Failed to delete member selection message: " + err.Error())
+		}
+
+		if idx == cancelIdx || idx == invalidCallbackIDX || idx > len(options) {
 			return nil
 		}
+
 		return callback(options[idx])
 	}
+
 	for idx := range options {
-		ctx.Session.MessageReactionAdd(message.ChannelID, message.ID, numbers[idx])
+		if err := ctx.Session.MessageReactionAdd(message.ChannelID, message.ID, numbers[idx]); err != nil {
+			log.Println("Failed to react to selection message: " + err.Error())
+		}
 	}
-	ctx.Session.MessageReactionAdd(message.ChannelID, message.ID, cancelReaction)
+
+	if err = ctx.Session.MessageReactionAdd(message.ChannelID, message.ID, cancelReaction); err != nil {
+		log.Println("Failed to add reaction to message" + err.Error())
+	}
 
 	time.AfterFunc(10*time.Second, func() {
-		ctx.Session.ChannelMessageDelete(message.ChannelID, message.ID)
+		if err := ctx.Session.ChannelMessageDelete(message.ChannelID, message.ID); err != nil {
+			log.Println("Failed to delete selection message: " + err.Error())
+		}
 		delete(memberSelectionCallbacks, key)
 	})
 }
 
-// searches for a user by the name, asking the user to select one if the name is ambiguous
+// searches for a user by the name, asking the user to select one if the name is ambiguous.
 func (ctx *Context) requestUserByName(alwaysAsk bool, str string, callback func(*discordgo.Member) error) error {
 	if m := parseMention(str); m != "" {
 		mem, err := ctx.Session.GuildMember(ctx.Message.GuildID, m)
 		if err != nil {
 			return err
 		}
+
 		return callback(mem)
 	}
 
@@ -278,6 +316,7 @@ func (ctx *Context) requestUserByName(alwaysAsk bool, str string, callback func(
 		if err != nil {
 			return err
 		}
+
 		return callback(mem)
 	}
 
@@ -303,6 +342,7 @@ func (ctx *Context) requestUserByName(alwaysAsk bool, str string, callback func(
 	if len(matches) < 1 {
 		return userNotFound
 	}
+
 	if alwaysAsk || len(matches) > 1 {
 		ctx.resolveAmbiguousUser(matches, callback)
 	} else {
@@ -320,7 +360,15 @@ func (ctx *Context) Reply(msg string) {
 }
 
 func (ctx *Context) ReportError(msg string, err error) {
-	log.Printf("Error Message ID: %s; ChannelID: %s; GuildID: %s; Author ID: %s; msg: %s; error: %s\n", ctx.Message.ID, ctx.Message.ChannelID, ctx.Message.GuildID, ctx.Message.Author.ID, msg, err)
+	log.Printf(
+		"Error Message ID: %s; ChannelID: %s; GuildID: %s; Author ID: %s; msg: %s; error: %s\n",
+		ctx.Message.ID,
+		ctx.Message.ChannelID,
+		ctx.Message.GuildID,
+		ctx.Message.Author.ID,
+		msg,
+		err,
+	)
 	ctx.Reply(msg)
 }
 
@@ -331,8 +379,10 @@ func modPrivateOnly(cmd Command) Command {
 			if err != nil {
 				return
 			}
+
 			if channel.ParentID == ctx.Env.CategoryModPrivate {
 				cmd.Exec(ctx, args)
+
 				return
 			}
 
@@ -350,6 +400,7 @@ func moderatorOnly(cmd Command) Command {
 			for _, r := range ctx.Message.Member.Roles {
 				if r == ctx.Env.RoleMod {
 					cmd.Exec(ctx, args)
+
 					return
 				}
 			}
@@ -368,13 +419,16 @@ func (ctx *Context) isModerator() bool {
 			return true
 		}
 	}
+
 	return false
 }
 
-func isValidUrl(toTest string) bool {
+func isValidURL(toTest string) bool {
 	if !strings.HasPrefix(toTest, "http") {
 		return false
 	}
+
 	u, err := url.Parse(toTest)
+
 	return err == nil && u.Scheme != "" && u.Host != ""
 }

@@ -79,6 +79,7 @@ Outer:
 			break
 		}
 	}
+
 	err = ctx.Session.ChannelMessagesBulkDelete(ctx.Message.ChannelID, toDelete)
 	if err != nil {
 		ctx.ReportError("Could not bulk delete messages. (likely missing permissions)", err)

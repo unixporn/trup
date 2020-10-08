@@ -24,16 +24,16 @@ func GetBlocklist() ([]string, error) {
 
 func AddToBlocklist(moderator, pattern string) error {
 	// check if the regex is actually valid
-	_, err := regexp.Compile(pattern)
-	if err != nil {
+	if _, err := regexp.Compile(pattern); err != nil {
 		return err
 	}
 
-	_, err = db.Exec(context.Background(), "INSERT INTO blocked_regexes (pattern, added_by) VALUES ($1, $2)", pattern, moderator)
-	if err != nil {
+	if _, err := db.Exec(context.Background(), "INSERT INTO blocked_regexes (pattern, added_by) VALUES ($1, $2)", pattern, moderator); err != nil {
 		return err
 	}
-	addPatternToCache(pattern)
+	if err := addPatternToCache(pattern); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -42,7 +42,9 @@ func RemoveFromBlocklist(pattern string) (removed bool, err error) {
 	if err != nil {
 		return false, err
 	}
-	updatePatternCache()
+	if err = updatePatternCache(); err != nil {
+		return false, err
+	}
 	return commandTag.RowsAffected() > 0, nil
 }
 

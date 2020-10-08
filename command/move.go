@@ -33,6 +33,8 @@ func move(ctx *Context, args []string) {
 		ctx.ReportError("error sending to channel (might not exist or no access)", err)
 		return
 	}
+
 	redirect := fmt.Sprintf("<https://discord.com/channels/%s/%s/%s>", ctx.Message.GuildID, m.ChannelID, m.ID)
-	ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, fmt.Sprintf("Continued at <#%s> - %s (%s)", target, mentionsString, redirect))
+
+	ctx.Reply(fmt.Sprintf("Continued at <#%s> - %s (%s)", target, mentionsString, redirect))
 }

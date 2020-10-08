@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/bwmarrin/discordgo"
 	"log"
 	"strings"
 	"trup/db"
+
+	"github.com/bwmarrin/discordgo"
 )
 
 var lastAuditIds = make(map[string]string)
@@ -100,8 +101,11 @@ func messageDelete(s *discordgo.Session, m *discordgo.MessageDelete) {
 
 	mediaFiles, finish, err := db.GetStoredAttachments(m.ChannelID, m.Message.ID)
 	defer finish()
+
 	if err != nil || len(mediaFiles) == 0 {
-		s.ChannelMessageSendEmbed(env.ChannelBotMessages, messageEmbed)
+		if _, err := s.ChannelMessageSendEmbed(env.ChannelBotMessages, messageEmbed); err != nil {
+			log.Println("Failed to send file embed: " + err.Error())
+		}
 		return
 	}
 
@@ -156,7 +160,7 @@ func messageUpdate(s *discordgo.Session, m *discordgo.MessageUpdate) {
 		}
 	}
 
-	s.ChannelMessageSendEmbed(env.ChannelBotMessages, &discordgo.MessageEmbed{
+	if _, err := s.ChannelMessageSendEmbed(env.ChannelBotMessages, &discordgo.MessageEmbed{
 		Author: &discordgo.MessageEmbedAuthor{
 			Name:    "Message Edit",
 			IconURL: m.Author.AvatarURL("128"),
@@ -165,5 +169,7 @@ func messageUpdate(s *discordgo.Session, m *discordgo.MessageUpdate) {
 		Description: fmt.Sprintf("**Before:**\n%s\n\n**Now:**\n%s\n%s", before, m.Content, messageLink),
 		Timestamp:   messageCreationDate.UTC().Format(dateFormat),
 		Footer:      footer,
-	})
+	}); err != nil {
+		log.Println("Failed to send channel embed: " + err.Error())
+	}
 }

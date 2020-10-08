@@ -17,10 +17,12 @@ func setFetch(ctx *Context, args []string) {
 	lines := strings.Split(ctx.Message.Content, "\n")
 	if len(lines) < 2 && len(ctx.Message.Attachments) == 0 {
 		ctx.Reply("run this: `curl -s https://raw.githubusercontent.com/unixporn/trup/prod/fetcher.sh | sh` and follow the instructions. It's recommended you download and read(verify) the script before running(<https://blog.dijit.sh/don-t-pipe-curl-to-bash>)\n > NOTE: use `!setfetch update` to update individual values")
+
 		return
 	}
 
 	var data db.SysinfoData
+
 	if len(args) >= 2 && args[1] == "update" {
 		sysinfo, err := db.GetSysinfo(ctx.Message.Author.ID)
 		if err != nil {
@@ -29,6 +31,7 @@ func setFetch(ctx *Context, args []string) {
 			} else {
 				ctx.ReportError("Failed to get existing fetch data", err)
 			}
+
 			return
 		}
 		data = sysinfo.Info
@@ -48,6 +51,7 @@ func setFetch(ctx *Context, args []string) {
 		"CPU":              &data.Cpu,
 		"GPU":              &data.Gpu,
 	}
+
 	for i := 1; i < len(lines); i++ {
 		kI := strings.Index(lines[i], ":")
 		if kI == -1 {
@@ -57,13 +61,15 @@ func setFetch(ctx *Context, args []string) {
 		key := lines[i][:kI]
 		value := strings.TrimSpace(lines[i][kI+1:])
 
-		if isValidUrl(lines[i]) {
+		if isValidURL(lines[i]) {
 			data.Image = lines[i]
+
 			continue
 		}
 
 		if addr, found := m[key]; found {
 			*addr = value
+
 			continue
 		}
 
@@ -74,9 +80,11 @@ func setFetch(ctx *Context, args []string) {
 				ctx.Reply("Failed to parse Max RAM")
 				return
 			}
+
 			data.Memory = b
 		default:
 			ctx.Reply("key '" + key + "' is not valid")
+
 			return
 		}
 	}
@@ -122,22 +130,25 @@ func doFetch(ctx *Context, user *discordgo.User) {
 		ctx.ReportError("Failed to fetch "+whose+" profile.", err)
 	}
 	profileFields := []*discordgo.MessageEmbedField{}
+
 	if err == nil {
 		if profile.Description != "" {
 			embed.Description = profile.Description
 		}
+
 		if profile.Git != "" {
 			profileFields = append(profileFields, &discordgo.MessageEmbedField{
-				"Git",
-				profile.Git,
-				inline,
+				Name:   "Git",
+				Value:  profile.Git,
+				Inline: inline,
 			})
 		}
+
 		if profile.Dotfiles != "" {
 			profileFields = append(profileFields, &discordgo.MessageEmbedField{
-				"Dotfiles",
-				profile.Dotfiles,
-				inline,
+				Name:   "Dotfiles",
+				Value:  profile.Dotfiles,
+				Inline: inline,
 			})
 		}
 	}
@@ -164,6 +175,7 @@ func doFetch(ctx *Context, user *discordgo.User) {
 		ctx.Reply("failed to find the user's info. Error: " + err.Error())
 		return
 	}
+
 	embed.Color = ctx.Session.State.UserColor(user.ID, ctx.Message.ChannelID)
 	if info.Info.Distro != "" {
 		embed.Thumbnail = &discordgo.MessageEmbedThumbnail{
@@ -173,100 +185,114 @@ func doFetch(ctx *Context, user *discordgo.User) {
 
 	if info.Info.Distro != "" {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-			"Distro",
-			info.Info.Distro,
-			inline,
+			Name:   "Distro",
+			Value:  info.Info.Distro,
+			Inline: inline,
 		})
 	}
+
 	if info.Info.Kernel != "" {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-			"Kernel",
-			info.Info.Kernel,
-			inline,
+			Name:   "Kernel",
+			Value:  info.Info.Kernel,
+			Inline: inline,
 		})
 	}
+
 	if info.Info.Terminal != "" {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-			"Terminal",
-			info.Info.Terminal,
-			inline,
+			Name:   "Terminal",
+			Value:  info.Info.Terminal,
+			Inline: inline,
 		})
 	}
+
 	if info.Info.Editor != "" {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-			"Editor",
-			info.Info.Editor,
-			inline,
+			Name:   "Editor",
+			Value:  info.Info.Editor,
+			Inline: inline,
 		})
 	}
+
 	if info.Info.DeWm != "" {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-			"DE/WM",
-			info.Info.DeWm,
-			inline,
+			Name:   "DE/WM",
+			Value:  info.Info.DeWm,
+			Inline: inline,
 		})
 	}
+
 	if info.Info.Bar != "" {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-			"Bar",
-			info.Info.Bar,
-			inline,
+			Name:   "Bar",
+			Value:  info.Info.Bar,
+			Inline: inline,
 		})
 	}
+
 	if info.Info.Resolution != "" {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-			"Resolution",
-			info.Info.Resolution,
-			inline,
+			Name:   "Resolution",
+			Value:  info.Info.Resolution,
+			Inline: inline,
 		})
 	}
+
 	if info.Info.DisplayProtocol != "" {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-			"Display Protocol",
-			info.Info.DisplayProtocol,
-			inline,
+			Name:   "Display Protocol",
+			Value:  info.Info.DisplayProtocol,
+			Inline: inline,
 		})
 	}
+
 	if info.Info.Gtk3Theme != "" {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-			"GTK3 Theme",
-			info.Info.Gtk3Theme,
-			inline,
+			Name:   "GTK3 Theme",
+			Value:  info.Info.Gtk3Theme,
+			Inline: inline,
 		})
 	}
+
 	if info.Info.GtkIconTheme != "" {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-			"GTK Icon Theme",
-			info.Info.GtkIconTheme,
-			inline,
+			Name:   "GTK Icon Theme",
+			Value:  info.Info.GtkIconTheme,
+			Inline: inline,
 		})
 	}
+
 	if info.Info.Cpu != "" {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-			"CPU",
-			info.Info.Cpu,
-			inline,
+			Name:   "CPU",
+			Value:  info.Info.Cpu,
+			Inline: inline,
 		})
 	}
+
 	if info.Info.Gpu != "" {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-			"GPU",
-			info.Info.Gpu,
-			inline,
+			Name:   "GPU",
+			Value:  info.Info.Gpu,
+			Inline: inline,
 		})
 	}
+
 	if info.Info.Memory != 0 {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-			"Memory",
-			humanize.Bytes(info.Info.Memory),
-			inline,
+			Name:   "Memory",
+			Value:  humanize.Bytes(info.Info.Memory),
+			Inline: inline,
 		})
 	}
+
 	if info.Info.Image != "" {
 		embed.Image = &discordgo.MessageEmbedImage{
 			URL: info.Info.Image,
 		}
 	}
+
 	if !info.ModifyDate.IsZero() {
 		const dateFormat = "2006-01-02T15:04:05.0000Z"
 		embed.Timestamp = info.ModifyDate.UTC().Format(dateFormat)
@@ -293,7 +319,9 @@ sysinfoEnd:
 		}
 
 		if retry {
-			ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed)
+			if _, err = ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed); err != nil {
+				log.Println("Failed to send channel embed: " + err.Error())
+			}
 		}
 	}
 }
@@ -315,11 +343,13 @@ func fetch(ctx *Context, args []string) {
 
 func getDistroImage(name string) string {
 	name = strings.ToLower(name)
+
 	for _, d := range distroImages {
 		if strings.HasPrefix(name, d.name) {
 			return d.image
 		}
 	}
+
 	return ""
 }
 

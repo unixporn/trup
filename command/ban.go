@@ -2,9 +2,10 @@ package command
 
 import (
 	"fmt"
-	"github.com/bwmarrin/discordgo"
 	"log"
 	"strings"
+
+	"github.com/bwmarrin/discordgo"
 )
 
 const banUsage = "ban <@user> <reason>"
@@ -45,6 +46,7 @@ func banUser(ctx *Context, user string, reason string, removeDays int) {
 	)
 	if err != nil {
 		ctx.ReportError(fmt.Sprintf("Failed to ban %s.", user), err)
+
 		return
 	}
 
@@ -52,6 +54,7 @@ func banUser(ctx *Context, user string, reason string, removeDays int) {
 		ctx.Env.ChannelModlog,
 		fmt.Sprintf("<@%s> has been banned by %s for %s.", user, ctx.Message.Author, reason),
 	)
+
 	if err != nil {
 		log.Printf("Error sending ban notice into modlog: %s\n", err)
 	}
