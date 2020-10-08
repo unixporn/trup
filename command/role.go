@@ -1,9 +1,10 @@
 package command
 
 import (
-	"github.com/bwmarrin/discordgo"
 	"log"
 	"strings"
+
+	"github.com/bwmarrin/discordgo"
 )
 
 const (

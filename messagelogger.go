@@ -103,7 +103,7 @@ func messageDelete(s *discordgo.Session, m *discordgo.MessageDelete) {
 	defer func() {
 		err := finish()
 		if err != nil {
-			log.Println("Failed to finish db.GetStoredAttachments. Err:", err);
+			log.Println("Failed to finish db.GetStoredAttachments. Err:", err)
 		}
 	}()
 
