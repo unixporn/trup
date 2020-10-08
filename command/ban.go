@@ -8,10 +8,12 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-const banUsage = "ban <@user> <reason>"
-const delbanUsage = "delban <@user> <reason"
+const (
+	banUsage    = "ban <@user> <reason>"
+	delbanUsage = "delban <@user> <reason"
+)
 
-func banUser(ctx *Context, user string, reason string, removeDays int) {
+func banUser(ctx *Context, user, reason string, removeDays int) {
 	guild, err := ctx.Session.Guild(ctx.Message.GuildID)
 	if err != nil {
 		log.Printf("Failed to fetch guild %s\n", err)

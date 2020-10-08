@@ -1,4 +1,4 @@
-version: '2.1'
+version: "2.1"
 services:
   trup:
     image: trup
@@ -8,7 +8,7 @@ services:
       - .env
     environment:
       DATABASE_URL: "postgresql://trup_postgres/trup"
-    depends_on: 
+    depends_on:
       trup_postgres:
         condition: service_healthy
 
