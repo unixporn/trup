@@ -1,14 +1,11 @@
-<h1 align="center">
-  Trup
-</h1>
+# Trup
 
-<hr />
+---
 
-<p align="center">
-  <i>A Discord bot for the Unixporn community</i>
-  <img src="https://github.com/unixporn/trup/workflows/build/badge.svg" />
-  <img src="https://github.com/unixporn/trup/workflows/lint/badge.svg" />
-</p>
+**A Discord bot for the Unixporn community**
+
+![build status](https://github.com/unixporn/trup/workflows/build/badge.svg)
+![lint status](https://github.com/unixporn/trup/workflows/build/lint.svg)
 
 # Dependencies
 
