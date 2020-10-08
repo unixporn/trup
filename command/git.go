@@ -26,18 +26,19 @@ func git(ctx *Context, args []string) {
 				return
 			}
 		}
+
 		if profile.Git == "" {
 			ctx.Reply(setItFirstMsg)
 			return
 		}
 
-		ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, profile.Git)
+		ctx.Reply(profile.Git)
 		return
 	}
 
 	url := args[1]
 
-	if !isValidUrl(url) {
+	if !isValidURL(url) {
 		ctx.Reply("provide a valid url")
 		return
 	}

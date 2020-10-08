@@ -47,11 +47,12 @@ func poll(ctx *Context, args []string) {
 
 func multiPoll(ctx *Context, question string, lines []string) {
 	optionCount := len(lines)
+
 	if len([]rune(strings.Join(lines, "\n"))) > questionMaxLength {
 		ctx.Reply(fmt.Sprintf("Poll's length can be max %d characters", questionMaxLength))
 		return
 	} else if optionCount > 10 {
-		ctx.Reply(fmt.Sprintf("You cannot have more than 10 different options in one poll"))
+		ctx.Reply("You cannot have more than 10 different options in one poll")
 		return
 	} else if optionCount < 2 {
 		ctx.Reply(fmt.Sprintf("You must have at least 2 options\nExample:\n```\n%s\n```", pollMultiExample))
@@ -63,6 +64,7 @@ func multiPoll(ctx *Context, question string, lines []string) {
 		ctx.Reply(err.Error())
 		return
 	}
+
 	for i, line := range lines {
 		option := pollOptionLineStartPattern.ReplaceAllString(line, "")
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
@@ -78,10 +80,14 @@ func multiPoll(ctx *Context, question string, lines []string) {
 	}
 
 	for i := range embed.Fields {
-		ctx.Session.MessageReactionAdd(pollMessage.ChannelID, pollMessage.ID, numbers[i])
+		if err = ctx.Session.MessageReactionAdd(pollMessage.ChannelID, pollMessage.ID, numbers[i]); err != nil {
+			log.Println("Failed to react to poll message: " + err.Error())
+		}
 	}
-	ctx.Session.MessageReactionAdd(pollMessage.ChannelID, pollMessage.ID, "🤷")
 
+	if err = ctx.Session.MessageReactionAdd(pollMessage.ChannelID, pollMessage.ID, "🤷"); err != nil {
+		log.Println("Failed to react to poll message: " + err.Error())
+	}
 }
 
 func yesNoPoll(ctx *Context, question string) {
@@ -101,9 +107,15 @@ func yesNoPoll(ctx *Context, question string) {
 		return
 	}
 
-	ctx.Session.MessageReactionAdd(pollMessage.ChannelID, pollMessage.ID, "✅")
-	ctx.Session.MessageReactionAdd(pollMessage.ChannelID, pollMessage.ID, "🤷")
-	ctx.Session.MessageReactionAdd(pollMessage.ChannelID, pollMessage.ID, "❎")
+	if err = ctx.Session.MessageReactionAdd(pollMessage.ChannelID, pollMessage.ID, "✅"); err != nil {
+		log.Println("Failed to react to poll message: " + err.Error())
+	}
+	if err = ctx.Session.MessageReactionAdd(pollMessage.ChannelID, pollMessage.ID, "🤷"); err != nil {
+		log.Println("Failed to react to poll message: " + err.Error())
+	}
+	if err = ctx.Session.MessageReactionAdd(pollMessage.ChannelID, pollMessage.ID, "❎"); err != nil {
+		log.Println("Failed to react to poll message: " + err.Error())
+	}
 }
 
 func makePollEmbed(ctx *Context, question, pollBody string) (*discordgo.MessageEmbed, error) {
@@ -111,6 +123,7 @@ func makePollEmbed(ctx *Context, question, pollBody string) (*discordgo.MessageE
 	if len(embedTitle) > 255 {
 		return nil, errors.New("The question is too long")
 	}
+
 	return &discordgo.MessageEmbed{
 		Title:       embedTitle,
 		Description: pollBody,

@@ -2,9 +2,11 @@ package command
 
 import (
 	"fmt"
+	"log"
+	"strings"
+
 	"github.com/bwmarrin/discordgo"
 	"github.com/dustin/go-humanize"
-	"strings"
 )
 
 const (
@@ -85,7 +87,8 @@ func info(ctx *Context, args []string) {
 			Value:  joinDate.UTC().Format("2006-01-02 15:04") + " (" + humanize.Time((joinDate)) + ")",
 			Inline: inline,
 		})
-		if premiumDate.IsZero() != true {
+
+		if !premiumDate.IsZero() {
 			embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
 				Name:   "Booster Since",
 				Value:  premiumDate.UTC().Format("2006-01-02 15:04") + " (" + humanize.Time((premiumDate)) + ")",
@@ -110,8 +113,14 @@ func info(ctx *Context, args []string) {
 			ctx.ReportError("Failed to find member info.", err)
 			return
 		}
-		callback(member)
+
+		if err = callback(member); err != nil {
+			log.Println("Failed to execute info callback: " + err.Error())
+		}
+
 	} else {
-		ctx.requestUserByName(false, strings.Join(args[1:], " "), callback)
+		if err := ctx.requestUserByName(false, strings.Join(args[1:], " "), callback); err != nil {
+			log.Println("Failed to request user by name: " + err.Error())
+		}
 	}
 }

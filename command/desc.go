@@ -15,6 +15,7 @@ const (
 func desc(ctx *Context, args []string) {
 	if len(args) < 2 {
 		ctx.Reply("Usage: " + descUsage)
+
 		return
 	}
 
@@ -25,6 +26,7 @@ func desc(ctx *Context, args []string) {
 
 	if len(desc) > 256 {
 		ctx.Reply("your description cannot be longer than 256 characters")
+
 		return
 	}
 
@@ -38,6 +40,7 @@ func desc(ctx *Context, args []string) {
 			profile = db.NewProfile(user, "", "", desc)
 		} else {
 			ctx.ReportError("failed to fetch your profile", err)
+
 			return
 		}
 	} else {
@@ -47,11 +50,13 @@ func desc(ctx *Context, args []string) {
 	err = profile.Save()
 	if err != nil {
 		ctx.ReportError("failed to save description", err)
+
 		return
 	}
 
 	if desc == "" {
 		ctx.Reply("cleared your description")
+
 		return
 	}
 

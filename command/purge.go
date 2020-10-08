@@ -34,7 +34,7 @@ func purge(ctx *Context, args []string) {
 		ctx.Reply("the first argument must be comprised between 2 and 100")
 		return
 	}
-	from := parseMention(args[2])
+	from := parseUser(args[2])
 	if from == "" {
 		ctx.Reply("The second argument must be a user mention.")
 		return
@@ -79,6 +79,7 @@ Outer:
 			break
 		}
 	}
+
 	err = ctx.Session.ChannelMessagesBulkDelete(ctx.Message.ChannelID, toDelete)
 	if err != nil {
 		ctx.ReportError("Could not bulk delete messages. (likely missing permissions)", err)

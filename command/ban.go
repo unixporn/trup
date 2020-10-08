@@ -2,15 +2,18 @@ package command
 
 import (
 	"fmt"
-	"github.com/bwmarrin/discordgo"
 	"log"
 	"strings"
+
+	"github.com/bwmarrin/discordgo"
 )
 
-const banUsage = "ban <@user> <reason>"
-const delbanUsage = "delban <@user> <reason"
+const (
+	banUsage    = "ban <@user> <reason>"
+	delbanUsage = "delban <@user> <reason"
+)
 
-func banUser(ctx *Context, user string, reason string, removeDays int) {
+func banUser(ctx *Context, user, reason string, removeDays int) {
 	guild, err := ctx.Session.Guild(ctx.Message.GuildID)
 	if err != nil {
 		log.Printf("Failed to fetch guild %s\n", err)
@@ -45,6 +48,7 @@ func banUser(ctx *Context, user string, reason string, removeDays int) {
 	)
 	if err != nil {
 		ctx.ReportError(fmt.Sprintf("Failed to ban %s.", user), err)
+
 		return
 	}
 
@@ -52,6 +56,7 @@ func banUser(ctx *Context, user string, reason string, removeDays int) {
 		ctx.Env.ChannelModlog,
 		fmt.Sprintf("<@%s> has been banned by %s for %s.", user, ctx.Message.Author, reason),
 	)
+
 	if err != nil {
 		log.Printf("Error sending ban notice into modlog: %s\n", err)
 	}
@@ -65,10 +70,7 @@ func ban(ctx *Context, args []string) {
 		return
 	}
 
-	user := parseMention(args[1])
-	if user == "" {
-		user = parseSnowflake(args[1])
-	}
+	user := parseUser(args[1])
 	if user == "" {
 		ctx.Reply("The first argument must be a user mention.")
 		return
@@ -85,10 +87,7 @@ func delban(ctx *Context, args []string) {
 		return
 	}
 
-	user := parseMention(args[1])
-	if user == "" {
-		user = parseSnowflake(args[1])
-	}
+	user := parseUser(args[1])
 	if user == "" {
 		ctx.Reply("The first argument must be a user mention.")
 		return

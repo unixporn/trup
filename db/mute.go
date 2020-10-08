@@ -39,7 +39,7 @@ func SetMuteInactive(id pgtype.UUID) error {
 	return err
 }
 
-// Careful: Returned mutes do not include all fields
+// Careful: Returned mutes do not include all fields.
 func GetExpiredMutes() ([]Mute, error) {
 	rows, err := db.Query(context.Background(), "SELECT id, guildid, usr FROM mute WHERE active=true AND end_time < CURRENT_TIMESTAMP")
 	if err != nil {

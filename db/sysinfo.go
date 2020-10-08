@@ -58,7 +58,7 @@ func GetSysinfo(user string) (*Sysinfo, error) {
 	return &sysinfo, nil
 }
 
-func UpdateSysinfoImage(userId string, image string) {
+func UpdateSysinfoImage(userId, image string) {
 	info, err := GetSysinfo(userId)
 	if err != nil && err.Error() != pgx.ErrNoRows.Error() {
 		log.Printf("Failed to fetch system info for %s; Error: %s\n", userId, err)

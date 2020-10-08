@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
@@ -15,17 +16,21 @@ const (
 func pfp(ctx *Context, args []string) {
 	callback := func(user *discordgo.User) error {
 		avatar := user.AvatarURL("2048")
-		ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &discordgo.MessageEmbed{
+		if _, err := ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &discordgo.MessageEmbed{
 			Title: fmt.Sprintf("%s#%s's profile picture", user.Username, user.Discriminator),
 			Image: &discordgo.MessageEmbedImage{
 				URL: avatar,
 			},
-		})
+		}); err != nil {
+			log.Println("Failed to send profile picture embed: " + err.Error())
+		}
 		return nil
 	}
 
 	if len(args) < 2 {
-		callback(ctx.Message.Author)
+		if err := callback(ctx.Message.Author); err != nil {
+			log.Println("Failed to execute profile picture callback: " + err.Error())
+		}
 	} else {
 		err := ctx.requestUserByName(false, strings.Join(args[1:], " "), func(m *discordgo.Member) error { return callback(m.User) })
 		if err != nil {
