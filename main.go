@@ -359,6 +359,7 @@ func cleanupMutes(s *discordgo.Session) {
 }
 
 var emojiRegex = regexp.MustCompile(`<((@!?\d+)|(:.+?:\d+))>`)
+var urlRegex = regexp.MustCompile(`(?i)(https?|ftp)://[^\s/$.?#].[^\s]*`)
 
 func runMessageFilter(s *discordgo.Session, m *discordgo.MessageCreate) (deleted bool) {
 	defer func() {
@@ -369,6 +370,7 @@ func runMessageFilter(s *discordgo.Session, m *discordgo.MessageCreate) (deleted
 	}()
 
 	content := emojiRegex.ReplaceAllString(m.Message.Content, "")
+	content = urlRegex.ReplaceAllString(content, "")
 
 	matchedString, err := db.FindBlockedWordMatch(content)
 	if err != nil {
