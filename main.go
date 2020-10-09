@@ -30,8 +30,10 @@ var (
 		ChannelBotTraffic:  os.Getenv("CHANNEL_BOT_TRAFFIC"),
 		Guild:              os.Getenv("GUILD"),
 	}
-	botId string
-	cache = newMessageCache(5000)
+	botId      string
+	cache      = newMessageCache(5000)
+	emojiRegex = regexp.MustCompile(`<((@!?\d+)|(:.+?:\d+))>`)
+	urlRegex   = regexp.MustCompile(`(?i)(https?|ftp)://[^\s/$.?#].[^\s]*`)
 )
 
 func main() {
@@ -358,8 +360,6 @@ func cleanupMutes(s *discordgo.Session) {
 	}
 }
 
-var emojiRegex = regexp.MustCompile(`<((@!?\d+)|(:.+?:\d+))>`)
-
 func runMessageFilter(s *discordgo.Session, m *discordgo.MessageCreate) (deleted bool) {
 	defer func() {
 		if err := recover(); err != nil {
@@ -369,6 +369,7 @@ func runMessageFilter(s *discordgo.Session, m *discordgo.MessageCreate) (deleted
 	}()
 
 	content := emojiRegex.ReplaceAllString(m.Message.Content, "")
+	content = urlRegex.ReplaceAllString(content, "")
 
 	matchedString, err := db.FindBlockedWordMatch(content)
 	if err != nil {
