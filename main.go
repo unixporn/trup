@@ -32,6 +32,8 @@ var (
 	}
 	botId string
 	cache = newMessageCache(5000)
+	emojiRegex = regexp.MustCompile(`<((@!?\d+)|(:.+?:\d+))>`)
+	urlRegex = regexp.MustCompile(`(?i)(https?|ftp)://[^\s/$.?#].[^\s]*`)
 )
 
 func main() {
@@ -357,9 +359,6 @@ func cleanupMutes(s *discordgo.Session) {
 		}
 	}
 }
-
-var emojiRegex = regexp.MustCompile(`<((@!?\d+)|(:.+?:\d+))>`)
-var urlRegex = regexp.MustCompile(`(?i)(https?|ftp)://[^\s/$.?#].[^\s]*`)
 
 func runMessageFilter(s *discordgo.Session, m *discordgo.MessageCreate) (deleted bool) {
 	defer func() {
