@@ -163,19 +163,17 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				log.Println("Failed to delete message with ID: " + m.ID + ": " + err.Error())
 			}
 
-			_, err := s.UserChannelCreate(m.Author.ID)
+			ch, err := s.UserChannelCreate(m.Author.ID)
 			if err != nil {
 				log.Println("Failed to create user channel with " + m.Author.ID)
 				return
 			}
 
-			context := command.Context{
-				Env:     &env,
-				Session: s,
-				Message: m.Message,
+			_, err = s.ChannelMessageSend(ch.ID, "Your showcase submission was detected to be invalid. If you wanna comment on a rice, use the #ricing-theming channel.\nIf this is a mistake, contact the moderators or open an issue on https://github.com/unixporn/trup")
+			if err != nil {
+				log.Println("Failed to send DM about invalid showcase submission. Err:", err)
+				return
 			}
-
-			context.Reply("Your showcase submission was detected to be invalid. If you wanna comment on a rice, use the #ricing-theming channel.\nIf this is a mistake, contact the moderators or open an issue on https://github.com/unixporn/trup")
 			return
 		}
 
