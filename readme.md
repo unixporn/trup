@@ -3,7 +3,7 @@
 **A Discord bot for the Unixporn community**
 
 ![build status](https://github.com/unixporn/trup/workflows/build/badge.svg)
-![lint status](https://github.com/unixporn/trup/workflows/build/lint.svg)
+![lint status](https://github.com/unixporn/trup/workflows/lint/badge.svg)
 
 # Dependencies
 
