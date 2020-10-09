@@ -16,4 +16,4 @@ jobs:
         uses: golangci/golangci-lint-action@v2
         with:
           version: v1.29
-          args: -E gofumpt -E unparam -E unconvert -E maligned -E goimports -E godot -E goconst
+          args: -E gofmt -E unparam -E unconvert -E maligned -E goimports -E godot -E goconst
