@@ -30,10 +30,10 @@ var (
 		ChannelBotTraffic:  os.Getenv("CHANNEL_BOT_TRAFFIC"),
 		Guild:              os.Getenv("GUILD"),
 	}
-	botId string
-	cache = newMessageCache(5000)
+	botId      string
+	cache      = newMessageCache(5000)
 	emojiRegex = regexp.MustCompile(`<((@!?\d+)|(:.+?:\d+))>`)
-	urlRegex = regexp.MustCompile(`(?i)(https?|ftp)://[^\s/$.?#].[^\s]*`)
+	urlRegex   = regexp.MustCompile(`(?i)(https?|ftp)://[^\s/$.?#].[^\s]*`)
 )
 
 func main() {
