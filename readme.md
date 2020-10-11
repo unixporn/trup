@@ -36,14 +36,7 @@ nix-shell
 # Set environment variables
 cp .env.example .env
 
-# Install dependencies
-go get -v -t -d ./...
-
-# Build production binary
-go build -ldflags '-s -w' -o trup
-
-# Run bot
-./trup
+go run .
 ```
 
 # Set up the database
