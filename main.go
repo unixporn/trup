@@ -117,21 +117,9 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			log.Printf("Recovered from panic in messageCreate. r: %#v; Message(%s): %s;\n", r, m.ID, m.Content)
 		}
 	}()
-	if m.Author.Bot {
+
+	if wasDeleted := runMessageFilter(s, m.Message); wasDeleted {
 		return
-	}
-
-	isByModerator := false
-	for _, r := range m.Member.Roles {
-		if r == env.RoleMod {
-			isByModerator = true
-		}
-	}
-
-	if !isByModerator {
-		if wasDeleted := runMessageFilter(s, m); wasDeleted {
-			return
-		}
 	}
 
 	cache.add(m.ID, *m.Message)
@@ -358,7 +346,7 @@ func cleanupMutes(s *discordgo.Session) {
 	}
 }
 
-func runMessageFilter(s *discordgo.Session, m *discordgo.MessageCreate) (deleted bool) {
+func runMessageFilter(s *discordgo.Session, m *discordgo.Message) (deleted bool) {
 	defer func() {
 		if err := recover(); err != nil {
 			log.Printf("Recovered from runMessageFilter; err: %s\n", err)
@@ -366,7 +354,22 @@ func runMessageFilter(s *discordgo.Session, m *discordgo.MessageCreate) (deleted
 		}
 	}()
 
-	content := emojiRegex.ReplaceAllString(m.Message.Content, "")
+	if m.Author.Bot {
+		return false
+	}
+
+	isByModerator := false
+	for _, r := range m.Member.Roles {
+		if r == env.RoleMod {
+			isByModerator = true
+		}
+	}
+
+	if isByModerator {
+		return false
+	}
+
+	content := emojiRegex.ReplaceAllString(m.Content, "")
 	content = urlRegex.ReplaceAllString(content, "")
 
 	matchedString, err := db.FindBlockedWordMatch(content)
@@ -402,7 +405,7 @@ func runMessageFilter(s *discordgo.Session, m *discordgo.MessageCreate) (deleted
 	return false
 }
 
-func logMessageAutodelete(s *discordgo.Session, m *discordgo.MessageCreate, matchedString string) {
+func logMessageAutodelete(s *discordgo.Session, m *discordgo.Message, matchedString string) {
 	const dateFormat = "2006-01-02T15:04:05.0000Z"
 	messageCreationDate, _ := discordgo.SnowflakeTimestamp(m.ID)
 
@@ -426,10 +429,10 @@ func logMessageAutodelete(s *discordgo.Session, m *discordgo.MessageCreate, matc
 	botlogEntry, err := s.ChannelMessageSendEmbed(env.ChannelAutoMod, &discordgo.MessageEmbed{
 		Author: &discordgo.MessageEmbedAuthor{
 			Name:    "Message Autodelete",
-			IconURL: m.Message.Author.AvatarURL("128"),
+			IconURL: m.Author.AvatarURL("128"),
 		},
-		Title:       fmt.Sprintf("%s#%s(%s) - deleted because of `%s`", m.Message.Author.Username, m.Message.Author.Discriminator, m.Message.Author.ID, matchedString),
-		Description: fmt.Sprintf("%s %s", m.Message.Content, contextLink),
+		Title:       fmt.Sprintf("%s#%s(%s) - deleted because of `%s`", m.Author.Username, m.Author.Discriminator, m.Author.ID, matchedString),
+		Description: fmt.Sprintf("%s %s", m.Content, contextLink),
 		Timestamp:   messageCreationDate.UTC().Format(dateFormat),
 		Footer:      footer,
 	})
@@ -437,7 +440,7 @@ func logMessageAutodelete(s *discordgo.Session, m *discordgo.MessageCreate, matc
 		log.Printf("Error writing botlog entry for message deletion: %s\n", err)
 	}
 
-	botlogEntryLink := makeMessageLink(m.Message.GuildID, botlogEntry)
+	botlogEntryLink := makeMessageLink(m.GuildID, botlogEntry)
 	note := db.NewNote(s.State.User.ID, m.Author.ID, fmt.Sprintf("Message deleted because of word `%s` [(source)](%s)", matchedString, botlogEntryLink), db.BlocklistViolation)
 	err = note.Save()
 	if err != nil {
