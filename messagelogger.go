@@ -145,6 +145,10 @@ func messageUpdate(s *discordgo.Session, m *discordgo.MessageUpdate) {
 		}
 	}()
 
+	if wasDeleted := runMessageFilter(s, m.Message); wasDeleted {
+		return
+	}
+
 	const dateFormat = "2006-01-02T15:04:05.0000Z"
 	messageCreationDate, _ := discordgo.SnowflakeTimestamp(m.ID)
 
