@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"runtime/debug"
 	"strings"
 	"trup/db"
 
@@ -31,9 +32,15 @@ func (c *messageCache) add(k string, value discordgo.Message) {
 func messageDelete(s *discordgo.Session, m *discordgo.MessageDelete) {
 	defer func() {
 		if r := recover(); r != nil {
-			log.Println("Recovered from panic in messageDelete", r)
+			log.Printf("Recovered from panic in messageDelete; Message: %#v; Error: %#v\n", m.Message, r)
+			debug.PrintStack()
 		}
 	}()
+
+	if m.Author == nil {
+		return
+	}
+
 	var deleter string
 	// get audit log info
 	auditLog, err := s.GuildAuditLog(m.GuildID, "", "", discordgo.AuditLogActionMessageDelete, 1)
@@ -134,16 +141,21 @@ func messageDelete(s *discordgo.Session, m *discordgo.MessageDelete) {
 		Files: discordFiles,
 	})
 	if err != nil {
-		log.Printf("Error writing message with attachments to botlog: %s", err)
+		log.Printf("Error writing message with attachments to channel bot-messages: %s", err)
 	}
 }
 
 func messageUpdate(s *discordgo.Session, m *discordgo.MessageUpdate) {
 	defer func() {
 		if r := recover(); r != nil {
-			log.Println("Recovered from panic in messageUpdate", r)
+			log.Printf("Recovered from panic in messageUpdate; Message: %#v; Error: %#v\n", *m.Message, r)
+			debug.PrintStack()
 		}
 	}()
+
+	if m.Author == nil {
+		return
+	}
 
 	if wasDeleted := runMessageFilter(s, m.Message); wasDeleted {
 		return
