@@ -78,7 +78,7 @@ func info(ctx *Context, args []string) {
 		embed.Color = ctx.Session.State.UserColor(member.User.ID, ctx.Message.ChannelID)
 
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-			Name:   "Snowflake",
+			Name:   "ID/Snowflake",
 			Value:  member.User.ID,
 			Inline: inline,
 		})
