@@ -118,11 +118,11 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 	}()
 
+	cache.add(m.ID, *m.Message)
+
 	if wasDeleted := runMessageFilter(s, m.Message); wasDeleted {
 		return
 	}
-
-	cache.add(m.ID, *m.Message)
 
 	go func() {
 		for _, attachment := range m.Message.Attachments {
@@ -354,6 +354,10 @@ func runMessageFilter(s *discordgo.Session, m *discordgo.Message) (deleted bool)
 		}
 	}()
 
+	if m.Author == nil {
+		return false
+	}
+
 	if m.Author.Bot {
 		return false
 	}
@@ -426,7 +430,7 @@ func logMessageAutodelete(s *discordgo.Session, m *discordgo.Message, matchedStr
 		}
 	}
 
-	botlogEntry, err := s.ChannelMessageSendEmbed(env.ChannelAutoMod, &discordgo.MessageEmbed{
+	autoModEntry, err := s.ChannelMessageSendEmbed(env.ChannelAutoMod, &discordgo.MessageEmbed{
 		Author: &discordgo.MessageEmbedAuthor{
 			Name:    "Message Autodelete",
 			IconURL: m.Author.AvatarURL("128"),
@@ -437,14 +441,14 @@ func logMessageAutodelete(s *discordgo.Session, m *discordgo.Message, matchedStr
 		Footer:      footer,
 	})
 	if err != nil {
-		log.Printf("Error writing botlog entry for message deletion: %s\n", err)
+		log.Printf("Error writing auto-mod entry for message deletion: %s\n", err)
 	}
 
-	botlogEntryLink := makeMessageLink(m.GuildID, botlogEntry)
-	note := db.NewNote(s.State.User.ID, m.Author.ID, fmt.Sprintf("Message deleted because of word `%s` [(source)](%s)", matchedString, botlogEntryLink), db.BlocklistViolation)
+	autoModEntryLink := makeMessageLink(m.GuildID, autoModEntry)
+	note := db.NewNote(s.State.User.ID, m.Author.ID, fmt.Sprintf("Message deleted because of word `%s` [(source)](%s)", matchedString, autoModEntryLink), db.BlocklistViolation)
 	err = note.Save()
 	if err != nil {
-		log.Println(err)
+		log.Println("Failed to save note. Error:", err)
 		return
 	}
 }
