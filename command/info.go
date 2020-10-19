@@ -78,6 +78,12 @@ func info(ctx *Context, args []string) {
 		embed.Color = ctx.Session.State.UserColor(member.User.ID, ctx.Message.ChannelID)
 
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
+			Name:   "Snowflake",
+			Value:  member.User.ID,
+			Inline: inline,
+		})
+
+		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
 			Name:   "Account Creation Date",
 			Value:  accountCreateDate.UTC().Format("2006-01-02 15:04") + " (" + humanize.Time((accountCreateDate)) + ")",
 			Inline: inline,
