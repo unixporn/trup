@@ -39,7 +39,7 @@ func messageDelete(s *discordgo.Session, m *discordgo.MessageDelete) {
 
 	var deleter string
 	// get audit log info
-	auditLog, err := s.GuildAuditLog(m.GuildID, "", "", discordgo.AuditLogActionMessageDelete, 1)
+	auditLog, err := s.GuildAuditLog(m.GuildID, "", "", int(discordgo.AuditLogActionMessageDelete), 1)
 	if err != nil {
 		log.Printf("Failed to check audit log: %s", err.Error())
 		return
