@@ -232,7 +232,7 @@ var userNotFound = errors.New("User not found")
 
 // members returns unique members from discordgo's state, because discordgo's state has duplicates.
 func (ctx *Context) members() []*discordgo.Member {
-	guild, err := ctx.Session.Guild(ctx.Message.GuildID)
+	guild, err := ctx.Session.State.Guild(ctx.Message.GuildID)
 	if err != nil {
 		ctx.ReportError("Failed to fetch guild "+ctx.Message.GuildID, err)
 

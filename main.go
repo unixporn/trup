@@ -43,6 +43,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed on discordgo.New(): %s\n", err)
 	}
+	discord.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsAllWithoutPrivileged | discordgo.IntentsGuildPresences | discordgo.IntentsGuildMembers)
 
 	go cleanupLoop(discord)
 
