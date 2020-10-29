@@ -2,11 +2,12 @@ FROM golang:1.14-alpine
 
 RUN mkdir /app
 
-ADD . /app
-
 WORKDIR /app
 
-RUN go mod download && \
-    go build -o main .
+ADD go.mod go.sum /app/
+RUN go mod download
+
+ADD . /app
+RUN go build -o main .
 
 CMD ["/app/main"]
