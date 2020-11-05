@@ -335,7 +335,7 @@ func fetch(ctx *Context, args []string) {
 			return nil
 		})
 		if err != nil {
-			ctx.Reply("failed to find the user. Error: " + err.Error())
+			ctx.ReportError("Failed to find the user.", err)
 			return
 		}
 	}

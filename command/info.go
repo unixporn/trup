@@ -126,7 +126,7 @@ func info(ctx *Context, args []string) {
 
 	} else {
 		if err := ctx.requestUserByName(false, strings.Join(args[1:], " "), callback); err != nil {
-			log.Println("Failed to request user by name: " + err.Error())
+			ctx.ReportError("Failed to request user by name.", err)
 		}
 	}
 }
