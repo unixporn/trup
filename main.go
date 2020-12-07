@@ -119,6 +119,10 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 	}()
 
+	if m.Author.Bot {
+		return
+	}
+
 	cache.add(m.ID, *m.Message)
 
 	if wasDeleted := runMessageFilter(s, m.Message); wasDeleted {
