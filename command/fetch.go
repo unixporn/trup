@@ -16,7 +16,7 @@ const setFetchHelp = "Run without arguments to see instructions."
 func setFetch(ctx *Context, args []string) {
 	lines := strings.Split(ctx.Message.Content, "\n")
 	if len(lines) < 2 && len(ctx.Message.Attachments) == 0 {
-		ctx.Reply("run this: `curl -s https://raw.githubusercontent.com/unixporn/trup/prod/fetcher.sh | sh` and follow the instructions. It's recommended that you download and read the script before running it, as piping to curl isn't always the safest practice. (<https://blog.dijit.sh/don-t-pipe-curl-to-bash>)\n > NOTE: use `!setfetch update` to update individual values\n > NOTE: If you're trying to manually change a value, it needs a newline. Also note that !git and !dotfiles are different commands.")
+		ctx.Reply("run this: `curl -s https://raw.githubusercontent.com/unixporn/trup/prod/fetcher.sh | sh` and follow the instructions. It's recommended that you download and read the script before running it, as piping curl to sh isn't always the safest practice. (<https://blog.dijit.sh/don-t-pipe-curl-to-bash>)\n > NOTE: use `!setfetch update` to update individual values\n > NOTE: If you're trying to manually change a value, it needs a newline. Also note that !git and !dotfiles are different commands.")
 
 		return
 	}
