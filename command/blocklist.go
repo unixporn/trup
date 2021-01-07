@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	blocklistUsage = "blocklist <add | remove | list> [regex]"
+	blocklistUsage = "blocklist <add | remove | list> `[regex]`"
 	blocklistHelp  = "Run commands related to the blocklist"
 )
 

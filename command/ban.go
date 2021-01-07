@@ -10,7 +10,7 @@ import (
 
 const (
 	banUsage    = "ban <@user> <reason>"
-	delbanUsage = "delban <@user> <reason"
+	delbanUsage = "delban <@user> <reason>"
 )
 
 func banUser(ctx *Context, user, reason string, removeDays int) {

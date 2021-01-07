@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	infoUsage = "info [url]"
-	infoHelp  = "displays additional info"
+	infoUsage = "info [user]"
+	infoHelp  = "displays additional user info"
 )
 
 type discordRole struct {
