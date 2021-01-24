@@ -132,6 +132,10 @@ var Commands = map[string]Command{
 		Exec:  restart,
 		Usage: restartUsage,
 	}),
+	"say": moderatorOnly(Command{
+		Exec:  say,
+		Usage: sayUsage,
+	}),
 }
 
 var parseMentionRegexp = regexp.MustCompile(`<@!?(\d+)>`)
