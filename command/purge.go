@@ -86,5 +86,5 @@ Outer:
 		return
 	}
 
-	ctx.Reply(fmt.Sprintf("Deleted %d messages.", len(toDelete)))
+	ctx.Reply(fmt.Sprintf("Deleted %d messages. <a:police:749871644071165974>", len(toDelete)))
 }

@@ -61,7 +61,7 @@ func banUser(ctx *Context, user, reason string, removeDays int) {
 		log.Printf("Error sending ban notice into modlog: %s\n", err)
 	}
 
-	ctx.Reply("Success")
+	ctx.Reply("Success <a:police:749871644071165974>")
 }
 
 func ban(ctx *Context, args []string) {
