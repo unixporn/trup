@@ -127,37 +127,14 @@ func GetStoredAttachments(channelId, messageId string) ([]*StoredAttachment, fun
 }
 
 func PruneExpiredAttachments() error {
-	rows, err := db.Query(
-		context.Background(),
-		"SELECT object_id FROM attachment_log_cache WHERE CURRENT_TIMESTAMP - create_date > $1",
-		fileExpiration,
-	)
-	if err != nil {
+	if _, err := db.Exec(context.Background(), `
+WITH oids AS (
+	DELETE FROM attachment_log_cache WHERE CURRENT_TIMESTAMP - create_date > $1 RETURNING object_id
+)
+SELECT lo_unlink(object_id) FROM oids`, fileExpiration); err != nil {
 		return err
 	}
 
-	defer rows.Close()
-
-	for rows.Next() {
-		values, err := rows.Values()
-		if err != nil {
-			return err
-		}
-
-		err = deleteLargeObject(values[0].(uint32))
-		if err != nil {
-			return nil
-		}
-	}
-
-	_, err = db.Exec(
-		context.Background(),
-		"DELETE FROM attachment_log_cache WHERE CURRENT_TIMESTAMP - create_date > $1",
-		fileExpiration,
-	)
-	if err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -168,25 +145,6 @@ func loadBytesFromLargeObject(tx pgx.Tx, objectId uint32) (io.ReadCloser, error)
 		return nil, err
 	}
 	return object, nil
-}
-
-func deleteLargeObject(objectId uint32) error {
-	tx, err := db.Begin(context.Background())
-	if err != nil {
-		return err
-	}
-
-	lo := tx.LargeObjects()
-	err = lo.Unlink(context.Background(), objectId)
-	if err != nil {
-		return err
-	}
-
-	err = tx.Commit(context.Background())
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func isAttachment(attachment *discordgo.MessageAttachment) bool {
