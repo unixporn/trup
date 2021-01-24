@@ -57,7 +57,7 @@ func mute(ctx *Context, args []string) {
 		if err != nil {
 			ctx.ReportError("Failed to set note about the user", err)
 		}
-		ctx.Reply("User successfully muted.")
+		ctx.Reply("User successfully muted. <a:police:749871644071165974>")
 
 		r := ""
 		if reason != "" {

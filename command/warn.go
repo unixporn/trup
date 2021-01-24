@@ -52,7 +52,7 @@ func warn(ctx *Context, args []string) {
 			log.Printf("Failed to save warning note. Error: %s\n", err)
 		}
 
-		ctx.Reply(fmt.Sprintf("<@%s> Has been warned%s with reason: %s.", user, nth, reason))
+		ctx.Reply(fmt.Sprintf("<@%s> Has been warned%s with reason: %s. <a:police:749871644071165974>", user, nth, reason))
 		r := ""
 		if reason != "" {
 			r = " with reason: " + reason
