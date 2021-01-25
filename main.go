@@ -30,7 +30,6 @@ var (
 		ChannelBotTraffic:  os.Getenv("CHANNEL_BOT_TRAFFIC"),
 		Guild:              os.Getenv("GUILD"),
 	}
-	botId      string
 	cache      = newMessageCache(5000)
 	emojiRegex = regexp.MustCompile(`<((@!?\d+)|(:.+?:\d+))>`)
 	urlRegex   = regexp.MustCompile(`(?i)(https?|ftp)://[^\s/$.?#].[^\s]*`)
@@ -48,7 +47,6 @@ func main() {
 	go cleanupLoop(discord)
 
 	discord.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
-		botId = r.User.ID
 		setStatus(s)
 	})
 	discord.AddHandler(memberJoin)
