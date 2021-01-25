@@ -214,25 +214,6 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		cmd.Exec(&context, args)
 		return
 	}
-
-	var mentionsBot bool
-	for _, m := range m.Mentions {
-		if m.ID == botId {
-			mentionsBot = true
-			break
-		}
-	}
-
-	if mentionsBot {
-		context := command.Context{
-			Env:     &env,
-			Session: s,
-			Message: m.Message,
-		}
-
-		context.Reply(m.Author.Mention() + " need help? Type `!help`")
-		return
-	}
 }
 
 func memberJoin(s *discordgo.Session, m *discordgo.GuildMemberAdd) {
