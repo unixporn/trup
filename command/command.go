@@ -56,6 +56,10 @@ var Commands = map[string]Command{
 		Exec: setFetch,
 		Help: setFetchHelp,
 	},
+	"top": {
+		Exec: top,
+		Help: topHelp,
+	},
 	"repo": {
 		Exec: repo,
 		Help: repoHelp,
