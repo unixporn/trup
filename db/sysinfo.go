@@ -88,7 +88,7 @@ type TopSysinfo struct {
 
 func TopSysinfoFields() ([]TopSysinfo, error) {
 	rows, err := db.Query(context.Background(), `
-	SELECT fields.field, fields.name, FLOOR((fields.count::float / (fields.total_count+2)::float) * 100) FROM (
+	SELECT fields.field, fields.name, FLOOR((fields.count::float / fields.total_count::float) * 100) FROM (
 		SELECT 1 as order, * FROM top_field('Distro')
 		UNION SELECT 2 as order, * FROM top_field('DeWm')
 		UNION SELECT 3 as order, * FROM top_field('DisplayProtocol')
