@@ -81,3 +81,10 @@ BEGIN
 EXCEPTION WHEN unique_violation THEN
     UPDATE profile SET git = _git, dotfiles = _dotfiles, description = _description WHERE usr = _usr;
 END $$;
+
+CREATE TYPE top_field_result AS (field varchar, name varchar, count bigint, total_count bigint);
+CREATE OR REPLACE FUNCTION top_field(field varchar) RETURNS top_field_result
+language SQL
+AS $$
+    SELECT field, info->>field AS name, count(*) AS count, (SELECT count(*) FROM sysinfo WHERE info->>field != '') AS total_count FROM sysinfo GROUP BY info->>field ORDER BY count DESC;
+$$;
