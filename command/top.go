@@ -1,6 +1,7 @@
 package command
 
 import (
+	"log"
 	"strconv"
 	"strings"
 	"trup/db"
@@ -24,8 +25,11 @@ func top(ctx *Context, args []string) {
 		description.WriteString("**" + field.Field + "**: " + field.Name + " (" + strconv.Itoa(field.Percentage) + "%)\n")
 	}
 
-	ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &discordgo.MessageEmbed{
+	_, err = ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &discordgo.MessageEmbed{
 		Title:       "Top Fields",
 		Description: description.String(),
 	})
+	if err != nil {
+		log.Println("Failed on ChannelMessageSendEmbed in top", err)
+	}
 }

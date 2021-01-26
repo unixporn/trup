@@ -109,7 +109,10 @@ func TopSysinfoFields() ([]TopSysinfo, error) {
 	var results []TopSysinfo
 	for rows.Next() {
 		var info TopSysinfo
-		rows.Scan(&info.Field, &info.Name, &info.Percentage)
+		err := rows.Scan(&info.Field, &info.Name, &info.Percentage)
+		if err != nil {
+			return nil, err
+		}
 		results = append(results, info)
 	}
 
