@@ -14,6 +14,7 @@ import (
 
 type Env struct {
 	RoleMod         string
+	RoleHelper      string
 	RoleMute        string
 	RoleColors      []discordgo.Role
 	ChannelShowcase string
@@ -128,7 +129,7 @@ var Commands = map[string]Command{
 		Exec:  warn,
 		Usage: warnUsage,
 	}),
-	"mute": moderatorOnly(Command{
+	"mute": moderatorAndHelperOnly(Command{
 		Exec:  mute,
 		Usage: muteUsage,
 	}),
@@ -436,9 +437,38 @@ func moderatorOnly(cmd Command) Command {
 	}
 }
 
+func moderatorAndHelperOnly(cmd Command) Command {
+	return Command{
+		Exec: func(ctx *Context, args []string) {
+			for _, r := range ctx.Message.Member.Roles {
+				if r == ctx.Env.RoleMod || r == ctx.Env.RoleHelper {
+					cmd.Exec(ctx, args)
+
+					return
+				}
+			}
+
+			ctx.Reply("this command is only for moderators and helpers.")
+		},
+		Usage:         cmd.Usage,
+		Help:          cmd.Help,
+		ModeratorOnly: true,
+	}
+}
+
 func (ctx *Context) isModerator() bool {
 	for _, r := range ctx.Message.Member.Roles {
 		if r == ctx.Env.RoleMod {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (ctx *Context) isHelper() bool {
+	for _, r := range ctx.Message.Member.Roles {
+		if r == ctx.Env.RoleHelper {
 			return true
 		}
 	}
