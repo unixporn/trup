@@ -124,7 +124,7 @@ type TopArginfo struct {
 	Percentage int
 }
 
-func TopArginfoFields(field string) ([]TopArginfo, error) {
+func TopArgInfoFields(field string) ([]TopArginfo, error) {
 	rows, err := db.Query(context.Background(), `
 WITH total_count AS
   (SELECT count(*)

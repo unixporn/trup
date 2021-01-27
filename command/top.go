@@ -12,54 +12,60 @@ import (
 
 const (
 	topHelp  = "Displays the most used distro, terminal, etc."
-	topUsage = "`!top` or `!top [Distro OR DeWm OR Terminal etc.]`"
+	topUsage = "!top [Distro OR DeWm OR Terminal etc.]"
 )
 
 func top(ctx *Context, args []string) {
 	if len(args) == 2 {
-		topFields, err := db.TopArginfoFields(args[1])
-		if err != nil {
-			ctx.ReportError("Failed to get top " + args[1], err)
-			return
-		}
-		if len(topFields) == 0 {
-			ctx.Reply("Arguement not found")
-			return
-		}
-		var description strings.Builder
-		i := 1
-		for _, field := range topFields {
-			description.WriteString(fmt.Sprintf("%d. %s (%s%%)\n", i, field.Name, strconv.Itoa(field.Percentage)))
-			i += 1
-		}
-
-		_, err = ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &discordgo.MessageEmbed{
-			Title:       "Top " + args[1],
-			Description: description.String(),
-		})
-		if err != nil {
-			log.Println("Failed on ChannelMessageSendEmbed in top", err)
-		}
+		topSpecific(ctx, args[1])
+		return
 	} else if len(args) == 1 {
-		topFields, err := db.TopSysinfoFields()
-		if err != nil {
-			ctx.ReportError("Failed to get top fields", err)
-			return
-		}
+		topAll(ctx)
+		return
+	}
+	ctx.Reply("Usage: " + topUsage)
+}
 
-		var description strings.Builder
-		for _, field := range topFields {
-			description.WriteString("**" + field.Field + "**: " + field.Name + " (" + strconv.Itoa(field.Percentage) + "%)\n")
-		}
+func topAll(ctx *Context) {
+	topFields, err := db.TopSysinfoFields()
+	if err != nil {
+		ctx.ReportError("Failed to get top fields", err)
+		return
+	}
 
-		_, err = ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &discordgo.MessageEmbed{
-			Title:       "Top Fields",
-			Description: description.String(),
-		})
-		if err != nil {
-			log.Println("Failed on ChannelMessageSendEmbed in top", err)
-		}
-	} else {
-		ctx.Reply("Usage: " + topUsage)
+	var description strings.Builder
+	for _, field := range topFields {
+		description.WriteString("**" + field.Field + "**: " + field.Name + " (" + strconv.Itoa(field.Percentage) + "%)\n")
+	}
+
+	_, err = ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &discordgo.MessageEmbed{
+		Title:       "Top Fields",
+		Description: description.String(),
+	})
+	if err != nil {
+		log.Println("Failed on ChannelMessageSendEmbed in !top", err)
+	}
+}
+
+func topSpecific(ctx *Context, field string) {
+	topFields, err := db.TopArgInfoFields(field)
+	if err != nil {
+		ctx.ReportError("Failed to get top [item]", err)
+		return
+	}
+	if len(topFields) == 0 {
+		ctx.Reply("Arguement not found")
+		return
+	}
+	var description strings.Builder
+	for i, field := range topFields {
+		description.WriteString(fmt.Sprintf("%d. %s (%d%%)\n", i+1, field.Name, field.Percentage))
+	}
+	_, err = ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &discordgo.MessageEmbed{
+		Title:       "Top " + field,
+		Description: description.String(),
+	})
+	if err != nil {
+		log.Println("Failed on ChannelMessageSendEmbed in !top", err)
 	}
 }
