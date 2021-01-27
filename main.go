@@ -19,6 +19,7 @@ var (
 	prefix = "!"
 	env    = command.Env{
 		RoleMod:            os.Getenv("ROLE_MOD"),
+		RoleHelper:         os.Getenv("ROLE_HELPER"),
 		RoleColors:         []discordgo.Role{},
 		ChannelShowcase:    os.Getenv("CHANNEL_SHOWCASE"),
 		RoleMute:           os.Getenv("ROLE_MUTE"),
