@@ -467,16 +467,6 @@ func (ctx *Context) isModerator() bool {
 	return false
 }
 
-func (ctx *Context) isHelper() bool {
-	for _, r := range ctx.Message.Member.Roles {
-		if r == ctx.Env.RoleHelper {
-			return true
-		}
-	}
-
-	return false
-}
-
 func isValidURL(toTest string) bool {
 	if !strings.HasPrefix(toTest, "http") {
 		return false
