@@ -119,12 +119,12 @@ func TopSysinfoFields() ([]TopSysinfo, error) {
 	return results, nil
 }
 
-type TopArginfo struct {
+type TopArgInfo struct {
 	Name       string
 	Percentage int
 }
 
-func TopArgInfoFields(field string) ([]TopArginfo, error) {
+func TopArgInfoFields(field string) ([]TopArgInfo, error) {
 	rows, err := db.Query(context.Background(), `
 WITH total_count AS
   (SELECT count(*)
@@ -150,9 +150,9 @@ FROM top_names;
 
 	defer rows.Close()
 
-	var results []TopArginfo
+	var results []TopArgInfo
 	for rows.Next() {
-		var info TopArginfo
+		var info TopArgInfo
 		err := rows.Scan(&info.Name, &info.Percentage)
 		if err != nil {
 			return nil, err
