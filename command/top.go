@@ -19,7 +19,7 @@ func top(ctx *Context, args []string) {
 	if len(args) == 2 {
 		topFields, err := db.TopArginfoFields(args[1])
 		if err != nil {
-			ctx.ReportError("Failed to get top fields", err)
+			ctx.ReportError("Failed to get top " + args[1], err)
 			return
 		}
 		if len(topFields) == 0 {
