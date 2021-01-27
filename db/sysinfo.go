@@ -120,3 +120,46 @@ func TopSysinfoFields() ([]TopSysinfo, error) {
 
 	return results, nil
 }
+
+type TopArgInfo struct {
+	Name       string
+	Percentage int
+}
+
+func TopArgInfoFields(field string) ([]TopArgInfo, error) {
+	rows, err := db.Query(context.Background(), `
+WITH total_count AS
+  (SELECT count(*)
+   FROM sysinfo
+   WHERE info->>$1 != ''),
+top_names AS
+  (SELECT info->>$1 AS name,
+                 count(*)
+   FROM sysinfo
+   WHERE info->>$1 != ''
+   GROUP BY info->>$1
+   ORDER BY COUNT DESC
+   LIMIT 5)
+SELECT name,
+       FLOOR((count::float /
+                (SELECT *
+                 FROM total_count)::float) * 100) AS percentage
+FROM top_names;
+	`, &field)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var results []TopArgInfo
+	for rows.Next() {
+		var info TopArgInfo
+		err := rows.Scan(&info.Name, &info.Percentage)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, info)
+	}
+	return results, nil
+}
