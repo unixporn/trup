@@ -88,28 +88,3 @@ language SQL
 AS $$
     SELECT field, info->>field AS name, count(*) AS count, (SELECT count(*) FROM sysinfo WHERE info->>field != '') AS total_count FROM sysinfo WHERE info->>field != '' GROUP BY info->>field ORDER BY count DESC;
 $$;
-
-
-CREATE TYPE top_args_result AS (field varchar, name varchar, count bigint, total_count bigint);
-CREATE OR REPLACE FUNCTION top_field(field varchar) RETURNS top_field_result
-language SQL
-AS $$
-    SELECT field, info->>field AS name, count(*) AS count, (SELECT count(*) FROM sysinfo WHERE info->>field != '') AS total_count FROM sysinfo WHERE info->>field != '' GROUP BY info->>field ORDER BY count DESC;
-    WITH total_count AS
-    (SELECT count(*)
-    FROM sysinfo
-    WHERE info->>'Distro' != ''),
-          top_names AS
-          (SELECT info->>'Distro' AS name,
-                 count(*)
-   FROM sysinfo
-   WHERE info->>'Distro' != ''
-   GROUP BY info->>'Distro'
-   ORDER BY COUNT DESC
-   LIMIT 5)
-SELECT name,
-       FLOOR((COUNT::float /
-                (SELECT *
-                 FROM total_count)::float) * 100) AS percentage
-FROM top_names;
-$$;
