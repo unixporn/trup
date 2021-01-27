@@ -17,6 +17,7 @@ type SysinfoData struct {
 	Bar             string
 	Resolution      string
 	DisplayProtocol string
+	Shell           string
 	Gtk3Theme       string
 	GtkIconTheme    string
 	Cpu             string
@@ -92,12 +93,13 @@ func TopSysinfoFields() ([]TopSysinfo, error) {
 		SELECT 1 as order, * FROM top_field('Distro')
 		UNION SELECT 2 as order, * FROM top_field('DeWm')
 		UNION SELECT 3 as order, * FROM top_field('DisplayProtocol')
-		UNION SELECT 4 as order, * FROM top_field('Terminal')
-		UNION SELECT 5 as order, * FROM top_field('Bar')
-		UNION SELECT 6 as order, * FROM top_field('Gtk3Theme')
-		UNION SELECT 7 as order, * FROM top_field('GtkIconTheme')
-		UNION SELECT 8 as order, * FROM top_field('Editor')
-		UNION SELECT 9 as order, * FROM top_field('Cpu')
+		UNION SELECT 4 as order, * FROM top_field('Shell')
+		UNION SELECT 5 as order, * FROM top_field('Terminal')
+		UNION SELECT 6 as order, * FROM top_field('Bar')
+		UNION SELECT 7 as order, * FROM top_field('Gtk3Theme')
+		UNION SELECT 8 as order, * FROM top_field('GtkIconTheme')
+		UNION SELECT 9 as order, * FROM top_field('Editor')
+		UNION SELECT 10 as order, * FROM top_field('Cpu')
 	) fields WHERE total_count != 0 ORDER BY fields.order ASC;
 	`)
 	if err != nil {
