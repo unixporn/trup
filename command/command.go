@@ -138,7 +138,7 @@ var Commands = map[string]Command{
 		Exec:  restart,
 		Usage: restartUsage,
 	}),
-	"say": moderatorOnly(Command{
+	"say": moderatorAndHelperOnly(Command{
 		Exec:  say,
 		Usage: sayUsage,
 	}),
