@@ -12,7 +12,7 @@ Also note that !git, !dotfiles, and !desc are different commands.
 
 !setfetch
 Distro: $NAME $ver
-Host: $(cat /sys/devices/virtual/dmi/id/product_name) $(cat /sys/devices/virtual/dmi/id/product_version)
+Host: $(cat /sys/devices/virtual/dmi/id/product_name)
 Kernel: $(uname -sr)
 Terminal: $term
 Editor: ${EDITOR##*/}
