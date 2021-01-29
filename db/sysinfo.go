@@ -163,3 +163,37 @@ FROM top_names;
 	}
 	return results, nil
 }
+
+type UsersFetch struct {
+	Count      int
+	Percentage int
+}
+
+func UserFetch(field string, value string) ([]UsersFetch, error) {
+	rows, err := db.Query(context.Background(), `
+SELECT
+  count,
+  ROUND((count::float/total::float)*100) AS percentage
+FROM (
+  SELECT
+    count(*),
+    (SELECT count(*) FROM sysinfo WHERE info->>$1 != '') AS total
+  FROM sysinfo WHERE info->>$1 ~* $2
+) t;
+`, &field, &value)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+	var results []UsersFetch
+	for rows.Next() {
+		var info UsersFetch
+		err := rows.Scan(&info.Count, &info.Percentage)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, info)
+	}
+	return results, nil
+}
