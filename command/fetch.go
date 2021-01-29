@@ -39,8 +39,9 @@ func setFetch(ctx *Context, args []string) {
 
 	m := map[string]*string{
 		"Distro":           &data.Distro,
-		"Kernel":           &data.Kernel,
-		"Terminal":         &data.Terminal,
+        "Host":             &data.Host,
+        "Kernel":           &data.Kernel,
+        "Terminal":         &data.Terminal,
 		"Editor":           &data.Editor,
 		"DE/WM":            &data.DeWm,
 		"Bar":              &data.Bar,
@@ -191,6 +192,15 @@ func doFetch(ctx *Context, user *discordgo.User) {
 			Inline: inline,
 		})
 	}
+
+    if info.Info.Host != "" {
+         embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
+             Name:   "Host",
+             Value:  info.Info.Host,
+             Inline: inline,
+         })
+     }
+
 
 	if info.Info.Kernel != "" {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
