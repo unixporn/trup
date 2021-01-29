@@ -10,7 +10,8 @@ import (
 
 type SysinfoData struct {
 	Distro          string
-	Kernel          string
+	Host            string
+    Kernel          string
 	Terminal        string
 	Editor          string
 	DeWm            string
