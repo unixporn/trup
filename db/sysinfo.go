@@ -163,3 +163,30 @@ FROM top_names;
 	}
 	return results, nil
 }
+
+type FieldValueStat struct {
+	Count      int
+	Percentage int
+}
+
+func FetchFieldValueStat(field string, value string) (FieldValueStat, error) {
+	row := db.QueryRow(context.Background(), `
+SELECT
+  count,
+  ROUND((count::float/total::float)*100) AS percentage
+FROM (
+  SELECT
+    count(*),
+    (SELECT count(*) FROM sysinfo WHERE info->>$1 != '') AS total
+  FROM sysinfo WHERE info->>$1 ~* $2
+) t;
+`, &field, &value)
+
+	var stat FieldValueStat
+	err := row.Scan(&stat.Count, &stat.Percentage)
+	if err != nil {
+		return FieldValueStat{}, err
+	}
+
+	return stat, nil
+}

@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	topHelp  = "Displays the most used distro, terminal, etc."
-	topUsage = "!top [Distro OR DeWm OR Terminal etc.]"
+	topHelp  = "Displays the most used distro, terminal, etc. If given a search query, shows the number and percentage of users with that field. Search Query supports regex."
+	topUsage = "!top [Distro OR DeWm OR Terminal etc.] [Search Query, e.g. arch]"
 )
 
 func top(ctx *Context, args []string) {
@@ -24,15 +24,15 @@ func top(ctx *Context, args []string) {
 	} else if len(args) == 1 {
 		title = "Top Fields"
 		description, success = topAll(ctx)
-	} else {
-		ctx.Reply("Usage: " + topUsage)
+	} else if len(args) >= 3 {
+		topUsers(ctx, args[1], strings.Join(args[2:], " "))
+		// return here because topUsers already sends a reply
 		return
 	}
 
 	if !success {
 		return
 	}
-
 	_, err := ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &discordgo.MessageEmbed{
 		Title:       title,
 		Description: description,
@@ -73,4 +73,17 @@ func topSpecific(ctx *Context, field string) (description string, success bool) 
 	}
 
 	return descriptionBuilder.String(), true
+}
+
+func topUsers(ctx *Context, field string, value string) {
+	stat, err := db.FetchFieldValueStat(field, value)
+	if err != nil {
+		ctx.ReportError("Failed to fetch the number of users", err)
+		return
+	}
+
+	_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, strconv.Itoa(stat.Count)+" ("+strconv.Itoa(stat.Percentage)+"%)\n")
+	if err != nil {
+		ctx.ReportError("Failed on ChannelMessageSend in !top", err)
+	}
 }
