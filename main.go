@@ -191,8 +191,10 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if strings.HasPrefix(m.Content, prefix) {
 		args := strings.Fields(m.Content[len(prefix):])
 		context := command.Context{
-			Env:     &env,
-			Session: s,
+			State: &command.State{
+				Env:     &env,
+				Session: s,
+			},
 			Message: m.Message,
 		}
 
