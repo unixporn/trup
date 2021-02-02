@@ -321,8 +321,7 @@ func doFetch(ctx *Context, user *discordgo.User) {
 sysinfoEnd:
 	embed.Fields = append(embed.Fields, profileFields...)
 
-	log.Printf("embed: %#v\n", embed)
-	if len(embed.Fields) == 0 && embed.Description == "" {
+	if len(embed.Fields) == 0 && embed.Description == "" && embed.Image == nil {
 		if user.ID == ctx.Message.Author.ID {
 			askUserToSetfetchHimself(ctx)
 		} else {
