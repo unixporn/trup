@@ -1,0 +1,123 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: trup
+  labels:
+    name: trup
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bot-config
+  namespace: trup
+data:
+  GUILD: "707266653989371956"
+  ROLE_MOD: "707318869445967872"
+  ROLE_HELPER: "803949776324001823"
+  ROLE_MUTE: "714891253103198259"
+  ROLE_COLORS: "712813563781054515,712813592092868608"
+  CHANNEL_BOTLOG: "712091775086362676"
+  CHANNEL_SHOWCASE: "707885030268993547"
+  CATEGORY_MOD_PRIVATE: "736921083264892938"
+  CHANNEL_AUTO_MOD: "712091775086362676"
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: db-pv-claim
+  namespace: trup
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: db-statefulset
+  namespace: trup
+  labels:
+    app: db
+spec:
+  serviceName: db
+  replicas: 1
+  selector:
+    matchLabels:
+      app: db
+  template:
+    metadata:
+      labels:
+        app: db
+    spec:
+      containers:
+        - name: postgres
+          image: mlvzk/trup-db
+          ports:
+            - containerPort: 5432
+              name: postgres
+          volumeMounts:
+            - name: db-data
+              mountPath: /var/lib/postgresql/data
+          env:
+            - name: POSTGRES_HOST_AUTH_METHOD
+              value: trust
+            - name: POSTGRES_USER
+              value: root
+            - name: POSTGRES_DB
+              value: trup
+      volumes:
+        - name: db-data
+          persistentVolumeClaim:
+            claimName: db-pv-claim
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db
+  namespace: trup
+  labels:
+    app: db
+spec:
+  selector:
+    app: db
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
+      name: postgres
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bot
+  namespace: trup
+  labels:
+    app: bot
+spec:
+  selector:
+    matchLabels:
+      app: bot
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: bot
+    spec:
+      containers:
+        - name: bot
+          image: mlvzk/trup
+          envFrom:
+            - secretRef:
+                name: discord-creds
+            - configMapRef:
+                name: bot-config
+          env:
+            - name: DATABASE_URL
+              value: "postgres://root@db/trup"
