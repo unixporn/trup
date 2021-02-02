@@ -13,7 +13,7 @@ services:
         condition: service_healthy
 
   trup_postgres:
-    image: "postgres:11"
+    image: postgres:11
     container_name: trup_postgres
     environment:
       POSTGRES_USER: root

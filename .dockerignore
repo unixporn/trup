@@ -1,0 +1,7 @@
+trup
+.idea/
+.vscode/
+.env
+pglogs
+postgres/
+postgres_data/
