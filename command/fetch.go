@@ -115,6 +115,18 @@ func setFetch(ctx *Context, args []string) {
 
 const fetchUsage = "fetch [user]"
 
+func askUserToSetfetch(ctx *Context, himself bool) {
+	message := "that user hasn't set their fetch information. You can ask them to run !setfetch"
+	if himself {
+		message = "you first need to set your information with !setfetch"
+	}
+
+	ctx.Reply(message)
+}
+
+func askUserToSetfetchSomeone(ctx *Context) { askUserToSetfetch(ctx, false) }
+func askUserToSetfetchHimself(ctx *Context) { askUserToSetfetch(ctx, true) }
+
 func doFetch(ctx *Context, user *discordgo.User) {
 	const inline = true
 	embed := discordgo.MessageEmbed{
@@ -164,12 +176,11 @@ func doFetch(ctx *Context, user *discordgo.User) {
 				goto sysinfoEnd
 			}
 
-			message := "that user hasn't set their fetch information. You can ask them to run !setfetch"
 			if user.ID == ctx.Message.Author.ID {
-				message = "you first need to set your information with !setfetch"
+				askUserToSetfetchHimself(ctx)
+			} else {
+				askUserToSetfetchSomeone(ctx)
 			}
-
-			ctx.Reply(message)
 			return
 		}
 
@@ -309,6 +320,16 @@ func doFetch(ctx *Context, user *discordgo.User) {
 
 sysinfoEnd:
 	embed.Fields = append(embed.Fields, profileFields...)
+
+	log.Printf("embed: %#v\n", embed)
+	if len(embed.Fields) == 0 && embed.Description == "" {
+		if user.ID == ctx.Message.Author.ID {
+			askUserToSetfetchHimself(ctx)
+		} else {
+			askUserToSetfetchSomeone(ctx)
+		}
+		return
+	}
 
 	_, err = ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed)
 	if err != nil {
