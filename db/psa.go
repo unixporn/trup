@@ -6,11 +6,12 @@ import (
 	"github.com/jackc/pgx/v4"
 )
 
-var messageID string
-
 func SetID(messageID string) error {
-	db.Exec(context.Background(), "delete from psa")
-	_, err := db.Exec(context.Background(), "insert into psa(id) values($1)", messageID)
+	_, err := db.Exec(context.Background(), "delete from psa")
+	if err != nil {
+		return err
+	}
+	_, err = db.Exec(context.Background(), "insert into psa(id) values($1)", messageID)
 	return err
 }
 
