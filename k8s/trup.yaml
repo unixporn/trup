@@ -116,3 +116,40 @@ spec:
           env:
             - name: DATABASE_URL
               value: "postgres://root@db/trup"
+
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: db-backup
+  namespace: trup
+spec:
+  schedule: "@daily"
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      template:
+        spec:
+          containers:
+            - name: db-backup
+              image: mlvzk/trup-db-backup
+              volumeMounts:
+                - name: ssh-key
+                  mountPath: "/etc/ssh-key/"
+                  readOnly: true
+              env:
+                - name: DATABASE_URL
+                  value: "postgres://root@db/trup"
+                - name: GIT_SSH_COMMAND
+                  value: "ssh -i /etc/ssh-key/ssh-privatekey -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
+                - name: USER_EMAIL
+                  value: "trup@prod"
+          restartPolicy: Never
+          volumes:
+            - name: ssh-key
+              secret:
+                secretName: db-backup-ssh-key
+                defaultMode: 0600
+
