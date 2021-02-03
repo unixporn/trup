@@ -185,6 +185,10 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			log.Println("Failed to react to message with 👎: " + err.Error())
 			return
 		}
+		message, err := monitorFeedback(s, m.ChannelID)
+		if len(message) != 0 {
+			log.Println(message + err.Error())
+		}
 		return
 	}
 
@@ -463,4 +467,30 @@ func initializeRoles(s *discordgo.Session, r *discordgo.Ready) {
 			}
 		}
 	}
+}
+
+func monitorFeedback(s *discordgo.Session, channelID string) (errorMessage string, err error) {
+	oldMessageID, err := db.GetID()
+	if err != nil {
+		return "Failed to Get Old message's ID, Error: ", err
+	}
+	// check if oldMessageID is empty, because db could've been reset
+	if len(oldMessageID) == 0 {
+		// do nothing
+	} else {
+		err = s.ChannelMessageDelete(channelID, oldMessageID)
+		if err != nil {
+			return "Failed to Delete Old Message in ServerFeedback, Error: ", err
+		}
+	}
+	message, err := s.ChannelMessageSend(channelID, "HEYYYYYYYYYYYYY")
+	if err != nil {
+		return "Failed to Send PSA Message to ServerFeedback, Error: ", err
+	}
+
+	err = db.SetID(message.ID)
+	if err != nil {
+		return "Failed to Set messageID in DB, Error: ", err
+	}
+	return "", nil
 }
