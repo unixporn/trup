@@ -483,7 +483,7 @@ func monitorFeedback(s *discordgo.Session, channelID string) (errorMessage strin
 			return "Failed to Delete Old Message in ServerFeedback, Error: ", err
 		}
 	}
-	message, err := s.ChannelMessageSend(channelID, "HEYYYYYYYYYYYYY")
+	message, err := s.ChannelMessageSend(channelID, "TO BE DECIDED")
 	if err != nil {
 		return "Failed to Send PSA Message to ServerFeedback, Error: ", err
 	}
