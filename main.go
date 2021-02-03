@@ -483,7 +483,7 @@ func monitorFeedback(s *discordgo.Session, channelID string) (errorMessage strin
 			return "Failed to Delete Old Message in ServerFeedback, Error: ", err
 		}
 	}
-	message, err := s.ChannelMessageSend(channelID, "TO BE DECIDED")
+	message, err := s.ChannelMessageSend(channelID, "Before posting, please make sure to check if your idea is a repetitive topic. (Listed in pins)\nNote that we have added a consequence for failure. The inability to delete repetitive feedback will result in an 'unsatisfactory' mark on your official testing record followed by death. Good luck!")
 	if err != nil {
 		return "Failed to Send PSA Message to ServerFeedback, Error: ", err
 	}
