@@ -9,7 +9,7 @@ const moveUsage = "move <#channel> [<@user> ...]"
 
 func move(ctx *Context, args []string) {
 	if len(args) < 2 {
-		ctx.Reply("not enough arguments.")
+		ctx.Reply("Usage: " + moveUsage)
 		return
 	}
 
