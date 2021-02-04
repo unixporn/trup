@@ -14,7 +14,7 @@ const warnUsage = "warn <@user> <reason>"
 
 func warn(ctx *Context, args []string) {
 	if len(args) < 3 {
-		ctx.Reply("not enough arguments.")
+		ctx.Reply("Usage: " + warnUsage)
 		return
 	}
 

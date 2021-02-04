@@ -14,7 +14,7 @@ const muteUsage = "mute <@user> <duration> [reason]"
 
 func mute(ctx *Context, args []string) {
 	if len(args) < 3 {
-		ctx.Reply("not enough arguments.")
+		ctx.Reply("Usage: " + muteUsage)
 		return
 	}
 

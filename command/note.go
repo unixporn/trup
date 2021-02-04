@@ -14,7 +14,7 @@ const noteUsage = "note <@user> [text]"
 
 func note(ctx *Context, args []string) {
 	if len(args) < 2 {
-		ctx.Reply("not enough arguments.")
+		ctx.Reply("Usage: " + noteUsage)
 		return
 	}
 

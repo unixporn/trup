@@ -66,7 +66,7 @@ func banUser(ctx *Context, user, reason string, removeDays int) {
 
 func ban(ctx *Context, args []string) {
 	if len(args) < 3 {
-		ctx.Reply("not enough arguments.")
+		ctx.Reply("Usage: " + banUsage)
 		return
 	}
 
@@ -83,7 +83,7 @@ func ban(ctx *Context, args []string) {
 
 func delban(ctx *Context, args []string) {
 	if len(args) < 3 {
-		ctx.Reply("not enough arguments.")
+		ctx.Reply("Usage: " + delbanUsage)
 		return
 	}
 
