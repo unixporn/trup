@@ -18,26 +18,24 @@ type User struct {
 }
 
 func AddUsers(discordMembers []*discordgo.Member) error {
-	users := make([]User, len(discordMembers))
-	for i, member := range discordMembers {
+	users := make([]User, 0, len(discordMembers))
+	for _, member := range discordMembers {
 		createDate, err := discordgo.SnowflakeTimestamp(member.User.ID)
 		if err != nil {
 			log.Println("Failed to get snowflake timestamp from id", member.User.ID)
 			continue
 		}
-		joinDate, err := member.JoinedAt.Parse()
-		if err != nil {
-			log.Println("Failed to get member's join date", member.User.ID)
-		}
+		// this fails sometimes, for some reason
+		joinDate, _ := member.JoinedAt.Parse()
 
-		users[i] = User{
+		users = append(users, User{
 			ID:                member.User.ID,
 			Username:          member.User.Username,
 			Tag:               member.User.Discriminator,
 			Nickname:          member.Nick,
 			AccountCreateDate: createDate,
 			ServerJoinDate:    joinDate,
-		}
+		})
 	}
 
 	_, err := db.Exec(context.Background(), `
