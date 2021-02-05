@@ -240,13 +240,11 @@ func parseChannelMention(mention string) string {
 
 var userNotFound = errors.New("User not found")
 
-// members returns unique members from discordgo's state, because discordgo's state has duplicates.
-func (ctx *Context) members() []*discordgo.Member {
-	guild, err := ctx.Session.State.Guild(ctx.Message.GuildID)
+// UniqueMembers returns unique members from discordgo's state, because discordgo's state has duplicates.
+func UniqueMembers(session *discordgo.Session, guildID string) ([]*discordgo.Member, error) {
+	guild, err := session.State.Guild(guildID)
 	if err != nil {
-		ctx.ReportError("Failed to fetch guild "+ctx.Message.GuildID, err)
-
-		return []*discordgo.Member{}
+		return []*discordgo.Member{}, fmt.Errorf("Failed to fetch guild %s; Error: %w", guildID, err)
 	}
 
 	var unique []*discordgo.Member
@@ -261,7 +259,17 @@ func (ctx *Context) members() []*discordgo.Member {
 		}
 	}
 
-	return unique
+	return unique, err
+}
+
+func (ctx *Context) members() []*discordgo.Member {
+	members, err := UniqueMembers(ctx.Session, ctx.Message.GuildID)
+	if err != nil {
+		ctx.ReportError("Failed to fetch unique members", err)
+		return []*discordgo.Member{}
+	}
+
+	return members
 }
 
 // asks the user to select one user. Once a user made a selection, deletes the messages and callback entry.
