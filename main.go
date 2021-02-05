@@ -46,6 +46,7 @@ func main() {
 	discord.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsAllWithoutPrivileged | discordgo.IntentsGuildPresences | discordgo.IntentsGuildMembers)
 
 	go cleanupLoop(discord)
+	go syncUsersInDatabase(discord)
 
 	discord.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
 		setStatus(s)
@@ -68,6 +69,35 @@ func main() {
 	<-sc
 
 	discord.Close()
+}
+
+func syncUsersInDatabase(s *discordgo.Session) {
+	time.Sleep(5 * time.Minute)
+
+	for {
+		func() {
+			defer func() {
+				if err := recover(); err != nil {
+					log.Printf("Panicked in syncUsersInDatabase with error: %v\n", err)
+				}
+			}()
+
+			members, err := command.UniqueMembers(s, env.Guild)
+			if err != nil {
+				log.Printf("Failed to get unique members; Error: %v\n", err)
+				return
+			}
+
+			err = db.AddUsers(members)
+			if err != nil {
+				log.Printf("Failed to add users to database; Error: %v\n", err)
+			} else {
+				log.Println("Successfully added users to database")
+			}
+		}()
+
+		time.Sleep(24 * time.Hour)
+	}
 }
 
 func messageReactionAdd(s *discordgo.Session, m *discordgo.MessageReactionAdd) {
@@ -244,6 +274,11 @@ func memberJoin(s *discordgo.Session, m *discordgo.GuildMemberAdd) {
 	_, err := s.ChannelMessageSendEmbed(env.ChannelBotTraffic, &embed)
 	if err != nil {
 		log.Printf("Failed to send embed to channel %s of user(%s) join. Error: %s\n", env.ChannelBotTraffic, m.User.ID, err)
+	}
+
+	err = db.AddUsers([]*discordgo.Member{m.Member})
+	if err != nil {
+		log.Printf("Failed to add new user to the database; Error: %v\n", err)
 	}
 }
 
