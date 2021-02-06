@@ -10,7 +10,7 @@ const (
 )
 
 func showcase(ctx *Context, args []string) {
-	ctx.Session.ChannelTyping(ctx.Message.ChannelID)
+	_ = ctx.Session.ChannelTyping(ctx.Message.ChannelID)
 
 	if len(args) < 1 {
 		ctx.Reply("Usage: " + showcaseUsage)
