@@ -22,7 +22,7 @@ func banUser(ctx *Context, user, reason string, removeDays int) {
 			return
 		}
 
-		if accountAge := time.Now().Sub(accountCreateDate); accountAge > time.Hour*24*3 {
+		if accountAge := time.Since(accountCreateDate); accountAge > time.Hour*24*3 {
 			ctx.Reply("You can't ban an account older than 3 days")
 			return
 		}
