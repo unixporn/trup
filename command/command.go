@@ -109,11 +109,11 @@ var Commands = map[string]Command{
 		Usage: blocklistUsage,
 		Help:  blocklistHelp,
 	})),
-	"ban": moderatorOnly(Command{
+	"ban": moderatorAndHelperOnly(Command{
 		Exec:  ban,
 		Usage: banUsage,
 	}),
-	"delban": moderatorOnly(Command{
+	"delban": moderatorAndHelperOnly(Command{
 		Exec:  delban,
 		Usage: delbanUsage,
 	}),
@@ -468,6 +468,16 @@ func moderatorAndHelperOnly(cmd Command) Command {
 func (ctx *Context) isModerator() bool {
 	for _, r := range ctx.Message.Member.Roles {
 		if r == ctx.Env.RoleMod {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (ctx *Context) isHelper() bool {
+	for _, r := range ctx.Message.Member.Roles {
+		if r == ctx.Env.RoleHelper {
 			return true
 		}
 	}

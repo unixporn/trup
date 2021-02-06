@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -14,6 +15,19 @@ const (
 )
 
 func banUser(ctx *Context, user, reason string, removeDays int) {
+	if ctx.isHelper() {
+		accountCreateDate, err := discordgo.SnowflakeTimestamp(user)
+		if err != nil {
+			ctx.ReportError("Failed to get user's account create date", err)
+			return
+		}
+
+		if accountAge := time.Since(accountCreateDate); accountAge > time.Hour*24*3 {
+			ctx.Reply("You can't ban an account older than 3 days")
+			return
+		}
+	}
+
 	guild, err := ctx.Session.Guild(ctx.Message.GuildID)
 	if err != nil {
 		log.Printf("Failed to fetch guild %s\n", err)
