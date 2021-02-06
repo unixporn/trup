@@ -74,6 +74,14 @@ CREATE TABLE IF NOT EXISTS users (
     primary key (id)
 );
 
+CREATE TABLE IF NOT EXISTS showcase_entries (
+    message_id text not null,
+    user_id text not null,
+    score integer not null,
+    create_date timestamptz not null,
+    primary key (message_id)
+);
+
 CREATE OR REPLACE PROCEDURE sysinfo_set(_usr varchar, _info jsonb, _modify_date timestamptz, _create_date timestamptz)
 language plpgsql
 AS $$
