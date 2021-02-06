@@ -58,7 +58,7 @@ func AddUsers(discordMembers []*discordgo.Member) error {
 			account_create_date date,
 			server_join_date date
 		)
-	ON CONFLICT (id) DO UPDATE SET nickname = EXCLUDED.nickname
+	ON CONFLICT (id) DO UPDATE SET nickname = EXCLUDED.nickname, username = EXCLUDED.username, tag = EXCLUDED.tag
 	`, &users)
 	return err
 }
