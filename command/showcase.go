@@ -18,11 +18,13 @@ func showcase(ctx *Context, args []string) {
 	}
 
 	if args[1] == "sync" {
+		ctx.Reply("Syncing... This may take a while.")
+
 		var entries []db.ShowcaseEntry
 
 		var beforeID string
 		for {
-			msgs, err := ctx.Session.ChannelMessages(ctx.Env.ChannelShowcase, 100, "", beforeID, "")
+			msgs, err := ctx.Session.ChannelMessages(ctx.Env.ChannelShowcase, 100, beforeID, "", "")
 			if err != nil {
 				panic(err)
 			}
@@ -55,7 +57,7 @@ func showcase(ctx *Context, args []string) {
 				})
 			}
 
-			beforeID = msgs[0].ID
+			beforeID = msgs[len(msgs)-1].ID
 		}
 
 		err := db.AddShowcaseEntries(entries)
