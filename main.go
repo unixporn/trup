@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/dustin/go-humanize"
 	"log"
 	"os"
 	"os/signal"
@@ -15,6 +14,7 @@ import (
 	"trup/db"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/dustin/go-humanize"
 )
 
 var (
