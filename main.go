@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/dustin/go-humanize"
 	"log"
 	"os"
 	"os/signal"
@@ -263,7 +264,7 @@ func memberJoin(s *discordgo.Session, m *discordgo.GuildMemberAdd) {
 		Fields: []*discordgo.MessageEmbedField{
 			{
 				Name:  "Account Creation Date",
-				Value: accountCreateDate.UTC().Format("2006-01-02 15:04"),
+				Value: accountCreateDate.UTC().Format("2006-01-02 15:04") + " (" + humanize.Time(accountCreateDate) + ")",
 			},
 			{
 				Name:  "Join Date",
