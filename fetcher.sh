@@ -167,6 +167,7 @@ if [ "$kernel" = "Linux" ]; then
       -e " dzen2$" \
       -e " tint2$" \
       -e " xmobar$" \
+      -e " waybar$" \
       -e " swaybar$" \
       -e " polybar$" \
       -e " lemonbar$" \
