@@ -56,6 +56,7 @@ func main() {
 	discord.AddHandler(memberLeave)
 	discord.AddHandler(messageCreate)
 	discord.AddHandler(messageDelete)
+	discord.AddHandler(messageDeleteBulk)
 	discord.AddHandler(messageUpdate)
 	discord.AddHandler(messageReactionAdd)
 	discord.AddHandlerOnce(initializeRoles)
