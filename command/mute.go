@@ -8,9 +8,46 @@ import (
 	"trup/db"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/dustin/go-humanize"
 )
 
 const muteUsage = "mute <@user> <duration> [reason]"
+
+func MuteMember(env *Env, session *discordgo.Session, moderator *discordgo.User, userId string, duration time.Duration, reason string) error {
+	w := db.NewMute(env.Guild, moderator.ID, userId, reason, time.Now(), time.Now().Add(duration))
+	err := w.Save()
+	if err != nil {
+		return fmt.Errorf("Failed to save your mute. Error: %w", err)
+	}
+
+	err = session.GuildMemberRoleAdd(env.Guild, userId, env.RoleMute)
+	if err != nil {
+		return fmt.Errorf("Error adding role %w", err)
+	}
+
+	reasonText := ""
+	if reason != "" {
+		reasonText = " with reason: " + reason
+	}
+	durationText := humanize.RelTime(time.Now(), time.Now().Add(duration), "", "")
+	err = db.NewNote(moderator.ID, userId, "User was muted for "+durationText+reasonText, db.ManualNote).Save()
+	if err != nil {
+		return fmt.Errorf("Failed to set note about the user %w", err)
+	}
+
+	r := ""
+	if reason != "" {
+		r = " with reason: " + reason
+	}
+	if _, err = session.ChannelMessageSend(
+		env.ChannelModlog,
+		fmt.Sprintf("User <@%s> was muted by %s for %s%s.", userId, moderator.Username, durationText, r),
+	); err != nil {
+		log.Println("Failed to send mute message: " + err.Error())
+	}
+
+	return nil
+}
 
 func mute(ctx *Context, args []string) {
 	if len(args) < 3 {
@@ -22,7 +59,6 @@ func mute(ctx *Context, args []string) {
 		user := m.User.ID
 		var (
 			duration = args[2]
-			start    = time.Now()
 			reason   = ""
 		)
 		if len(args) > 3 {
@@ -35,41 +71,12 @@ func mute(ctx *Context, args []string) {
 			return nil
 		}
 
-		end := start.Add(i)
-		w := db.NewMute(ctx.Message.GuildID, ctx.Message.Author.ID, user, reason, start, end)
-		err = w.Save()
-		if err != nil {
-			ctx.ReportError("Failed to save your mute", err)
+		if err := MuteMember(ctx.Env, ctx.Session, ctx.Message.Author, user, i, reason); err != nil {
+			ctx.Reply("Failed to mute user. Error: " + err.Error())
 			return nil
 		}
 
-		err = ctx.Session.GuildMemberRoleAdd(ctx.Message.GuildID, user, ctx.Env.RoleMute)
-		if err != nil {
-			ctx.ReportError("Error adding role", err)
-			return nil
-		}
-
-		reasonText := ""
-		if reason != "" {
-			reasonText = " with reason: " + reason
-		}
-		err = db.NewNote(ctx.Message.Author.ID, user, "User was muted for "+duration+reasonText, db.ManualNote).Save()
-		if err != nil {
-			ctx.ReportError("Failed to set note about the user", err)
-		}
 		ctx.Reply("User successfully muted. <a:police:749871644071165974>")
-
-		r := ""
-		if reason != "" {
-			r = " with reason: " + reason
-		}
-
-		if _, err = ctx.Session.ChannelMessageSend(
-			ctx.Env.ChannelModlog,
-			fmt.Sprintf("User <@%s> was muted by %s for %s%s.", user, ctx.Message.Author.Username, duration, r),
-		); err != nil {
-			log.Println("Failed to send mute message: " + err.Error())
-		}
 		return nil
 	})
 	if err != nil {

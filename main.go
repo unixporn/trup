@@ -154,6 +154,10 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
+	if wasDeleted := spamProtection(s, m.Message); wasDeleted {
+		return
+	}
+
 	cache.add(m.ID, *m.Message)
 
 	if wasDeleted := runMessageFilter(s, m.Message); wasDeleted {
@@ -500,4 +504,50 @@ func initializeRoles(s *discordgo.Session, r *discordgo.Ready) {
 			}
 		}
 	}
+}
+
+func spamProtection(s *discordgo.Session, m *discordgo.Message) (deleted bool) {
+	accountAge, err := discordgo.SnowflakeTimestamp(m.Author.ID)
+	if err != nil {
+		return
+	}
+	if time.Since(accountAge) > time.Hour*24 {
+		return
+	}
+
+	messageHasMention := len(m.Mentions) > 0
+	if !messageHasMention {
+		return
+	}
+
+	var sameMessages []discordgo.Message
+	for _, msg := range cache.m {
+		if msg.Author.ID != m.Author.ID || msg.ChannelID != m.ChannelID || msg.Content != m.Content {
+			continue
+		}
+
+		timestamp, err := msg.Timestamp.Parse()
+		if err != nil {
+			continue
+		}
+
+		if time.Since(timestamp) > time.Minute {
+			continue
+		}
+
+		sameMessages = append(sameMessages, msg)
+	}
+
+	if len(sameMessages) > 2 {
+		_, err := s.ChannelMessageSend(env.ChannelAutoMod, "Detected spam. Message: "+m.ID)
+		log.Println("spamProtection err:", err)
+		// err := command.MuteMember(&env, s, s.State.User, m.Author.ID, time.Minute*24, "Spam")
+		// if err != nil {
+		// 	log.Printf("Failed to mute spammer(ID: %s). Error: %v\n", m.Author.ID, err)
+		// 	return false
+		// }
+		// return true
+	}
+
+	return false
 }
