@@ -402,6 +402,8 @@ var distroImages = []struct {
 	{name: "calculate", image: "https://upload.wikimedia.org/wikipedia/commons/3/3a/CalculateLinux-transparent-90x52.png"},
 	{name: "caos", image: "https://upload.wikimedia.org/wikipedia/en/4/4b/CAos_Linux_logo.png"},
 	{name: "centos", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Centos-logo-light.svg/300px-Centos-logo-light.svg.png"},
+	{name: "chromeos", image: "https://upload.wikimedia.org/wikipedia/en/e/e2/The_Chrome_OS_logo_as_of_2020.png"},
+	{name: "chromium", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Chromium_11_Wordmark_Logo.svg/1280px-Chromium_11_Wordmark_Logo.svg.png"},
 	{name: "cub", image: "https://upload.wikimedia.org/wikipedia/commons/d/d8/CubLinux100.png"},
 	{name: "debian", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Debian-OpenLogo.svg/100px-Debian-OpenLogo.svg.png"},
 	{name: "deepin", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Deepin_logo.svg/60px-Deepin_logo.svg.png"},
