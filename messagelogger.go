@@ -164,7 +164,7 @@ func messageDeleteBulk(s *discordgo.Session, m *discordgo.MessageDeleteBulk) {
 		}
 	}
 
-	s.ChannelMessageSend(env.ChannelBotMessages, "User's messages were deleted in bulk. Logging last "+strconv.Itoa(len(lastMessages))+" messages")
+	_, _ = s.ChannelMessageSend(env.ChannelBotMessages, "User's messages were deleted in bulk. Logging last "+strconv.Itoa(len(lastMessages))+" messages")
 
 	for _, message := range lastMessages {
 		const dateFormat = "2006-01-02T15:04:05.0000Z"
