@@ -185,6 +185,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			log.Println("Failed to react to message with 👎: " + err.Error())
 			return
 		}
+
 		message, err := monitorFeedback(s, m.ChannelID)
 		if len(message) != 0 {
 			log.Println(message + err.Error())
@@ -470,27 +471,21 @@ func initializeRoles(s *discordgo.Session, r *discordgo.Ready) {
 }
 
 func monitorFeedback(s *discordgo.Session, channelID string) (errorMessage string, err error) {
-	oldMessageID, err := db.GetID()
+	prevmessages, err := s.ChannelMessages(channelID, 10, "", "", "")
 	if err != nil {
-		return "Failed to Get Old message's ID, Error: ", err
+		return "Failed to fetch previous messages from #server-feeedback", err
 	}
-	// check if oldMessageID is empty, because db could've been reset
-	if len(oldMessageID) == 0 {
-		// do nothing
-	} else {
-		err = s.ChannelMessageDelete(channelID, oldMessageID)
-		if err != nil {
-			return "Failed to Delete Old Message in ServerFeedback, Error: ", err
+	for _, message := range prevmessages {
+		if message.Author.ID == s.State.User.ID {
+			err := s.ChannelMessageDelete(channelID, message.ID)
+			if err != nil {
+				return "Failed to delete previous PSA in #server-feedback", err
+			}
 		}
 	}
-	message, err := s.ChannelMessageSend(channelID, "Before posting, please make sure to check if your idea is a repetitive topic. (Listed in pins)\nNote that we have added a consequence for failure. The inability to delete repetitive feedback will result in an 'unsatisfactory' mark on your official testing record, followed by death. Good luck!")
+	_, err = s.ChannelMessageSend(channelID, "Before posting, please make sure to check if your idea is a repetitive topic. (Listed in pins)\nNote that we have added a consequence for failure. The inability to delete repetitive feedback will result in an 'unsatisfactory' mark on your official testing record, followed by death. Good luck!")
 	if err != nil {
-		return "Failed to Send PSA Message to ServerFeedback, Error: ", err
-	}
-
-	err = db.SetID(message.ID)
-	if err != nil {
-		return "Failed to Set messageID in DB, Error: ", err
+		return "Failed to Send PSA in #server-feedback", err
 	}
 	return "", nil
 }

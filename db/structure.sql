@@ -20,10 +20,6 @@ CREATE TABLE IF NOT EXISTS warn (
     primary key (id)
 );
 
-CREATE TABLE IF NOT EXISTS psa (
-    id varchar
-);
-
 CREATE TABLE IF NOT EXISTS sysinfo (
     usr varchar,
     info jsonb,
