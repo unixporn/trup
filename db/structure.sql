@@ -69,8 +69,8 @@ CREATE TABLE IF NOT EXISTS users (
     username text not null,
     tag char(4) not null,
     nickname text not null, -- empty string means no nickname
-    account_create_date date not null,
-    server_join_date date, -- first known join date
+    account_create_date timestamptz not null,
+    server_join_date timestamptz, -- first known join date
     primary key (id)
 );
 
