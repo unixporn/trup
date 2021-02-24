@@ -538,15 +538,13 @@ func spamProtection(s *discordgo.Session, m *discordgo.Message) (deleted bool) {
 		sameMessages = append(sameMessages, msg)
 	}
 
-	if len(sameMessages) > 2 {
-		_, err := s.ChannelMessageSend(env.ChannelAutoMod, "Detected spam. Message: "+m.ID)
-		log.Println("spamProtection err:", err)
-		// err := command.MuteMember(&env, s, s.State.User, m.Author.ID, time.Minute*24, "Spam")
-		// if err != nil {
-		// 	log.Printf("Failed to mute spammer(ID: %s). Error: %v\n", m.Author.ID, err)
-		// 	return false
-		// }
-		// return true
+	if len(sameMessages) == 3 {
+		err := command.MuteMember(&env, s, s.State.User, m.Author.ID, time.Minute*30, "Spam")
+		if err != nil {
+			log.Printf("Failed to mute spammer(ID: %s). Error: %v\n", m.Author.ID, err)
+			return false
+		}
+		return true
 	}
 
 	return false
