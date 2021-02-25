@@ -15,66 +15,80 @@ type Command struct {
 
 var Commands = map[string]Command{
 	"modping": {
-		Exec:  modping,
-		Usage: modpingUsage,
-		Help:  modpingHelp,
+		Exec:         modping,
+		Usage:        modpingUsage,
+		Help:         modpingHelp,
+		IsAuthorized: allowAnyone,
 	},
 	"fetch": {
-		Exec:  fetch,
-		Usage: fetchUsage,
+		Exec:         fetch,
+		Usage:        fetchUsage,
+		IsAuthorized: allowAnyone,
 	},
 	"setfetch": {
-		Exec: setFetch,
-		Help: setFetchHelp,
+		Exec:         setFetch,
+		Usage:        setFetchUsage,
+		Help:         setFetchHelp,
+		IsAuthorized: allowAnyone,
 	},
 	"top": {
-		Exec:  top,
-		Usage: topUsage,
-		Help:  topHelp,
+		Exec:         top,
+		Usage:        topUsage,
+		Help:         topHelp,
+		IsAuthorized: allowAnyone,
 	},
 	"repo": {
-		Exec: repo,
-		Help: repoHelp,
+		Exec:         repo,
+		Help:         repoHelp,
+		IsAuthorized: allowAnyone,
 	},
 	"move": {
-		Exec:  move,
-		Usage: moveUsage,
+		Exec:         move,
+		Usage:        moveUsage,
+		IsAuthorized: allowAnyone,
 	},
 	"info": {
-		Exec:  info,
-		Usage: infoUsage,
-		Help:  infoHelp,
+		Exec:         info,
+		Usage:        infoUsage,
+		Help:         infoHelp,
+		IsAuthorized: allowAnyone,
 	},
 	"git": {
-		Exec:  git,
-		Usage: gitUsage,
-		Help:  gitHelp,
+		Exec:         git,
+		Usage:        gitUsage,
+		Help:         gitHelp,
+		IsAuthorized: allowAnyone,
 	},
 	"dotfiles": {
-		Exec:  dotfiles,
-		Usage: dotfilesUsage,
-		Help:  dotfilesHelp,
+		Exec:         dotfiles,
+		Usage:        dotfilesUsage,
+		Help:         dotfilesHelp,
+		IsAuthorized: allowAnyone,
 	},
 	"desc": {
-		Exec:  desc,
-		Usage: descUsage,
-		Help:  descHelp,
+		Exec:         desc,
+		Usage:        descUsage,
+		Help:         descHelp,
+		IsAuthorized: allowAnyone,
 	},
 	"role": {
-		Exec:  role,
-		Usage: roleUsage,
-		Help:  roleHelp,
+		Exec:         role,
+		Usage:        roleUsage,
+		Help:         roleHelp,
+		IsAuthorized: allowAnyone,
 	},
 	"pfp": {
-		Exec:  pfp,
-		Usage: pfpUsage,
-		Help:  pfpHelp,
+		Exec:         pfp,
+		Usage:        pfpUsage,
+		Help:         pfpHelp,
+		IsAuthorized: allowAnyone,
 	},
 	"poll": {
-		Exec:  poll,
-		Usage: pollUsage,
+		Exec:         poll,
+		Usage:        pollUsage,
+		IsAuthorized: allowAnyone,
 	},
-	"blocklist": Command{
+	"blocklist": {
 		Exec:  blocklist,
 		Usage: blocklistUsage,
 		Help:  blocklistHelp,
@@ -82,48 +96,48 @@ var Commands = map[string]Command{
 			return moderatorOnly(ctx) && modPrivateOnly(ctx)
 		},
 	},
-	"ban": Command{
+	"ban": {
 		Exec:         ban,
 		Usage:        banUsage,
 		IsAuthorized: moderatorOnly,
 	},
-	"delban": Command{
+	"delban": {
 		Exec:         delban,
 		Usage:        delbanUsage,
 		IsAuthorized: moderatorOnly,
 	},
-	"purge": Command{
+	"purge": {
 		Exec:         purge,
 		Usage:        purgeUsage,
 		Help:         purgeHelp,
 		IsAuthorized: moderatorOnly,
 	},
-	"note": Command{
+	"note": {
 		Exec:         note,
 		Usage:        noteUsage,
 		IsAuthorized: moderatorOnly,
 	},
-	"warn": Command{
+	"warn": {
 		Exec:         warn,
 		Usage:        warnUsage,
 		IsAuthorized: moderatorOnly,
 	},
-	"mute": Command{
+	"mute": {
 		Exec:         mute,
 		Usage:        muteUsage,
 		IsAuthorized: moderatorAndHelperOnly,
 	},
-	"restart": Command{
+	"restart": {
 		Exec:         restart,
 		Usage:        restartUsage,
 		IsAuthorized: moderatorOnly,
 	},
-	"say": Command{
+	"say": {
 		Exec:         say,
 		Usage:        sayUsage,
 		IsAuthorized: moderatorOnly,
 	},
-	"showcase": Command{
+	"showcase": {
 		Exec:         showcase,
 		Usage:        showcaseUsage,
 		IsAuthorized: moderatorOnly,
@@ -162,6 +176,8 @@ func moderatorAndHelperOnly(ctx *ctx.MessageContext) bool {
 
 	return false
 }
+
+func allowAnyone(ctx *ctx.MessageContext) bool { return true }
 
 func isValidURL(toTest string) bool {
 	if !strings.HasPrefix(toTest, "http") {

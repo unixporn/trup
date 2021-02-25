@@ -13,7 +13,10 @@ import (
 	"github.com/jackc/pgx"
 )
 
-const setFetchHelp = "Run without arguments to see instructions."
+const (
+	setFetchHelp  = "Run without arguments to see instructions."
+	setFetchUsage = "setfetch [update]"
+)
 
 func setFetch(ctx *ctx.MessageContext, args []string) {
 	lines := strings.Split(ctx.Message.Content, "\n")
