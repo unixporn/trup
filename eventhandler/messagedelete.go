@@ -45,11 +45,10 @@ func MessageDelete(ctx *ctx.Context, m *discordgo.MessageDelete) {
 			}
 		}
 	}
-	const dateFormat = "2006-01-02T15:04:05.0000Z"
 	messageCreationDate, _ := discordgo.SnowflakeTimestamp(m.ID)
 	message, inCache := ctx.MessageCache.IdToMessage[m.ID]
 	if !inCache {
-		log.Printf("Unknown user deleted message %s(not in cache), message creation date: %s\n", m.ID, messageCreationDate.UTC().Format(dateFormat))
+		log.Printf("Unknown user deleted message %s(not in cache), message creation date: %s\n", m.ID, messageCreationDate.UTC().Format(misc.DiscordDateFormat))
 		return
 	}
 
@@ -83,7 +82,7 @@ func MessageDelete(ctx *ctx.Context, m *discordgo.MessageDelete) {
 		},
 		Title:       fmt.Sprintf("%s#%s(%s)", message.Author.Username, message.Author.Discriminator, message.Author.ID),
 		Description: fmt.Sprintf("%s %s", message.Content, contextLink),
-		Timestamp:   messageCreationDate.UTC().Format(dateFormat),
+		Timestamp:   messageCreationDate.UTC().Format(misc.DiscordDateFormat),
 		Footer:      footer,
 	}
 

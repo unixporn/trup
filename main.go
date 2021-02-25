@@ -17,10 +17,11 @@ var (
 	prefix = "!"
 	env    = ctx.Env{
 		RoleColors:         []discordgo.Role{},
+		RoleColorsString:   os.Getenv("ROLE_COLORS"),
 		RoleMod:            os.Getenv("ROLE_MOD"),
 		RoleHelper:         os.Getenv("ROLE_HELPER"),
-		ChannelShowcase:    os.Getenv("CHANNEL_SHOWCASE"),
 		RoleMute:           os.Getenv("ROLE_MUTE"),
+		ChannelShowcase:    os.Getenv("CHANNEL_SHOWCASE"),
 		ChannelFeedback:    os.Getenv("CHANNEL_FEEDBACK"),
 		ChannelModlog:      os.Getenv("CHANNEL_MODLOG"),
 		CategoryModPrivate: os.Getenv("CATEGORY_MOD_PRIVATE"),
@@ -44,32 +45,36 @@ func main() {
 	go routine.CleanupLoop(ctx.NewContext(&env, discord, cache))
 	go routine.SyncUsersLoop(ctx.NewContext(&env, discord, cache))
 
+	newContext := func(session *discordgo.Session) *ctx.Context {
+		return ctx.NewContext(&env, session, cache)
+	}
+
 	discord.AddHandlerOnce(func(s *discordgo.Session, r *discordgo.Ready) {
-		eventhandler.ReadyOnce(ctx.NewContext(&env, s, cache), r, os.Getenv("ROLE_COLORS"))
+		eventhandler.ReadyOnce(newContext(s), r)
 	})
 	discord.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
-		eventhandler.Ready(ctx.NewContext(&env, s, cache), r)
+		eventhandler.Ready(newContext(s), r)
 	})
 	discord.AddHandler(func(s *discordgo.Session, m *discordgo.GuildMemberAdd) {
-		eventhandler.MemberJoin(ctx.NewContext(&env, s, cache), m)
+		eventhandler.MemberJoin(newContext(s), m)
 	})
 	discord.AddHandler(func(s *discordgo.Session, m *discordgo.GuildMemberRemove) {
-		eventhandler.MemberLeave(ctx.NewContext(&env, s, cache), m)
+		eventhandler.MemberLeave(newContext(s), m)
 	})
 	discord.AddHandler(func(s *discordgo.Session, m *discordgo.MessageCreate) {
-		eventhandler.MessageCreate(ctx.NewContext(&env, s, cache), m)
+		eventhandler.MessageCreate(newContext(s), m)
 	})
 	discord.AddHandler(func(s *discordgo.Session, m *discordgo.MessageDelete) {
-		eventhandler.MessageDelete(ctx.NewContext(&env, s, cache), m)
+		eventhandler.MessageDelete(newContext(s), m)
 	})
 	discord.AddHandler(func(s *discordgo.Session, m *discordgo.MessageDeleteBulk) {
-		eventhandler.MessageDeleteBulk(ctx.NewContext(&env, s, cache), m)
+		eventhandler.MessageDeleteBulk(newContext(s), m)
 	})
 	discord.AddHandler(func(s *discordgo.Session, m *discordgo.MessageUpdate) {
-		eventhandler.MessageUpdate(ctx.NewContext(&env, s, cache), m)
+		eventhandler.MessageUpdate(newContext(s), m)
 	})
 	discord.AddHandler(func(s *discordgo.Session, m *discordgo.MessageReactionAdd) {
-		eventhandler.MessageReactionAdd(ctx.NewContext(&env, s, cache), m)
+		eventhandler.MessageReactionAdd(newContext(s), m)
 	})
 	err = discord.Open()
 	if err != nil {

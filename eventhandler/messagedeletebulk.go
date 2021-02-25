@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strconv"
 	"trup/ctx"
+	"trup/misc"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -35,7 +36,6 @@ func MessageDeleteBulk(ctx *ctx.Context, m *discordgo.MessageDeleteBulk) {
 	_, _ = ctx.Session.ChannelMessageSend(ctx.Env.ChannelBotMessages, "User's messages were deleted in bulk. Logging last "+strconv.Itoa(len(lastMessages))+" messages")
 
 	for _, message := range lastMessages {
-		const dateFormat = "2006-01-02T15:04:05.0000Z"
 		messageCreationDate, _ := discordgo.SnowflakeTimestamp(message.ID)
 
 		messageEmbed := &discordgo.MessageEmbed{
@@ -45,7 +45,7 @@ func MessageDeleteBulk(ctx *ctx.Context, m *discordgo.MessageDeleteBulk) {
 			},
 			Title:       fmt.Sprintf("%s#%s(%s)", message.Author.Username, message.Author.Discriminator, message.Author.ID),
 			Description: message.Content,
-			Timestamp:   messageCreationDate.UTC().Format(dateFormat),
+			Timestamp:   messageCreationDate.UTC().Format(misc.DiscordDateFormat),
 		}
 
 		_, err := ctx.Session.ChannelMessageSendComplex(ctx.Env.ChannelBotMessages, &discordgo.MessageSend{

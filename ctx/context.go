@@ -35,11 +35,12 @@ func indexOfStringList(list []string, searched string) int {
 }
 
 type Env struct {
-	RoleMod         string
-	RoleHelper      string
-	RoleMute        string
-	RoleColors      []discordgo.Role
-	ChannelShowcase string
+	RoleMod          string
+	RoleHelper       string
+	RoleMute         string
+	RoleColors       []discordgo.Role
+	RoleColorsString string
+	ChannelShowcase  string
 
 	ChannelAutoMod     string
 	ChannelBotMessages string

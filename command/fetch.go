@@ -6,6 +6,7 @@ import (
 	"strings"
 	"trup/ctx"
 	"trup/db"
+	"trup/misc"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/dustin/go-humanize"
@@ -315,8 +316,7 @@ func doFetch(ctx *ctx.MessageContext, user *discordgo.User) {
 	}
 
 	if !info.ModifyDate.IsZero() {
-		const dateFormat = "2006-01-02T15:04:05.0000Z"
-		embed.Timestamp = info.ModifyDate.UTC().Format(dateFormat)
+		embed.Timestamp = info.ModifyDate.UTC().Format(misc.DiscordDateFormat)
 	}
 
 sysinfoEnd:

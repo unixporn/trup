@@ -8,13 +8,14 @@ import (
 )
 
 var (
-	NumberEmojis      = []string{"1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"}
-	EmojiRegex        = regexp.MustCompile(`<((@!?\d+)|(:.+?:\d+))>`)
-	UrlRegex          = regexp.MustCompile(`(?i)(https?|ftp)://[^\s/$.?#].[^\s]*`)
-	DiscordDateFormat = "2006-01-02T15:04:05.0000Z"
+	NumberEmojis              = []string{"1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"}
+	EmojiRegex                = regexp.MustCompile(`<((@!?\d+)|(:.+?:\d+))>`)
+	UrlRegex                  = regexp.MustCompile(`(?i)(https?|ftp)://[^\s/$.?#].[^\s]*`)
+	DiscordDateFormat         = "2006-01-02T15:04:05.0000Z"
+	parseMentionRegexp        = regexp.MustCompile(`<@!?(\d+)>`)
+	parseSnowflakeRegex       = regexp.MustCompile(`^\d+$`)
+	parseChannelMentionRegexp = regexp.MustCompile(`<#(\d+)>`)
 )
-
-var parseMentionRegexp = regexp.MustCompile(`<@!?(\d+)>`)
 
 func ParseUser(user string) string {
 	res := ParseMention(user)
@@ -36,17 +37,13 @@ func ParseMention(mention string) string {
 	return res[1]
 }
 
-var snowflakeRegex = regexp.MustCompile(`^\d+$`)
-
 func ParseSnowflake(snowflake string) string {
-	if snowflakeRegex.MatchString(snowflake) {
+	if parseSnowflakeRegex.MatchString(snowflake) {
 		return snowflake
 	}
 
 	return ""
 }
-
-var parseChannelMentionRegexp = regexp.MustCompile(`<#(\d+)>`)
 
 func ParseChannelMention(mention string) string {
 	res := parseChannelMentionRegexp.FindStringSubmatch(mention)
