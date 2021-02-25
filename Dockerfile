@@ -9,6 +9,8 @@ RUN go mod download
 
 COPY db /app/db
 COPY command /app/command
+COPY ctx /app/ctx
+COPY misc /app/misc
 COPY *.go /app/
 RUN go build -o main .
 

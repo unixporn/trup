@@ -7,6 +7,8 @@ import (
 	"regexp"
 	"strings"
 	"time"
+	"trup/ctx"
+	"trup/misc"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -23,7 +25,7 @@ poll multi These are my options
 
 var pollOptionLineStartPattern = regexp.MustCompile(`^\s*-|^\s*\d\.|^\s*\*`)
 
-func poll(ctx *Context, args []string) {
+func poll(ctx *ctx.MessageContext, args []string) {
 	if len(args) < 2 {
 		ctx.Reply("Usage: " + pollUsage)
 		return
@@ -45,7 +47,7 @@ func poll(ctx *Context, args []string) {
 	}
 }
 
-func multiPoll(ctx *Context, question string, lines []string) {
+func multiPoll(ctx *ctx.MessageContext, question string, lines []string) {
 	optionCount := len(lines)
 
 	if len([]rune(strings.Join(lines, "\n"))) > questionMaxLength {
@@ -68,7 +70,7 @@ func multiPoll(ctx *Context, question string, lines []string) {
 	for i, line := range lines {
 		option := pollOptionLineStartPattern.ReplaceAllString(line, "")
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-			Name:  "Option " + numbers[i],
+			Name:  "Option " + misc.NumberEmojis[i],
 			Value: option,
 		})
 	}
@@ -80,7 +82,7 @@ func multiPoll(ctx *Context, question string, lines []string) {
 	}
 
 	for i := range embed.Fields {
-		if err = ctx.Session.MessageReactionAdd(pollMessage.ChannelID, pollMessage.ID, numbers[i]); err != nil {
+		if err = ctx.Session.MessageReactionAdd(pollMessage.ChannelID, pollMessage.ID, misc.NumberEmojis[i]); err != nil {
 			log.Println("Failed to react to poll message: " + err.Error())
 		}
 	}
@@ -90,7 +92,7 @@ func multiPoll(ctx *Context, question string, lines []string) {
 	}
 }
 
-func yesNoPoll(ctx *Context, question string) {
+func yesNoPoll(ctx *ctx.MessageContext, question string) {
 	if len(question) > questionMaxLength {
 		ctx.Reply(fmt.Sprintf("Question's length can be max %d characters", questionMaxLength))
 		return
@@ -118,7 +120,7 @@ func yesNoPoll(ctx *Context, question string) {
 	}
 }
 
-func makePollEmbed(ctx *Context, question, pollBody string) (*discordgo.MessageEmbed, error) {
+func makePollEmbed(ctx *ctx.MessageContext, question, pollBody string) (*discordgo.MessageEmbed, error) {
 	embedTitle := "Poll: " + question
 	if len(embedTitle) > 255 {
 		return nil, errors.New("The question is too long")

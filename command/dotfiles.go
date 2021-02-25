@@ -1,6 +1,7 @@
 package command
 
 import (
+	"trup/ctx"
 	"trup/db"
 
 	"github.com/jackc/pgx"
@@ -11,7 +12,7 @@ const (
 	dotfilesHelp  = "Adds a dotfiles link to your fetch."
 )
 
-func dotfiles(ctx *Context, args []string) {
+func dotfiles(ctx *ctx.MessageContext, args []string) {
 	user := ctx.Message.Author.ID
 
 	if len(args) == 1 {

@@ -1,6 +1,7 @@
 package command
 
 import (
+	"trup/ctx"
 	"trup/db"
 
 	"github.com/jackc/pgx"
@@ -11,7 +12,7 @@ const (
 	gitHelp  = "Adds a git link to your fetch."
 )
 
-func git(ctx *Context, args []string) {
+func git(ctx *ctx.MessageContext, args []string) {
 	user := ctx.Message.Author.ID
 
 	if len(args) == 1 {

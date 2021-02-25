@@ -11,14 +11,16 @@ import (
 	"syscall"
 	"time"
 	"trup/command"
+	"trup/ctx"
 	"trup/db"
+	"trup/misc"
 
 	"github.com/bwmarrin/discordgo"
 )
 
 var (
 	prefix = "!"
-	env    = command.Env{
+	env    = ctx.Env{
 		RoleMod:            os.Getenv("ROLE_MOD"),
 		RoleHelper:         os.Getenv("ROLE_HELPER"),
 		RoleColors:         []discordgo.Role{},
@@ -84,7 +86,7 @@ func syncUsersInDatabase(s *discordgo.Session) {
 				}
 			}()
 
-			members, err := command.UniqueMembers(s, env.Guild)
+			members, err := misc.UniqueMembers(s, env.Guild)
 			if err != nil {
 				log.Printf("Failed to get unique members; Error: %v\n", err)
 				return
@@ -108,7 +110,7 @@ func messageReactionAdd(s *discordgo.Session, m *discordgo.MessageReactionAdd) {
 		return
 	}
 
-	didHandle, err := command.HandleMessageReaction(m.MessageReaction)
+	didHandle, err := ctx.HandleMessageReaction(m.MessageReaction)
 	if didHandle {
 		return
 	}
@@ -226,9 +228,11 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	if strings.HasPrefix(m.Content, prefix) {
 		args := strings.Fields(m.Content[len(prefix):])
-		context := command.Context{
-			Env:     &env,
-			Session: s,
+		context := ctx.MessageContext{
+			Context: ctx.Context{
+				Env:     &env,
+				Session: s,
+			},
 			Message: m.Message,
 		}
 
@@ -243,6 +247,11 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		cmd, exists := command.Commands[args[0]]
 		if !exists {
+			return
+		}
+
+		if cmd.IsAuthorized != nil && !cmd.IsAuthorized(&context) {
+			context.Reply("You're not authorized to use this command.")
 			return
 		}
 

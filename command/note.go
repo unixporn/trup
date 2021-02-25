@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"trup/ctx"
 	"trup/db"
 
 	"github.com/bwmarrin/discordgo"
@@ -12,13 +13,13 @@ import (
 
 const noteUsage = "note <@user> [text]"
 
-func note(ctx *Context, args []string) {
+func note(ctx *ctx.MessageContext, args []string) {
 	if len(args) < 2 {
 		ctx.Reply("Usage: " + noteUsage)
 		return
 	}
 
-	err := ctx.requestUserByName(len(args) > 2, args[1], func(m *discordgo.Member) error {
+	err := ctx.RequestUserByName(len(args) > 2, args[1], func(m *discordgo.Member) error {
 		user := m.User
 		if len(args) == 2 {
 			getNotes(ctx, user)
@@ -42,7 +43,7 @@ func note(ctx *Context, args []string) {
 	}
 }
 
-func getNotes(ctx *Context, aboutUser *discordgo.User) {
+func getNotes(ctx *ctx.MessageContext, aboutUser *discordgo.User) {
 	notes, err := db.GetNotes(aboutUser.ID)
 	if err != nil {
 		ctx.ReportError("Failed to retrieve notes.", err)

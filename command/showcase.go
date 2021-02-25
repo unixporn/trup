@@ -2,6 +2,7 @@ package command
 
 import (
 	"log"
+	"trup/ctx"
 	"trup/db"
 )
 
@@ -9,7 +10,7 @@ const (
 	showcaseUsage = "showcase sync"
 )
 
-func showcase(ctx *Context, args []string) {
+func showcase(ctx *ctx.MessageContext, args []string) {
 	_ = ctx.Session.ChannelTyping(ctx.Message.ChannelID)
 
 	if len(args) < 1 {

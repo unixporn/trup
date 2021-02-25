@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"trup/ctx"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/dustin/go-humanize"
@@ -19,7 +20,7 @@ type discordRole struct {
 	Color string `json:"color"`
 }
 
-func info(ctx *Context, args []string) {
+func info(ctx *ctx.MessageContext, args []string) {
 	callback := func(member *discordgo.Member) error {
 		accountCreateDate, err := discordgo.SnowflakeTimestamp(member.User.ID)
 		if err != nil {
@@ -125,7 +126,7 @@ func info(ctx *Context, args []string) {
 		}
 
 	} else {
-		if err := ctx.requestUserByName(false, strings.Join(args[1:], " "), callback); err != nil {
+		if err := ctx.RequestUserByName(false, strings.Join(args[1:], " "), callback); err != nil {
 			ctx.ReportError("Failed to request user by name.", err)
 		}
 	}

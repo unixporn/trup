@@ -5,6 +5,8 @@ import (
 	"log"
 	"strings"
 	"time"
+	"trup/ctx"
+	"trup/misc"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -14,8 +16,8 @@ const (
 	delbanUsage = "delban <@user> <reason>"
 )
 
-func banUser(ctx *Context, user, reason string, removeDays int) {
-	if ctx.isHelper() {
+func banUser(ctx *ctx.MessageContext, user, reason string, removeDays int) {
+	if ctx.IsHelper() {
 		accountCreateDate, err := discordgo.SnowflakeTimestamp(user)
 		if err != nil {
 			ctx.ReportError("Failed to get user's account create date", err)
@@ -78,13 +80,13 @@ func banUser(ctx *Context, user, reason string, removeDays int) {
 	ctx.Reply("Success <a:police:749871644071165974>")
 }
 
-func ban(ctx *Context, args []string) {
+func ban(ctx *ctx.MessageContext, args []string) {
 	if len(args) < 3 {
 		ctx.Reply("Usage: " + banUsage)
 		return
 	}
 
-	user := parseUser(args[1])
+	user := misc.ParseUser(args[1])
 	if user == "" {
 		ctx.Reply("The first argument must be a user mention.")
 		return
@@ -95,13 +97,13 @@ func ban(ctx *Context, args []string) {
 	banUser(ctx, user, reason, 0)
 }
 
-func delban(ctx *Context, args []string) {
+func delban(ctx *ctx.MessageContext, args []string) {
 	if len(args) < 3 {
 		ctx.Reply("Usage: " + delbanUsage)
 		return
 	}
 
-	user := parseUser(args[1])
+	user := misc.ParseUser(args[1])
 	if user == "" {
 		ctx.Reply("The first argument must be a user mention.")
 		return

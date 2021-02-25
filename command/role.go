@@ -3,6 +3,7 @@ package command
 import (
 	"log"
 	"strings"
+	"trup/ctx"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -12,7 +13,7 @@ const (
 	roleHelp  = "Use without arguments to see available roles"
 )
 
-func role(ctx *Context, args []string) {
+func role(ctx *ctx.MessageContext, args []string) {
 	if len(args) < 2 {
 		var roles strings.Builder
 		for _, role := range ctx.Env.RoleColors {

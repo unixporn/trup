@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"strings"
+	"trup/ctx"
 	"trup/db"
 
 	"github.com/bwmarrin/discordgo"
@@ -13,7 +14,7 @@ import (
 
 const setFetchHelp = "Run without arguments to see instructions."
 
-func setFetch(ctx *Context, args []string) {
+func setFetch(ctx *ctx.MessageContext, args []string) {
 	lines := strings.Split(ctx.Message.Content, "\n")
 	if len(lines) < 2 && len(ctx.Message.Attachments) == 0 {
 		ctx.Reply("run this: `curl -s https://raw.githubusercontent.com/unixporn/trup/prod/fetcher.sh | sh` and follow the instructions. It's recommended that you download and read the script before running it, as piping curl to sh isn't always the safest practice. (<https://blog.dijit.sh/don-t-pipe-curl-to-bash>)\n > NOTE: use `!setfetch update` to update individual values (including the image!) without overwriting everything.\n > NOTE: If you're trying to manually change a value, it needs a newline after !setfetch (update).\n > NOTE: !git, !dotfiles, and !desc are different commands.")
@@ -115,7 +116,7 @@ func setFetch(ctx *Context, args []string) {
 
 const fetchUsage = "fetch [user]"
 
-func askUserToSetfetch(ctx *Context, himself bool) {
+func askUserToSetfetch(ctx *ctx.MessageContext, himself bool) {
 	message := "that user hasn't set their fetch information. You can ask them to run !setfetch"
 	if himself {
 		message = "you first need to set your information with !setfetch"
@@ -124,10 +125,10 @@ func askUserToSetfetch(ctx *Context, himself bool) {
 	ctx.Reply(message)
 }
 
-func askUserToSetfetchSomeone(ctx *Context) { askUserToSetfetch(ctx, false) }
-func askUserToSetfetchHimself(ctx *Context) { askUserToSetfetch(ctx, true) }
+func askUserToSetfetchSomeone(ctx *ctx.MessageContext) { askUserToSetfetch(ctx, false) }
+func askUserToSetfetchHimself(ctx *ctx.MessageContext) { askUserToSetfetch(ctx, true) }
 
-func doFetch(ctx *Context, user *discordgo.User) {
+func doFetch(ctx *ctx.MessageContext, user *discordgo.User) {
 	const inline = true
 	embed := discordgo.MessageEmbed{
 		Title:  "Fetch " + user.Username + "#" + user.Discriminator,
@@ -355,11 +356,11 @@ sysinfoEnd:
 	}
 }
 
-func fetch(ctx *Context, args []string) {
+func fetch(ctx *ctx.MessageContext, args []string) {
 	if len(args) < 2 {
 		doFetch(ctx, ctx.Message.Author)
 	} else {
-		err := ctx.requestUserByName(false, strings.Join(args[1:], " "), func(member *discordgo.Member) error {
+		err := ctx.RequestUserByName(false, strings.Join(args[1:], " "), func(member *discordgo.Member) error {
 			doFetch(ctx, member.User)
 			return nil
 		})

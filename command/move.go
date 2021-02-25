@@ -3,17 +3,19 @@ package command
 import (
 	"fmt"
 	"strings"
+	"trup/ctx"
+	"trup/misc"
 )
 
 const moveUsage = "move <#channel> [<@user> ...]"
 
-func move(ctx *Context, args []string) {
+func move(ctx *ctx.MessageContext, args []string) {
 	if len(args) < 2 {
 		ctx.Reply("Usage: " + moveUsage)
 		return
 	}
 
-	target := parseChannelMention(args[1])
+	target := misc.ParseChannelMention(args[1])
 	if target == "" {
 		ctx.Reply("invalid channel")
 		return
@@ -21,7 +23,7 @@ func move(ctx *Context, args []string) {
 
 	var mentions []string
 	for _, a := range args[2:] {
-		if mention := parseMention(a); mention != "" {
+		if mention := misc.ParseMention(a); mention != "" {
 			mentions = append(mentions, fmt.Sprintf("<@!%s>", mention))
 		}
 	}

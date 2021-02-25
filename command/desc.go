@@ -2,6 +2,7 @@ package command
 
 import (
 	"strings"
+	"trup/ctx"
 	"trup/db"
 
 	"github.com/jackc/pgx"
@@ -12,7 +13,7 @@ const (
 	descHelp  = "Sets or clears your description, displays it with fetch"
 )
 
-func desc(ctx *Context, args []string) {
+func desc(ctx *ctx.MessageContext, args []string) {
 	if len(args) < 2 {
 		ctx.Reply("Usage: " + descUsage)
 

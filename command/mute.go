@@ -5,6 +5,7 @@ import (
 	"log"
 	"strings"
 	"time"
+	"trup/ctx"
 	"trup/db"
 
 	"github.com/bwmarrin/discordgo"
@@ -13,7 +14,7 @@ import (
 
 const muteUsage = "mute <@user> <duration> [reason]"
 
-func MuteMember(env *Env, session *discordgo.Session, moderator *discordgo.User, userId string, duration time.Duration, reason string) error {
+func MuteMember(env *ctx.Env, session *discordgo.Session, moderator *discordgo.User, userId string, duration time.Duration, reason string) error {
 	w := db.NewMute(env.Guild, moderator.ID, userId, reason, time.Now(), time.Now().Add(duration))
 	err := w.Save()
 	if err != nil {
@@ -49,13 +50,13 @@ func MuteMember(env *Env, session *discordgo.Session, moderator *discordgo.User,
 	return nil
 }
 
-func mute(ctx *Context, args []string) {
+func mute(ctx *ctx.MessageContext, args []string) {
 	if len(args) < 3 {
 		ctx.Reply("Usage: " + muteUsage)
 		return
 	}
 
-	err := ctx.requestUserByName(true, args[1], func(m *discordgo.Member) error {
+	err := ctx.RequestUserByName(true, args[1], func(m *discordgo.Member) error {
 		user := m.User.ID
 		var (
 			duration = args[2]

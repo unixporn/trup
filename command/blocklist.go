@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"trup/ctx"
 	"trup/db"
 )
 
@@ -12,7 +13,7 @@ const (
 	blocklistHelp  = "Run commands related to the blocklist"
 )
 
-func blocklist(ctx *Context, args []string) {
+func blocklist(ctx *ctx.MessageContext, args []string) {
 	if len(args) < 2 {
 		ctx.Reply(blocklistUsage)
 
@@ -43,7 +44,7 @@ func blocklist(ctx *Context, args []string) {
 	}
 }
 
-func blocklistAdd(ctx *Context, pattern string) {
+func blocklistAdd(ctx *ctx.MessageContext, pattern string) {
 	if pattern[0] != '`' || pattern[len(pattern)-1] != '`' {
 		ctx.Reply("Please surround the pattern with `")
 
@@ -62,7 +63,7 @@ func blocklistAdd(ctx *Context, pattern string) {
 	ctx.Reply(fmt.Sprintf("the pattern `%s` has been added to the blocklist", pattern))
 }
 
-func blocklistRemove(ctx *Context, pattern string) {
+func blocklistRemove(ctx *ctx.MessageContext, pattern string) {
 	if pattern[0] != '`' || pattern[len(pattern)-1] != '`' {
 		ctx.Reply("Please surround the pattern with backticks (`)")
 
@@ -92,7 +93,7 @@ func blocklistRemove(ctx *Context, pattern string) {
 	}
 }
 
-func blocklistGet(ctx *Context) {
+func blocklistGet(ctx *ctx.MessageContext) {
 	patterns, err := db.GetBlocklist()
 	if err != nil {
 		ctx.ReportError("Failed to fetch patterns", err)

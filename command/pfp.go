@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"trup/ctx"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -13,7 +14,7 @@ const (
 	pfpHelp  = "displays the user's profile picture in highest resolution"
 )
 
-func pfp(ctx *Context, args []string) {
+func pfp(ctx *ctx.MessageContext, args []string) {
 	callback := func(user *discordgo.User) error {
 		avatar := user.AvatarURL("2048")
 		if _, err := ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &discordgo.MessageEmbed{
@@ -33,7 +34,7 @@ func pfp(ctx *Context, args []string) {
 			log.Println("Failed to execute profile picture callback: " + err.Error())
 		}
 	} else {
-		err := ctx.requestUserByName(false, strings.Join(args[1:], " "), func(m *discordgo.Member) error { return callback(m.User) })
+		err := ctx.RequestUserByName(false, strings.Join(args[1:], " "), func(m *discordgo.Member) error { return callback(m.User) })
 		if err != nil {
 			ctx.ReportError("Failed to find the user", err)
 			return
