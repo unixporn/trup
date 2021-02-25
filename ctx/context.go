@@ -56,10 +56,10 @@ type Env struct {
 type Context struct {
 	Env          *Env
 	Session      *discordgo.Session
-	MessageCache *MessageCache
+	MessageCache *misc.MessageCache
 }
 
-func NewContext(env *Env, session *discordgo.Session, messageCache *MessageCache) *Context {
+func NewContext(env *Env, session *discordgo.Session, messageCache *misc.MessageCache) *Context {
 	return &Context{
 		Env:          env,
 		Session:      session,

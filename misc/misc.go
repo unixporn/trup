@@ -7,6 +7,10 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+const (
+	Prefix = "!"
+)
+
 var (
 	NumberEmojis              = []string{"1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"}
 	EmojiRegex                = regexp.MustCompile(`<((@!?\d+)|(:.+?:\d+))>`)

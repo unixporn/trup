@@ -8,6 +8,7 @@ import (
 	"syscall"
 	"trup/ctx"
 	"trup/eventhandler"
+	"trup/misc"
 	"trup/routine"
 
 	"github.com/bwmarrin/discordgo"
@@ -30,7 +31,7 @@ var (
 		ChannelBotTraffic:  os.Getenv("CHANNEL_BOT_TRAFFIC"),
 		Guild:              os.Getenv("GUILD"),
 	}
-	cache = ctx.NewMessageCache(5000)
+	cache = misc.NewMessageCache(5000)
 )
 
 func main() {
@@ -42,12 +43,12 @@ func main() {
 	}
 	discord.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsAllWithoutPrivileged | discordgo.IntentsGuildPresences | discordgo.IntentsGuildMembers)
 
-	go routine.CleanupLoop(ctx.NewContext(&env, discord, cache))
-	go routine.SyncUsersLoop(ctx.NewContext(&env, discord, cache))
-
 	newContext := func(session *discordgo.Session) *ctx.Context {
 		return ctx.NewContext(&env, session, cache)
 	}
+
+	go routine.CleanupLoop(ctx.NewContext(&env, discord, cache))
+	go routine.SyncUsersLoop(ctx.NewContext(&env, discord, cache))
 
 	discord.AddHandlerOnce(func(s *discordgo.Session, r *discordgo.Ready) {
 		eventhandler.ReadyOnce(newContext(s), r)

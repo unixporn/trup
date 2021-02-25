@@ -7,13 +7,10 @@ import (
 	"trup/command"
 	context "trup/ctx"
 	"trup/db"
+	"trup/misc"
 	"trup/routine"
 
 	"github.com/bwmarrin/discordgo"
-)
-
-const (
-	prefix = "!"
 )
 
 func MessageCreate(ctx *context.Context, m *discordgo.MessageCreate) {
@@ -97,8 +94,8 @@ func MessageCreate(ctx *context.Context, m *discordgo.MessageCreate) {
 		return
 	}
 
-	if strings.HasPrefix(m.Content, prefix) {
-		args := strings.Fields(m.Content[len(prefix):])
+	if strings.HasPrefix(m.Content, misc.Prefix) {
+		args := strings.Fields(m.Content[len(misc.Prefix):])
 		context := context.MessageContext{
 			Context: context.Context{
 				Env:     ctx.Env,
