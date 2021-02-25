@@ -39,7 +39,7 @@ func MessageDelete(ctx *ctx.Context, m *discordgo.MessageDelete) {
 	}
 	lastAuditId = lastEntry.ID
 
-	message, inCache := ctx.MessageCache.IdToMessage[m.ID]
+	message, inCache := ctx.MessageCache.GetById(m.ID)
 	if !inCache {
 		messageCreationDate, _ := discordgo.SnowflakeTimestamp(message.ID)
 		log.Printf("Unknown user deleted message %s(not in cache), message creation date: %s\n", m.ID, messageCreationDate.UTC().Format(misc.DiscordDateFormat))
@@ -59,7 +59,7 @@ func MessageDelete(ctx *ctx.Context, m *discordgo.MessageDelete) {
 		}
 	}
 
-	logMessageDelete(ctx, &message, footer)
+	logMessageDelete(ctx, message, footer)
 }
 
 func logMessageDelete(ctx *ctx.Context, message *discordgo.Message, footer *discordgo.MessageEmbedFooter) {
@@ -122,48 +122,5 @@ func logMessageDelete(ctx *ctx.Context, message *discordgo.Message, footer *disc
 	})
 	if err != nil {
 		log.Printf("Error writing message with attachments to channel bot-messages: %s", err)
-	}
-}
-
-func logMessageAutoDelete(ctx *ctx.Context, m *discordgo.Message, matchedString string) {
-	messageCreationDate, _ := discordgo.SnowflakeTimestamp(m.ID)
-
-	var footer *discordgo.MessageEmbedFooter
-	if channel, err := ctx.Session.State.Channel(m.ChannelID); err == nil {
-		footer = &discordgo.MessageEmbedFooter{
-			Text: "#" + channel.Name,
-		}
-	}
-
-	contextLink := ""
-	beforeMessages, err := ctx.Session.ChannelMessages(m.ChannelID, 1, m.ID, "", "")
-	if err != nil {
-		log.Printf("Error fetching previous message for context of message deletion: %s\n", err)
-	} else {
-		if len(beforeMessages) > 0 {
-			contextLink = fmt.Sprintf("[(context)](%s)", misc.MakeMessageLink(m.GuildID, beforeMessages[0]))
-		}
-	}
-
-	autoModEntry, err := ctx.Session.ChannelMessageSendEmbed(ctx.Env.ChannelAutoMod, &discordgo.MessageEmbed{
-		Author: &discordgo.MessageEmbedAuthor{
-			Name:    "Message Autodelete",
-			IconURL: m.Author.AvatarURL("128"),
-		},
-		Title:       fmt.Sprintf("%s#%s(%s) - deleted because of `%s`", m.Author.Username, m.Author.Discriminator, m.Author.ID, matchedString),
-		Description: fmt.Sprintf("%s %s", m.Content, contextLink),
-		Timestamp:   messageCreationDate.UTC().Format(misc.DiscordDateFormat),
-		Footer:      footer,
-	})
-	if err != nil {
-		log.Printf("Error writing auto-mod entry for message deletion: %s\n", err)
-	}
-
-	autoModEntryLink := misc.MakeMessageLink(m.GuildID, autoModEntry)
-	note := db.NewNote(ctx.Session.State.User.ID, m.Author.ID, fmt.Sprintf("Message deleted because of word `%s` [(source)](%s)", matchedString, autoModEntryLink), db.BlocklistViolation)
-	err = note.Save()
-	if err != nil {
-		log.Println("Failed to save note. Error:", err)
-		return
 	}
 }

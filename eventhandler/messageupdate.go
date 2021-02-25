@@ -6,6 +6,7 @@ import (
 	"runtime/debug"
 	"trup/ctx"
 	"trup/misc"
+	"trup/routine"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -22,19 +23,20 @@ func MessageUpdate(ctx *ctx.Context, m *discordgo.MessageUpdate) {
 		return
 	}
 
-	if wasDeleted := runMessageFilter(ctx, m.Message); wasDeleted {
+	if wasDeleted := routine.BlocklistFilter(ctx, m.Message); wasDeleted {
 		return
 	}
 
 	messageCreationDate, _ := discordgo.SnowflakeTimestamp(m.ID)
 
-	cached, inCache := ctx.MessageCache.IdToMessage[m.ID]
+	cached, inCache := ctx.MessageCache.GetById(m.ID)
 	if !inCache {
 		return
 	}
 	before := cached.Content
 	cached.Content = m.Content
-	ctx.MessageCache.IdToMessage[m.ID] = cached
+	ctx.MessageCache.Delete(m.ID)
+	ctx.MessageCache.Add(m.ID, cached)
 
 	messageLink := fmt.Sprintf("[(context)](%s)", misc.MakeMessageLink(m.GuildID, m.Message))
 

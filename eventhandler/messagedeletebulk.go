@@ -25,9 +25,9 @@ func MessageDeleteBulk(ctx *ctx.Context, m *discordgo.MessageDeleteBulk) {
 		start = 0
 	}
 	lastMessageIds := m.Messages[start:]
-	lastMessages := make([]discordgo.Message, 0, limit)
+	lastMessages := make([]*discordgo.Message, 0, limit)
 	for _, lm := range lastMessageIds {
-		if msg, exists := ctx.MessageCache.IdToMessage[lm]; exists {
+		if msg, exists := ctx.MessageCache.GetById(lm); exists {
 			lastMessages = append(lastMessages, msg)
 		}
 	}
@@ -35,6 +35,6 @@ func MessageDeleteBulk(ctx *ctx.Context, m *discordgo.MessageDeleteBulk) {
 	_, _ = ctx.Session.ChannelMessageSend(ctx.Env.ChannelBotMessages, "User's messages were deleted in bulk. Logging last "+strconv.Itoa(len(lastMessages))+" messages")
 
 	for _, message := range lastMessages {
-		logMessageDelete(ctx, &message, nil)
+		logMessageDelete(ctx, message, nil)
 	}
 }
