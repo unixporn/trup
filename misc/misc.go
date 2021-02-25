@@ -8,7 +8,10 @@ import (
 )
 
 var (
-	NumberEmojis = []string{"1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"}
+	NumberEmojis      = []string{"1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"}
+	EmojiRegex        = regexp.MustCompile(`<((@!?\d+)|(:.+?:\d+))>`)
+	UrlRegex          = regexp.MustCompile(`(?i)(https?|ftp)://[^\s/$.?#].[^\s]*`)
+	DiscordDateFormat = "2006-01-02T15:04:05.0000Z"
 )
 
 var parseMentionRegexp = regexp.MustCompile(`<@!?(\d+)>`)
@@ -74,4 +77,8 @@ func UniqueMembers(session *discordgo.Session, guildID string) ([]*discordgo.Mem
 	}
 
 	return unique, err
+}
+
+func MakeMessageLink(guildID string, m *discordgo.Message) string {
+	return fmt.Sprintf("https://discord.com/channels/%s/%s/%s", guildID, m.ChannelID, m.ID)
 }
