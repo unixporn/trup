@@ -1,13 +1,11 @@
 package eventhandler
 
 import (
-	"fmt"
 	"log"
 	"runtime/debug"
 	"sort"
 	"strconv"
 	"trup/ctx"
-	"trup/misc"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -21,12 +19,13 @@ func MessageDeleteBulk(ctx *ctx.Context, m *discordgo.MessageDeleteBulk) {
 	}()
 
 	sort.Strings(m.Messages)
-	start := len(m.Messages) - 5
+	const limit = 5
+	start := len(m.Messages) - limit
 	if start < 0 {
 		start = 0
 	}
 	lastMessageIds := m.Messages[start:]
-	lastMessages := make([]discordgo.Message, 0, 5)
+	lastMessages := make([]discordgo.Message, 0, limit)
 	for _, lm := range lastMessageIds {
 		if msg, exists := ctx.MessageCache.IdToMessage[lm]; exists {
 			lastMessages = append(lastMessages, msg)
@@ -36,23 +35,6 @@ func MessageDeleteBulk(ctx *ctx.Context, m *discordgo.MessageDeleteBulk) {
 	_, _ = ctx.Session.ChannelMessageSend(ctx.Env.ChannelBotMessages, "User's messages were deleted in bulk. Logging last "+strconv.Itoa(len(lastMessages))+" messages")
 
 	for _, message := range lastMessages {
-		messageCreationDate, _ := discordgo.SnowflakeTimestamp(message.ID)
-
-		messageEmbed := &discordgo.MessageEmbed{
-			Author: &discordgo.MessageEmbedAuthor{
-				Name:    "Message Delete (Bulk)",
-				IconURL: message.Author.AvatarURL("128"),
-			},
-			Title:       fmt.Sprintf("%s#%s(%s)", message.Author.Username, message.Author.Discriminator, message.Author.ID),
-			Description: message.Content,
-			Timestamp:   messageCreationDate.UTC().Format(misc.DiscordDateFormat),
-		}
-
-		_, err := ctx.Session.ChannelMessageSendComplex(ctx.Env.ChannelBotMessages, &discordgo.MessageSend{
-			Embed: messageEmbed,
-		})
-		if err != nil {
-			log.Printf("Error writing message with attachments to channel bot-messages: %v\n", err)
-		}
+		logMessageDelete(ctx, &message, nil)
 	}
 }

@@ -234,7 +234,7 @@ func runMessageFilter(ctx *context.Context, m *discordgo.Message) (deleted bool)
 			log.Printf("Failed to delete message by \"%s\" containing blocked words\n%s\n", m.Author.Username, err)
 			return false
 		}
-		logMessageAutodelete(ctx, m, matchedString)
+		logMessageAutoDelete(ctx, m, matchedString)
 		return true
 	}
 	return false

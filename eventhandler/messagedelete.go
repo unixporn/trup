@@ -12,7 +12,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-var lastAuditIds = make(map[string]string)
+var lastAuditId string
 
 func MessageDelete(ctx *ctx.Context, m *discordgo.MessageDelete) {
 	defer func() {
@@ -22,48 +22,32 @@ func MessageDelete(ctx *ctx.Context, m *discordgo.MessageDelete) {
 		}
 	}()
 
-	var deleter string
-	// get audit log info
 	auditLog, err := ctx.Session.GuildAuditLog(m.GuildID, "", "", int(discordgo.AuditLogActionMessageDelete), 1)
 	if err != nil {
-		log.Printf("Failed to check audit log: %s", err.Error())
+		log.Printf("Failed to get audit log: %v\n", err.Error())
 		return
 	}
-	// get audit log entries
-	if len(auditLog.AuditLogEntries) == 0 {
-		log.Printf("Received no audit-log entries")
-	}
-	lastEntry := auditLog.AuditLogEntries[0]
-	if lastAuditIds[m.GuildID] == lastEntry.ID {
-		deleter = ""
-	} else {
-		lastAuditIds[m.GuildID] = lastEntry.ID
 
+	lastEntry := auditLog.AuditLogEntries[0]
+	var deleter string
+	if lastAuditId != lastEntry.ID && *lastEntry.ActionType == discordgo.AuditLogActionMessageDelete && lastEntry.Options.MessageID == m.ID {
 		for _, u := range auditLog.Users {
 			if u.ID == lastEntry.UserID {
 				deleter = u.Username + "#" + u.Discriminator
 			}
 		}
 	}
-	messageCreationDate, _ := discordgo.SnowflakeTimestamp(m.ID)
+	lastAuditId = lastEntry.ID
+
 	message, inCache := ctx.MessageCache.IdToMessage[m.ID]
 	if !inCache {
+		messageCreationDate, _ := discordgo.SnowflakeTimestamp(message.ID)
 		log.Printf("Unknown user deleted message %s(not in cache), message creation date: %s\n", m.ID, messageCreationDate.UTC().Format(misc.DiscordDateFormat))
 		return
 	}
 
-	contextLink := ""
-	beforeMessages, err := ctx.Session.ChannelMessages(m.ChannelID, 1, m.ID, "", "")
-	if err != nil {
-		log.Printf("Error fetching previous message for context of message deletion: %s\n", err)
-	} else {
-		if len(beforeMessages) > 0 {
-			contextLink = fmt.Sprintf("[(context)](%s)", misc.MakeMessageLink(m.GuildID, beforeMessages[0]))
-		}
-	}
-
 	var footer *discordgo.MessageEmbedFooter
-	if channel, err := ctx.Session.State.Channel(m.ChannelID); err == nil {
+	if channel, err := ctx.Session.State.Channel(message.ChannelID); err == nil {
 		if deleter == "" {
 			footer = &discordgo.MessageEmbedFooter{
 				Text: "#" + channel.Name,
@@ -74,6 +58,22 @@ func MessageDelete(ctx *ctx.Context, m *discordgo.MessageDelete) {
 			}
 		}
 	}
+
+	logMessageDelete(ctx, &message, footer)
+}
+
+func logMessageDelete(ctx *ctx.Context, message *discordgo.Message, footer *discordgo.MessageEmbedFooter) {
+	contextLink := ""
+	beforeMessages, err := ctx.Session.ChannelMessages(message.ChannelID, 1, message.ID, "", "")
+	if err != nil {
+		log.Printf("Failed to fetch previous message for context of message deletion: %v\n", err)
+	} else {
+		if len(beforeMessages) > 0 {
+			contextLink = fmt.Sprintf("[(context)](%s)", misc.MakeMessageLink(message.GuildID, beforeMessages[0]))
+		}
+	}
+
+	messageCreationDate, _ := discordgo.SnowflakeTimestamp(message.ID)
 
 	messageEmbed := &discordgo.MessageEmbed{
 		Author: &discordgo.MessageEmbedAuthor{
@@ -86,7 +86,7 @@ func MessageDelete(ctx *ctx.Context, m *discordgo.MessageDelete) {
 		Footer:      footer,
 	}
 
-	mediaFiles, finish, err := db.GetStoredAttachments(m.ChannelID, m.Message.ID)
+	mediaFiles, finish, err := db.GetStoredAttachments(message.ChannelID, message.ID)
 	defer func() {
 		err := finish()
 		if err != nil {
@@ -125,7 +125,7 @@ func MessageDelete(ctx *ctx.Context, m *discordgo.MessageDelete) {
 	}
 }
 
-func logMessageAutodelete(ctx *ctx.Context, m *discordgo.Message, matchedString string) {
+func logMessageAutoDelete(ctx *ctx.Context, m *discordgo.Message, matchedString string) {
 	messageCreationDate, _ := discordgo.SnowflakeTimestamp(m.ID)
 
 	var footer *discordgo.MessageEmbedFooter
