@@ -1,8 +1,6 @@
 package command
 
 import (
-	"net/url"
-	"strings"
 	"trup/ctx"
 )
 
@@ -88,13 +86,10 @@ var Commands = map[string]Command{
 		Usage:        pollUsage,
 		IsAuthorized: allowAnyone,
 	},
-	"blocklist": {
-		Exec:  blocklist,
-		Usage: blocklistUsage,
-		Help:  blocklistHelp,
-		IsAuthorized: func(ctx *ctx.MessageContext) bool {
-			return moderatorOnly(ctx) && modPrivateOnly(ctx)
-		},
+	"mute": {
+		Exec:         mute,
+		Usage:        muteUsage,
+		IsAuthorized: moderatorAndHelperOnly,
 	},
 	"ban": {
 		Exec:         ban,
@@ -122,11 +117,6 @@ var Commands = map[string]Command{
 		Usage:        warnUsage,
 		IsAuthorized: moderatorOnly,
 	},
-	"mute": {
-		Exec:         mute,
-		Usage:        muteUsage,
-		IsAuthorized: moderatorAndHelperOnly,
-	},
 	"restart": {
 		Exec:         restart,
 		Usage:        restartUsage,
@@ -141,6 +131,14 @@ var Commands = map[string]Command{
 		Exec:         showcase,
 		Usage:        showcaseUsage,
 		IsAuthorized: moderatorOnly,
+	},
+	"blocklist": {
+		Exec:  blocklist,
+		Usage: blocklistUsage,
+		Help:  blocklistHelp,
+		IsAuthorized: func(ctx *ctx.MessageContext) bool {
+			return moderatorOnly(ctx) && modPrivateOnly(ctx)
+		},
 	},
 }
 
@@ -178,13 +176,3 @@ func moderatorAndHelperOnly(ctx *ctx.MessageContext) bool {
 }
 
 func allowAnyone(ctx *ctx.MessageContext) bool { return true }
-
-func isValidURL(toTest string) bool {
-	if !strings.HasPrefix(toTest, "http") {
-		return false
-	}
-
-	u, err := url.Parse(toTest)
-
-	return err == nil && u.Scheme != "" && u.Host != ""
-}

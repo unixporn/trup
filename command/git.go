@@ -3,6 +3,7 @@ package command
 import (
 	"trup/ctx"
 	"trup/db"
+	"trup/misc"
 
 	"github.com/jackc/pgx"
 )
@@ -39,7 +40,7 @@ func git(ctx *ctx.MessageContext, args []string) {
 
 	url := args[1]
 
-	if !isValidURL(url) {
+	if !misc.IsValidURL(url) {
 		ctx.ReportUserError("You need to provide a valid url")
 		return
 	}

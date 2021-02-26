@@ -3,6 +3,7 @@ package command
 import (
 	"trup/ctx"
 	"trup/db"
+	"trup/misc"
 
 	"github.com/jackc/pgx"
 )
@@ -42,7 +43,7 @@ func dotfiles(ctx *ctx.MessageContext, args []string) {
 
 	url := args[1]
 
-	if !isValidURL(url) {
+	if !misc.IsValidURL(url) {
 		ctx.ReportUserError("Provide a valid url")
 
 		return

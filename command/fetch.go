@@ -74,7 +74,7 @@ func setFetch(ctx *ctx.MessageContext, args []string) {
 		key := lines[i][:kI]
 		value := strings.TrimSpace(lines[i][kI+1:])
 
-		if isValidURL(lines[i]) {
+		if misc.IsValidURL(lines[i]) {
 			data.Image = lines[i]
 
 			continue

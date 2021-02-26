@@ -2,7 +2,9 @@ package misc
 
 import (
 	"fmt"
+	"net/url"
 	"regexp"
+	"strings"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -60,4 +62,14 @@ func ParseChannelMention(mention string) string {
 
 func MakeMessageLink(guildID string, m *discordgo.Message) string {
 	return fmt.Sprintf("https://discord.com/channels/%s/%s/%s", guildID, m.ChannelID, m.ID)
+}
+
+func IsValidURL(toTest string) bool {
+	if !strings.HasPrefix(toTest, "http") {
+		return false
+	}
+
+	u, err := url.Parse(toTest)
+
+	return err == nil && u.Scheme != "" && u.Host != ""
 }
