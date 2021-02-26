@@ -10,7 +10,7 @@ import (
 )
 
 // UnmuteUsersLoop checks the database for mutes that have expired,
-// and unmutes the users
+// and unmutes the users.
 func UnmuteUsersLoop(ctx *ctx.Context) {
 	for {
 		time.Sleep(time.Minute)

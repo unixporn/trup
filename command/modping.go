@@ -53,5 +53,5 @@ func modping(ctx *ctx.MessageContext, args []string) {
 		reasonText = " for reason: " + reason
 	}
 
-	ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" pinged moderators "+strings.Join(mods, " ")+reasonText)
+	_, _ = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" pinged moderators "+strings.Join(mods, " ")+reasonText)
 }

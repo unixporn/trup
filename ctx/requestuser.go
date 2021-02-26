@@ -97,7 +97,10 @@ func (ctx *MessageContext) RequestUserByName(alwaysAsk bool, str string, callbac
 	}
 
 	if alwaysAsk || len(matches) > 1 {
-		ctx.resolveAmbiguousUser(users, callback)
+		err := ctx.resolveAmbiguousUser(users, callback)
+		if err != nil {
+			log.Println("Failed to resolve ambiguous user", err)
+		}
 	} else {
 		member, err := ctx.Session.GuildMember(ctx.Message.GuildID, matches[0].ID)
 		if err != nil {

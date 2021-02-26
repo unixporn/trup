@@ -15,8 +15,7 @@ import (
 )
 
 var (
-	prefix = "!"
-	env    = ctx.Env{
+	env = ctx.Env{
 		RoleColors:         []discordgo.Role{},
 		RoleColorsString:   os.Getenv("ROLE_COLORS"),
 		RoleMod:            os.Getenv("ROLE_MOD"),

@@ -87,7 +87,9 @@ func GetUsersShortByName(name string, limit int) ([]*UserShort, error) {
 	users := []*UserShort{}
 	for res.Next() {
 		var user UserShort
-		res.Scan(&user.ID, &user.Username, &user.Tag, &user.Nickname)
+		if err := res.Scan(&user.ID, &user.Username, &user.Tag, &user.Nickname); err != nil {
+			return nil, err
+		}
 		users = append(users, &user)
 	}
 
