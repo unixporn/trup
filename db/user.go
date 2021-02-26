@@ -24,15 +24,6 @@ type UserShort struct {
 	Nickname string `json:"nickname"`
 }
 
-func UserShortFromMember(member *discordgo.Member) *UserShort {
-	return &UserShort{
-		ID:       member.User.ID,
-		Username: member.User.Username,
-		Tag:      member.User.Discriminator,
-		Nickname: member.Nick,
-	}
-}
-
 func AddUsers(discordMembers []*discordgo.Member) error {
 	users := make([]User, 0, len(discordMembers))
 	for _, member := range discordMembers {
