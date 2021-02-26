@@ -14,7 +14,8 @@ import (
 
 var ErrUserNotFound = errors.New("User not found")
 
-// RequestUserByName searches for a user by the name, asking the user to select one if the name is ambiguous.
+// RequestUserByName searches for a user by the name,
+// asking the user to select one if the name is ambiguous.
 func (ctx *MessageContext) RequestUserByName(alwaysAsk bool, str string, callback func(*discordgo.Member) error) error {
 	if m := misc.ParseMention(str); m != "" {
 		mem, err := ctx.Session.GuildMember(ctx.Message.GuildID, m)
@@ -116,7 +117,6 @@ func (ctx *MessageContext) resolveAmbiguousUser(options []*db.UserShort, callbac
 	}
 
 	membersString := ""
-
 	for idx, option := range options {
 		if len(option.Nickname) == 0 {
 			membersString += fmt.Sprintf("%s - %s\n", misc.NumberEmojis[idx], option.Username)
