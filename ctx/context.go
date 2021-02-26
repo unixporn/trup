@@ -67,13 +67,26 @@ func NewContext(env *Env, session *discordgo.Session, messageCache *misc.Message
 	}
 }
 
+// Members returns unique members from discordgo's state, because discordgo's state has duplicates.
 func (ctx *Context) Members() ([]*discordgo.Member, error) {
-	members, err := misc.UniqueMembers(ctx.Session, ctx.Env.Guild)
+	guild, err := ctx.Session.State.Guild(ctx.Env.Guild)
 	if err != nil {
-		return []*discordgo.Member{}, fmt.Errorf("Failed to fetch unique members; Error: %w", err)
+		return []*discordgo.Member{}, fmt.Errorf("Failed to fetch guild %s; Error: %w", ctx.Env.Guild, err)
 	}
 
-	return members, nil
+	var unique []*discordgo.Member
+
+	mm := make(map[string]*discordgo.Member)
+
+	for _, member := range guild.Members {
+		if _, ok := mm[member.User.ID]; !ok {
+			mm[member.User.ID] = nil
+
+			unique = append(unique, member)
+		}
+	}
+
+	return unique, err
 }
 
 func (ctx *Context) SetStatus(name string) {

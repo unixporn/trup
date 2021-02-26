@@ -40,7 +40,7 @@ func MessageDelete(ctx *ctx.Context, m *discordgo.MessageDelete) {
 
 	message, inCache := ctx.MessageCache.GetById(m.ID)
 	if !inCache {
-		messageCreationDate, _ := discordgo.SnowflakeTimestamp(message.ID)
+		messageCreationDate, _ := discordgo.SnowflakeTimestamp(m.ID)
 		log.Printf("Unknown user deleted message %s(not in cache), message creation date: %s\n", m.ID, messageCreationDate.UTC().Format(misc.DiscordDateFormat))
 		return
 	}

@@ -58,28 +58,6 @@ func ParseChannelMention(mention string) string {
 	return res[1]
 }
 
-// UniqueMembers returns unique members from discordgo's state, because discordgo's state has duplicates.
-func UniqueMembers(session *discordgo.Session, guildID string) ([]*discordgo.Member, error) {
-	guild, err := session.State.Guild(guildID)
-	if err != nil {
-		return []*discordgo.Member{}, fmt.Errorf("Failed to fetch guild %s; Error: %w", guildID, err)
-	}
-
-	var unique []*discordgo.Member
-
-	mm := make(map[string]*discordgo.Member)
-
-	for _, member := range guild.Members {
-		if _, ok := mm[member.User.ID]; !ok {
-			mm[member.User.ID] = nil
-
-			unique = append(unique, member)
-		}
-	}
-
-	return unique, err
-}
-
 func MakeMessageLink(guildID string, m *discordgo.Message) string {
 	return fmt.Sprintf("https://discord.com/channels/%s/%s/%s", guildID, m.ChannelID, m.ID)
 }

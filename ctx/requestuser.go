@@ -6,6 +6,7 @@ import (
 	"log"
 	"strings"
 	"time"
+	"trup/db"
 	"trup/misc"
 
 	"github.com/bwmarrin/discordgo"
@@ -39,20 +40,54 @@ func (ctx *MessageContext) RequestUserByName(alwaysAsk bool, str string, callbac
 		str = str[:index]
 	}
 
-	matches := []*discordgo.Member{}
+	matches := []*db.UserShort{}
 
 	members, err := ctx.Members()
 	if err != nil {
 		return err
 	}
-	for _, m := range members {
+
+	memberIdsFiltered := make(map[string]struct{}, len(members))
+
+	isMatching := func(username, userDiscriminator, nickname string) bool {
 		if discriminator != "" {
-			if m.User.Discriminator == discriminator && strings.EqualFold(m.User.Username, str) {
-				matches = append(matches, m)
+			if userDiscriminator == discriminator && strings.EqualFold(username, str) {
+				return true
 			}
-		} else if strings.Contains(strings.ToLower(m.Nick), strings.ToLower(str)) ||
-			strings.Contains(strings.ToLower(m.User.Username), strings.ToLower(str)) {
-			matches = append(matches, m)
+		} else if strings.Contains(strings.ToLower(nickname), strings.ToLower(str)) ||
+			strings.Contains(strings.ToLower(username), strings.ToLower(str)) {
+			return true
+		}
+
+		return false
+	}
+
+	for _, m := range members {
+		memberIdsFiltered[m.User.ID] = struct{}{}
+
+		if isMatching(m.User.Username, m.User.Discriminator, m.Nick) {
+			matches = append(matches, &db.UserShort{
+				ID:       m.User.ID,
+				Username: m.User.Username,
+				Tag:      m.User.Discriminator,
+				Nickname: m.Nick,
+			})
+		}
+	}
+
+	users, err := db.GetUsersShortByName(str, 11)
+	if err != nil {
+		log.Println("Failed to get database users by name. Error:", err)
+	} else {
+		for _, u := range users {
+			if _, filtered := memberIdsFiltered[u.ID]; filtered {
+				continue
+			}
+			memberIdsFiltered[u.ID] = struct{}{}
+
+			if isMatching(u.Username, u.Tag, u.Nickname) {
+				matches = append(matches, u)
+			}
 		}
 	}
 
@@ -61,16 +96,21 @@ func (ctx *MessageContext) RequestUserByName(alwaysAsk bool, str string, callbac
 	}
 
 	if alwaysAsk || len(matches) > 1 {
-		ctx.resolveAmbiguousUser(matches, callback)
+		ctx.resolveAmbiguousUser(users, callback)
 	} else {
-		return callback(matches[0])
+		member, err := ctx.Session.GuildMember(ctx.Message.GuildID, matches[0].ID)
+		if err != nil {
+			return err
+		}
+
+		return callback(member)
 	}
 
 	return nil
 }
 
 // asks the user to select one user. Once a user made a selection, deletes the messages and callback entry.
-func (ctx *MessageContext) resolveAmbiguousUser(options []*discordgo.Member, callback func(*discordgo.Member) error) error {
+func (ctx *MessageContext) resolveAmbiguousUser(options []*db.UserShort, callback func(*discordgo.Member) error) error {
 	if len(options) > 10 {
 		return errors.New("More than ten possible users, I can't deal with that much uncertainty 😕")
 	}
@@ -78,10 +118,10 @@ func (ctx *MessageContext) resolveAmbiguousUser(options []*discordgo.Member, cal
 	membersString := ""
 
 	for idx, option := range options {
-		if len(option.Nick) == 0 {
-			membersString += fmt.Sprintf("%s - %s\n", misc.NumberEmojis[idx], option.User.String())
+		if len(option.Nickname) == 0 {
+			membersString += fmt.Sprintf("%s - %s\n", misc.NumberEmojis[idx], option.Username)
 		} else {
-			membersString += fmt.Sprintf("%s - %s (%s)\n", misc.NumberEmojis[idx], option.Nick, option.User.String())
+			membersString += fmt.Sprintf("%s - %s (%s)\n", misc.NumberEmojis[idx], option.Nickname, option.Username)
 		}
 	}
 	membersString += fmt.Sprintf("%s - Cancel\n", cancelReaction)
@@ -100,14 +140,19 @@ func (ctx *MessageContext) resolveAmbiguousUser(options []*discordgo.Member, cal
 
 	memberSelectionCallbacks[key] = func(idx int) error {
 		if err := ctx.Session.ChannelMessageDelete(message.ChannelID, message.ID); err != nil {
-			log.Println("Failed to delete member selection message: " + err.Error())
+			log.Println("Failed to delete member selection message:", err.Error())
 		}
 
 		if idx == cancelIdx || idx == invalidCallbackIDX || idx > len(options) {
 			return nil
 		}
 
-		return callback(options[idx])
+		member, err := ctx.Session.GuildMember(ctx.Message.GuildID, options[idx].ID)
+		if err != nil {
+			return err
+		}
+
+		return callback(member)
 	}
 
 	for idx := range options {

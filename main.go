@@ -47,8 +47,8 @@ func main() {
 		return ctx.NewContext(&env, session, cache)
 	}
 
-	go routine.CleanupLoop(ctx.NewContext(&env, discord, cache))
-	go routine.SyncUsersLoop(ctx.NewContext(&env, discord, cache))
+	go routine.CleanupLoop(newContext(discord))
+	go routine.SyncUsersLoop(newContext(discord))
 
 	discord.AddHandlerOnce(func(s *discordgo.Session, r *discordgo.Ready) {
 		eventhandler.ReadyOnce(newContext(s), r)
