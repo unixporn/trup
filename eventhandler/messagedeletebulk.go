@@ -13,8 +13,7 @@ import (
 func MessageDeleteBulk(ctx *ctx.Context, m *discordgo.MessageDeleteBulk) {
 	defer func() {
 		if r := recover(); r != nil {
-			log.Printf("Recovered from panic in MessageDeleteBulk; Error: %#v\n", r)
-			debug.PrintStack()
+			log.Printf("Recovered from panic in MessageDeleteBulk; Error: %#v; Stack: %s\n", r, debug.Stack())
 		}
 	}()
 

@@ -3,6 +3,7 @@ package eventhandler
 import (
 	"fmt"
 	"log"
+	"runtime/debug"
 	"time"
 	"trup/ctx"
 	"trup/misc"
@@ -13,7 +14,7 @@ import (
 func MemberLeave(ctx *ctx.Context, m *discordgo.GuildMemberRemove) {
 	defer func() {
 		if r := recover(); r != nil {
-			log.Println("Recovered from panic in MemberLeave", r)
+			log.Println("Recovered from panic in MemberLeave", r, debug.Stack())
 		}
 	}()
 

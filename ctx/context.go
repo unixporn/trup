@@ -40,14 +40,14 @@ type Env struct {
 	RoleMute         string
 	RoleColors       []discordgo.Role
 	RoleColorsString string
-	ChannelShowcase  string
 
+	ChannelShowcase    string
 	ChannelAutoMod     string
 	ChannelBotMessages string
 	ChannelBotTraffic  string
-
 	ChannelFeedback    string
 	ChannelModlog      string
+
 	CategoryModPrivate string
 
 	Guild string

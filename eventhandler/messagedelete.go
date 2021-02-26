@@ -17,8 +17,7 @@ var lastAuditId string
 func MessageDelete(ctx *ctx.Context, m *discordgo.MessageDelete) {
 	defer func() {
 		if r := recover(); r != nil {
-			log.Printf("Recovered from panic in MessageDelete; Message: %#v; Error: %#v\n", m.Message, r)
-			debug.PrintStack()
+			log.Printf("Recovered from panic in MessageDelete; Message: %#v; Error: %#v; Stack: %s\n", m.Message, r, debug.Stack())
 		}
 	}()
 

@@ -2,6 +2,7 @@ package routine
 
 import (
 	"log"
+	"runtime/debug"
 	"time"
 	"trup/ctx"
 	"trup/db"
@@ -14,7 +15,7 @@ func SyncUsersLoop(ctx *ctx.Context) {
 		func() {
 			defer func() {
 				if err := recover(); err != nil {
-					log.Printf("Panicked in syncUsersInDatabase with error: %v\n", err)
+					log.Printf("Panicked in syncUsersInDatabase with error: %v; Stack: %s\n", err, debug.Stack())
 				}
 			}()
 

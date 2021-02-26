@@ -3,6 +3,7 @@ package eventhandler
 import (
 	"fmt"
 	"log"
+	"runtime/debug"
 	"time"
 	"trup/ctx"
 	"trup/db"
@@ -14,7 +15,7 @@ import (
 func MemberJoin(ctx *ctx.Context, m *discordgo.GuildMemberAdd) {
 	defer func() {
 		if r := recover(); r != nil {
-			log.Println("Recovered from panic in MemberJoin", r)
+			log.Println("Recovered from panic in MemberJoin", r, debug.Stack())
 		}
 	}()
 

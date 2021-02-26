@@ -14,8 +14,7 @@ import (
 func MessageUpdate(ctx *ctx.Context, m *discordgo.MessageUpdate) {
 	defer func() {
 		if r := recover(); r != nil {
-			log.Printf("Recovered from panic in MessageUpdate; Message: %#v; Error: %#v\n", *m.Message, r)
-			debug.PrintStack()
+			log.Printf("Recovered from panic in MessageUpdate; Message: %#v; Error: %#v; Stack: %s\n", *m.Message, r, debug.Stack())
 		}
 	}()
 

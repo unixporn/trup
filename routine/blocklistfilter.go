@@ -3,6 +3,7 @@ package routine
 import (
 	"fmt"
 	"log"
+	"runtime/debug"
 	"trup/ctx"
 	"trup/db"
 	"trup/misc"
@@ -13,7 +14,7 @@ import (
 func BlocklistFilter(ctx *ctx.Context, m *discordgo.Message) (deleted bool) {
 	defer func() {
 		if err := recover(); err != nil {
-			log.Printf("Recovered from runMessageFilter; err: %s\n", err)
+			log.Printf("Recovered from runMessageFilter; err: %s; Stack: %s\n", err, debug.Stack())
 			deleted = false
 		}
 	}()
