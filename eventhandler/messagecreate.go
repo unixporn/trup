@@ -119,7 +119,7 @@ func MessageCreate(ctx *context.Context, m *discordgo.MessageCreate) {
 		}
 
 		if !cmd.IsAuthorized(&context) {
-			context.Reply("You're not authorized to use this command.")
+			context.ReportUserError("You're not authorized to use this command")
 			return
 		}
 
