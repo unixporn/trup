@@ -16,13 +16,13 @@ const warnUsage = "warn <@user> <reason>"
 
 func warn(ctx *ctx.MessageContext, args []string) {
 	if len(args) < 3 {
-		ctx.Reply("Usage: " + warnUsage)
+		ctx.ReportUserError("Usage: " + warnUsage)
 		return
 	}
 
 	user := misc.ParseUser(args[1])
 	if user == "" {
-		ctx.Reply("The first argument must be a user mention")
+		ctx.ReportUserError("The first argument must be a user mention")
 		return
 	}
 

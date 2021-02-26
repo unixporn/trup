@@ -33,7 +33,7 @@ func setFetch(ctx *ctx.MessageContext, args []string) {
 		sysinfo, err := db.GetSysinfo(ctx.Message.Author.ID)
 		if err != nil {
 			if err.Error() == pgx.ErrNoRows.Error() {
-				ctx.Reply("Cannot update fetch; No existing fetch data found")
+				ctx.ReportUserError("Cannot update fetch; No existing fetch data found")
 			} else {
 				ctx.ReportError("Failed to get existing fetch data", err)
 			}
@@ -90,7 +90,7 @@ func setFetch(ctx *ctx.MessageContext, args []string) {
 		case "Memory":
 			b, err := humanize.ParseBytes(value)
 			if err != nil {
-				ctx.Reply("Failed to parse Max RAM")
+				ctx.ReportUserError("Failed to parse Max RAM")
 				return
 			}
 
@@ -119,7 +119,7 @@ func setFetch(ctx *ctx.MessageContext, args []string) {
 	info := db.NewSysinfo(ctx.Message.Author.ID, data)
 	err := info.Save()
 	if err != nil {
-		ctx.Reply("Failed to save. Error: " + err.Error())
+		ctx.ReportUserError("Failed to save. Error: " + err.Error())
 		return
 	}
 	ctx.Reply("Success. You can now run !fetch")
@@ -136,7 +136,7 @@ func askUserToSetfetch(ctx *ctx.MessageContext, user *discordgo.User, himself bo
 		message = "You first need to set your information with !setfetch"
 	}
 
-	ctx.Reply(message)
+	ctx.ReportUserError(message)
 }
 
 func askUserToSetfetchSomeone(ctx *ctx.MessageContext, user *discordgo.User) {
@@ -202,7 +202,7 @@ func doFetch(ctx *ctx.MessageContext, user *discordgo.User) {
 			return
 		}
 
-		ctx.Reply("Failed to find the user's info. Error: " + err.Error())
+		ctx.ReportUserError("Failed to find the user's info. Error: " + err.Error())
 		return
 	}
 

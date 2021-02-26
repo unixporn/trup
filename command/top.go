@@ -65,7 +65,7 @@ func topSpecific(ctx *ctx.MessageContext, field string) (description string, suc
 		return "", false
 	}
 	if len(topFields) == 0 {
-		ctx.Reply("No entries were found. Check if your field name is correct(capitalization matters). Usage: " + topUsage)
+		ctx.ReportUserError("No entries were found. Check if your field name is correct(capitalization matters). Usage: " + topUsage)
 		return "", false
 	}
 	var descriptionBuilder strings.Builder

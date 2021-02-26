@@ -20,7 +20,7 @@ func git(ctx *ctx.MessageContext, args []string) {
 		profile, err := db.GetProfile(user)
 		if err != nil {
 			if err.Error() == pgx.ErrNoRows.Error() {
-				ctx.Reply(setItFirstMsg)
+				ctx.ReportUserError(setItFirstMsg)
 				return
 			} else {
 				ctx.ReportError("Failed to fetch your profile", err)
@@ -29,7 +29,7 @@ func git(ctx *ctx.MessageContext, args []string) {
 		}
 
 		if profile.Git == "" {
-			ctx.Reply(setItFirstMsg)
+			ctx.ReportUserError(setItFirstMsg)
 			return
 		}
 
@@ -40,7 +40,7 @@ func git(ctx *ctx.MessageContext, args []string) {
 	url := args[1]
 
 	if !isValidURL(url) {
-		ctx.Reply("You need to provide a valid url")
+		ctx.ReportUserError("You need to provide a valid url")
 		return
 	}
 

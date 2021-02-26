@@ -11,13 +11,13 @@ const moveUsage = "move <#channel> [<@user> ...]"
 
 func move(ctx *ctx.MessageContext, args []string) {
 	if len(args) < 2 {
-		ctx.Reply("Usage: " + moveUsage)
+		ctx.ReportUserError("Usage: " + moveUsage)
 		return
 	}
 
 	target := misc.ParseChannelMention(args[1])
 	if target == "" {
-		ctx.Reply("Invalid channel")
+		ctx.ReportUserError("Invalid channel")
 		return
 	}
 

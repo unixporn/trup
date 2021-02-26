@@ -1,7 +1,6 @@
 package command
 
 import (
-	"log"
 	"trup/ctx"
 	"trup/db"
 )
@@ -14,7 +13,7 @@ func showcase(ctx *ctx.MessageContext, args []string) {
 	_ = ctx.Session.ChannelTyping(ctx.Message.ChannelID)
 
 	if len(args) < 1 {
-		ctx.Reply("Usage: " + showcaseUsage)
+		ctx.ReportUserError("Usage: " + showcaseUsage)
 		return
 	}
 
@@ -29,7 +28,6 @@ func showcase(ctx *ctx.MessageContext, args []string) {
 			if err != nil {
 				panic(err)
 			}
-			log.Printf("msgs: %#v\n", msgs)
 
 			if len(msgs) == 0 {
 				break
@@ -71,5 +69,5 @@ func showcase(ctx *ctx.MessageContext, args []string) {
 		return
 	}
 
-	ctx.Reply("Usage: " + showcaseUsage)
+	ctx.ReportUserError("Usage: " + showcaseUsage)
 }

@@ -15,7 +15,7 @@ const noteUsage = "note <@user> [text]"
 
 func note(ctx *ctx.MessageContext, args []string) {
 	if len(args) < 2 {
-		ctx.Reply("Usage: " + noteUsage)
+		ctx.ReportUserError("Usage: " + noteUsage)
 		return
 	}
 
@@ -33,7 +33,7 @@ func note(ctx *ctx.MessageContext, args []string) {
 				return nil
 			}
 
-			ctx.Reply("Success.")
+			ctx.Reply("Success")
 		}
 		return nil
 	})

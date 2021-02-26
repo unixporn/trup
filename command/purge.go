@@ -17,7 +17,7 @@ const (
 
 func purge(ctx *ctx.MessageContext, args []string) {
 	if len(args) < 3 {
-		ctx.Reply("Usage: " + purgeUsage)
+		ctx.ReportUserError("Usage: " + purgeUsage)
 		return
 	}
 
@@ -33,12 +33,12 @@ func purge(ctx *ctx.MessageContext, args []string) {
 		isDuration = true
 		number = 100
 	} else if number > 100 || number < 2 {
-		ctx.Reply("The first argument must be comprised between 2 and 100")
+		ctx.ReportUserError("The first argument must be comprised between 2 and 100")
 		return
 	}
 	from := misc.ParseUser(args[2])
 	if from == "" {
-		ctx.Reply("The second argument must be a user mention")
+		ctx.ReportUserError("The second argument must be a user mention")
 		return
 	}
 

@@ -20,7 +20,7 @@ func dotfiles(ctx *ctx.MessageContext, args []string) {
 		profile, err := db.GetProfile(user)
 		if err != nil {
 			if err.Error() == pgx.ErrNoRows.Error() {
-				ctx.Reply(setItFirstMsg)
+				ctx.ReportUserError(setItFirstMsg)
 
 				return
 			} else {
@@ -31,19 +31,19 @@ func dotfiles(ctx *ctx.MessageContext, args []string) {
 		}
 
 		if profile.Dotfiles == "" {
-			ctx.Reply(setItFirstMsg)
+			ctx.ReportUserError(setItFirstMsg)
 
 			return
 		}
 
-		ctx.Reply(profile.Dotfiles)
+		ctx.ReportUserError(profile.Dotfiles)
 		return
 	}
 
 	url := args[1]
 
 	if !isValidURL(url) {
-		ctx.Reply("Provide a valid url")
+		ctx.ReportUserError("Provide a valid url")
 
 		return
 	}

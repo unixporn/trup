@@ -52,7 +52,7 @@ func MuteMember(env *ctx.Env, session *discordgo.Session, moderator *discordgo.U
 
 func mute(ctx *ctx.MessageContext, args []string) {
 	if len(args) < 3 {
-		ctx.Reply("Usage: " + muteUsage)
+		ctx.ReportUserError("Usage: " + muteUsage)
 		return
 	}
 
@@ -73,7 +73,7 @@ func mute(ctx *ctx.MessageContext, args []string) {
 		}
 
 		if err := MuteMember(ctx.Env, ctx.Session, ctx.Message.Author, user, i, reason); err != nil {
-			ctx.Reply("Failed to mute user. Error: " + err.Error())
+			ctx.ReportUserError("Failed to mute user. Error: " + err.Error())
 			return nil
 		}
 

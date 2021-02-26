@@ -15,7 +15,7 @@ const (
 
 func modping(ctx *ctx.MessageContext, args []string) {
 	if len(args) < 2 {
-		ctx.Reply("Usage: " + modpingUsage)
+		ctx.ReportUserError("Usage: " + modpingUsage)
 		return
 	}
 
@@ -24,7 +24,7 @@ func modping(ctx *ctx.MessageContext, args []string) {
 	mods := []string{}
 	members, err := ctx.Members()
 	if err != nil {
-		ctx.ReportError("Failed to get members list", err)
+		ctx.ReportError("Failed to get member list", err)
 		return
 	}
 	for _, mem := range members {
@@ -53,5 +53,5 @@ func modping(ctx *ctx.MessageContext, args []string) {
 		reasonText = " for reason: " + reason
 	}
 
-	ctx.Reply(ctx.Message.Author.Mention() + " pinged moderators " + strings.Join(mods, " ") + reasonText)
+	ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" pinged moderators "+strings.Join(mods, " ")+reasonText)
 }

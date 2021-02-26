@@ -2,7 +2,6 @@ package command
 
 import (
 	"fmt"
-	"log"
 	"strings"
 	"trup/ctx"
 	"trup/db"
@@ -15,7 +14,7 @@ const (
 
 func blocklist(ctx *ctx.MessageContext, args []string) {
 	if len(args) < 2 {
-		ctx.Reply(blocklistUsage)
+		ctx.ReportUserError(blocklistUsage)
 
 		return
 	}
@@ -25,7 +24,7 @@ func blocklist(ctx *ctx.MessageContext, args []string) {
 		blocklistGet(ctx)
 	case "add":
 		if len(args) < 3 {
-			ctx.Reply(blocklistUsage)
+			ctx.ReportUserError(blocklistUsage)
 
 			return
 		}
@@ -33,20 +32,20 @@ func blocklist(ctx *ctx.MessageContext, args []string) {
 		blocklistAdd(ctx, strings.Join(args[2:], " "))
 	case "remove":
 		if len(args) < 3 {
-			ctx.Reply(blocklistUsage)
+			ctx.ReportUserError(blocklistUsage)
 
 			return
 		}
 
 		blocklistRemove(ctx, strings.Join(args[2:], " "))
 	default:
-		ctx.Reply(blocklistUsage)
+		ctx.ReportUserError(blocklistUsage)
 	}
 }
 
 func blocklistAdd(ctx *ctx.MessageContext, pattern string) {
 	if pattern[0] != '`' || pattern[len(pattern)-1] != '`' {
-		ctx.Reply("Please surround the pattern with `")
+		ctx.ReportUserError("Please surround the pattern with `")
 
 		return
 	}
@@ -65,7 +64,7 @@ func blocklistAdd(ctx *ctx.MessageContext, pattern string) {
 
 func blocklistRemove(ctx *ctx.MessageContext, pattern string) {
 	if pattern[0] != '`' || pattern[len(pattern)-1] != '`' {
-		ctx.Reply("Please surround the pattern with backticks (`)")
+		ctx.ReportUserError("Please surround the pattern with backticks (`)")
 
 		return
 	}
@@ -80,17 +79,14 @@ func blocklistRemove(ctx *ctx.MessageContext, pattern string) {
 	}
 
 	if !didDelete {
-		ctx.Reply(fmt.Sprintf("Couldn't find `%s` in the blocklist", pattern))
+		ctx.ReportUserError(fmt.Sprintf("Couldn't find `%s` in the blocklist", pattern))
 
 		return
 	}
 
-	if _, err = ctx.Session.ChannelMessageSend(
-		ctx.Message.ChannelID,
+	ctx.Reply(
 		fmt.Sprintf("the pattern `%s` has been removed from the blocklist", pattern),
-	); err != nil {
-		log.Println("Failed to send blocklist removal message: " + err.Error())
-	}
+	)
 }
 
 func blocklistGet(ctx *ctx.MessageContext) {
@@ -101,12 +97,9 @@ func blocklistGet(ctx *ctx.MessageContext) {
 		return
 	}
 
-	if _, err = ctx.Session.ChannelMessageSend(
-		ctx.Message.ChannelID,
+	ctx.Reply(
 		fmt.Sprintf(
 			"Patterns in the blocklist:\n```\n%s\n```", strings.Join(patterns, "\n"),
 		),
-	); err != nil {
-		log.Println("Failed to send blocklist retrieval message: " + err.Error())
-	}
+	)
 }
