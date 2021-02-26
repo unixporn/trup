@@ -43,7 +43,7 @@ func dotfiles(ctx *ctx.MessageContext, args []string) {
 	url := args[1]
 
 	if !isValidURL(url) {
-		ctx.Reply("provide a valid url")
+		ctx.Reply("Provide a valid url")
 
 		return
 	}
@@ -57,7 +57,7 @@ func dotfiles(ctx *ctx.MessageContext, args []string) {
 
 	err = profile.Save()
 	if err != nil {
-		ctx.ReportError("failed to save dotfiles url", err)
+		ctx.ReportError("Failed to save dotfiles url", err)
 
 		return
 	}

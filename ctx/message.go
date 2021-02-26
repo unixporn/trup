@@ -2,6 +2,8 @@ package ctx
 
 import (
 	"log"
+	"time"
+	"trup/misc"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -12,7 +14,7 @@ type MessageContext struct {
 }
 
 func (ctx *MessageContext) Reply(msg string) {
-	_, err := ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, msg)
+	_, err := ctx.ReplyEmbedSimple("", msg)
 	if err != nil {
 		log.Printf("Failed to reply to message %s; Error: %s\n", ctx.Message.ID, err)
 	}
@@ -35,8 +37,23 @@ func (ctx *MessageContext) ReplyEmbed(embed *discordgo.MessageEmbed) (*discordgo
 	if embed.Color == 0 {
 		embed.Color = ctx.UserColor()
 	}
+	if embed.Timestamp == "" {
+		embed.Timestamp = time.Now().Format(misc.DiscordDateFormat)
+	}
+	if embed.Footer == nil {
+		embed.Footer = &discordgo.MessageEmbedFooter{
+			Text: "Response to " + ctx.Message.Author.String() + "'s message",
+		}
+	}
 
 	return ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, embed)
+}
+
+func (ctx *MessageContext) ReplyEmbedSimple(title string, description string) (*discordgo.Message, error) {
+	return ctx.ReplyEmbed(&discordgo.MessageEmbed{
+		Title:       title,
+		Description: description,
+	})
 }
 
 func (ctx *MessageContext) UserColor() int {

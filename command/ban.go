@@ -88,7 +88,7 @@ func ban(ctx *ctx.MessageContext, args []string) {
 
 	user := misc.ParseUser(args[1])
 	if user == "" {
-		ctx.Reply("The first argument must be a user mention.")
+		ctx.Reply("The first argument must be a user mention")
 		return
 	}
 
@@ -105,7 +105,7 @@ func delban(ctx *ctx.MessageContext, args []string) {
 
 	user := misc.ParseUser(args[1])
 	if user == "" {
-		ctx.Reply("The first argument must be a user mention.")
+		ctx.Reply("The first argument must be a user mention")
 		return
 	}
 

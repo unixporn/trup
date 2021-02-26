@@ -24,7 +24,8 @@ func modping(ctx *ctx.MessageContext, args []string) {
 	mods := []string{}
 	members, err := ctx.Members()
 	if err != nil {
-		ctx.Reply(err.Error())
+		ctx.ReportError("Failed to get members list", err)
+		return
 	}
 	for _, mem := range members {
 		for _, r := range mem.Roles {

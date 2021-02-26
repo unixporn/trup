@@ -60,7 +60,7 @@ func blocklistAdd(ctx *ctx.MessageContext, pattern string) {
 		return
 	}
 
-	ctx.Reply(fmt.Sprintf("the pattern `%s` has been added to the blocklist", pattern))
+	ctx.Reply(fmt.Sprintf("The pattern `%s` has been added to the blocklist", pattern))
 }
 
 func blocklistRemove(ctx *ctx.MessageContext, pattern string) {

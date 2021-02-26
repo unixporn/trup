@@ -21,7 +21,7 @@ const (
 func setFetch(ctx *ctx.MessageContext, args []string) {
 	lines := strings.Split(ctx.Message.Content, "\n")
 	if len(lines) < 2 && len(ctx.Message.Attachments) == 0 {
-		ctx.Reply("run this: `curl -s https://raw.githubusercontent.com/unixporn/trup/prod/fetcher.sh | sh` and follow the instructions. It's recommended that you download and read the script before running it, as piping curl to sh isn't always the safest practice. (<https://blog.dijit.sh/don-t-pipe-curl-to-bash>)\n > NOTE: use `!setfetch update` to update individual values (including the image!) without overwriting everything.\n > NOTE: If you're trying to manually change a value, it needs a newline after !setfetch (update).\n > NOTE: !git, !dotfiles, and !desc are different commands.")
+		ctx.Reply("Run this: `curl -s https://raw.githubusercontent.com/unixporn/trup/prod/fetcher.sh | sh` and follow the instructions. It's recommended that you download and read the script before running it, as piping curl to sh isn't always the safest practice. (<https://blog.dijit.sh/don-t-pipe-curl-to-bash>)\n > NOTE: use `!setfetch update` to update individual values (including the image!) without overwriting everything.\n > NOTE: If you're trying to manually change a value, it needs a newline after !setfetch (update).\n > NOTE: !git, !dotfiles, and !desc are different commands")
 
 		return
 	}
@@ -58,6 +58,11 @@ func setFetch(ctx *ctx.MessageContext, args []string) {
 		"GPU":              &data.Gpu,
 	}
 
+	allowedKeys := []string{"Memory"}
+	for key := range m {
+		allowedKeys = append(allowedKeys, key)
+	}
+
 	for i := 1; i < len(lines); i++ {
 		kI := strings.Index(lines[i], ":")
 		if kI == -1 {
@@ -89,7 +94,7 @@ func setFetch(ctx *ctx.MessageContext, args []string) {
 
 			data.Memory = b
 		default:
-			ctx.Reply("key '" + key + "' is not valid")
+			ctx.Reply("Field '" + key + "' is not valid. The allowed fields are: " + strings.Join(allowedKeys, ", ") + ".")
 
 			return
 		}
@@ -115,28 +120,34 @@ func setFetch(ctx *ctx.MessageContext, args []string) {
 		ctx.Reply("Failed to save. Error: " + err.Error())
 		return
 	}
-	ctx.Reply("success. You can now run !fetch")
+	ctx.Reply("Success. You can now run !fetch")
 }
 
 const fetchUsage = "fetch [user]"
 
-func askUserToSetfetch(ctx *ctx.MessageContext, himself bool) {
-	message := "that user hasn't set their fetch information. You can ask them to run !setfetch"
+func askUserToSetfetch(ctx *ctx.MessageContext, user *discordgo.User, himself bool) {
+	message := "That user hasn't set their fetch information. You can ask them to run **!setfetch**"
+	if user != nil {
+		message = strings.Replace(message, "That user", user.String(), 1)
+	}
 	if himself {
-		message = "you first need to set your information with !setfetch"
+		message = "You first need to set your information with !setfetch"
 	}
 
 	ctx.Reply(message)
 }
 
-func askUserToSetfetchSomeone(ctx *ctx.MessageContext) { askUserToSetfetch(ctx, false) }
-func askUserToSetfetchHimself(ctx *ctx.MessageContext) { askUserToSetfetch(ctx, true) }
+func askUserToSetfetchSomeone(ctx *ctx.MessageContext, user *discordgo.User) {
+	askUserToSetfetch(ctx, user, false)
+}
+func askUserToSetfetchHimself(ctx *ctx.MessageContext) { askUserToSetfetch(ctx, nil, true) }
 
 func doFetch(ctx *ctx.MessageContext, user *discordgo.User) {
 	const inline = true
 	embed := discordgo.MessageEmbed{
 		Title:  "Fetch " + user.Username + "#" + user.Discriminator,
 		Fields: []*discordgo.MessageEmbedField{},
+		Footer: &discordgo.MessageEmbedFooter{},
 	}
 
 	profile, err := db.GetProfile(user.ID)
@@ -184,12 +195,12 @@ func doFetch(ctx *ctx.MessageContext, user *discordgo.User) {
 			if user.ID == ctx.Message.Author.ID {
 				askUserToSetfetchHimself(ctx)
 			} else {
-				askUserToSetfetchSomeone(ctx)
+				askUserToSetfetchSomeone(ctx, user)
 			}
 			return
 		}
 
-		ctx.Reply("failed to find the user's info. Error: " + err.Error())
+		ctx.Reply("Failed to find the user's info. Error: " + err.Error())
 		return
 	}
 
@@ -328,7 +339,7 @@ sysinfoEnd:
 		if user.ID == ctx.Message.Author.ID {
 			askUserToSetfetchHimself(ctx)
 		} else {
-			askUserToSetfetchSomeone(ctx)
+			askUserToSetfetchSomeone(ctx, user)
 		}
 		return
 	}

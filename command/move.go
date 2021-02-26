@@ -17,7 +17,7 @@ func move(ctx *ctx.MessageContext, args []string) {
 
 	target := misc.ParseChannelMention(args[1])
 	if target == "" {
-		ctx.Reply("invalid channel")
+		ctx.Reply("Invalid channel")
 		return
 	}
 
@@ -32,7 +32,7 @@ func move(ctx *ctx.MessageContext, args []string) {
 	link := fmt.Sprintf("<https://discord.com/channels/%s/%s/%s>", ctx.Message.GuildID, ctx.Message.ChannelID, ctx.Message.ID)
 	m, err := ctx.Session.ChannelMessageSend(target, fmt.Sprintf("Continuation from <#%s> - %s (%s)", ctx.Message.ChannelID, mentionsString, link))
 	if err != nil {
-		ctx.ReportError("error sending to channel (might not exist or no access)", err)
+		ctx.ReportError("Error sending to channel (might not exist or no access)", err)
 		return
 	}
 

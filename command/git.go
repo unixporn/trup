@@ -40,7 +40,7 @@ func git(ctx *ctx.MessageContext, args []string) {
 	url := args[1]
 
 	if !isValidURL(url) {
-		ctx.Reply("provide a valid url")
+		ctx.Reply("You need to provide a valid url")
 		return
 	}
 

@@ -19,7 +19,7 @@ func showcase(ctx *ctx.MessageContext, args []string) {
 	}
 
 	if args[1] == "sync" {
-		ctx.Reply("Syncing... This may take a while.")
+		ctx.Reply("Syncing... This may take a while")
 
 		var entries []db.ShowcaseEntry
 

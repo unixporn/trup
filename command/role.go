@@ -73,5 +73,5 @@ func role(ctx *ctx.MessageContext, args []string) {
 		}
 	}
 
-	ctx.Reply("Success.")
+	ctx.Reply("Success")
 }

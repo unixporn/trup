@@ -26,7 +26,7 @@ func desc(ctx *ctx.MessageContext, args []string) {
 	)
 
 	if len(desc) > 256 {
-		ctx.Reply("your description cannot be longer than 256 characters")
+		ctx.Reply("Your description cannot be longer than 256 characters")
 
 		return
 	}
@@ -56,7 +56,7 @@ func desc(ctx *ctx.MessageContext, args []string) {
 	}
 
 	if desc == "" {
-		ctx.Reply("cleared your description")
+		ctx.Reply("Cleared your description")
 
 		return
 	}

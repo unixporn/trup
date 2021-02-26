@@ -22,7 +22,7 @@ func warn(ctx *ctx.MessageContext, args []string) {
 
 	user := misc.ParseUser(args[1])
 	if user == "" {
-		ctx.Reply("The first argument must be a user mention.")
+		ctx.Reply("The first argument must be a user mention")
 		return
 	}
 
@@ -62,7 +62,7 @@ func warn(ctx *ctx.MessageContext, args []string) {
 
 		_, err = ctx.Session.ChannelMessageSend(
 			ctx.Env.ChannelModlog,
-			fmt.Sprintf("<@%s> was warned by moderator %s%s. They've been warned%s.", user, taker.Username, r, nth),
+			fmt.Sprintf("<@%s> was warned by moderator %s%s. They've been warned%s", user, taker.Username, r, nth),
 		)
 		if err != nil {
 			log.Printf("Error sending warning notice into modlog: %s\n", err)
