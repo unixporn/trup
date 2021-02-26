@@ -8,6 +8,10 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+const (
+	errorColor = 0xEC4646
+)
+
 type MessageContext struct {
 	Context
 	Message *discordgo.Message
@@ -20,6 +24,14 @@ func (ctx *MessageContext) Reply(msg string) {
 	}
 }
 
+func (ctx *MessageContext) ReportUserError(msg string) {
+	_, _ = ctx.ReplyEmbed(&discordgo.MessageEmbed{
+		Title:       "Error",
+		Description: msg,
+		Color:       errorColor,
+	})
+}
+
 func (ctx *MessageContext) ReportError(msg string, err error) {
 	log.Printf(
 		"Error Message ID: %s; ChannelID: %s; GuildID: %s; Author ID: %s; msg: %s; error: %s\n",
@@ -30,7 +42,11 @@ func (ctx *MessageContext) ReportError(msg string, err error) {
 		msg,
 		err,
 	)
-	ctx.Reply(msg)
+	_, _ = ctx.ReplyEmbed(&discordgo.MessageEmbed{
+		Title:       "Error",
+		Description: msg,
+		Color:       errorColor,
+	})
 }
 
 func (ctx *MessageContext) ReplyEmbed(embed *discordgo.MessageEmbed) (*discordgo.Message, error) {

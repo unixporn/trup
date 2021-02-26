@@ -3,6 +3,7 @@ package command
 import (
 	"encoding/json"
 	"log"
+	"sort"
 	"strings"
 	"trup/ctx"
 	"trup/db"
@@ -62,6 +63,7 @@ func setFetch(ctx *ctx.MessageContext, args []string) {
 	for key := range m {
 		allowedKeys = append(allowedKeys, key)
 	}
+	sort.Strings(allowedKeys)
 
 	for i := 1; i < len(lines); i++ {
 		kI := strings.Index(lines[i], ":")
@@ -94,7 +96,7 @@ func setFetch(ctx *ctx.MessageContext, args []string) {
 
 			data.Memory = b
 		default:
-			ctx.Reply("Field '" + key + "' is not valid. The allowed fields are: " + strings.Join(allowedKeys, ", ") + ".")
+			ctx.ReportUserError("Field '" + key + "' is not valid. The allowed fields are: " + strings.Join(allowedKeys, ", "))
 
 			return
 		}
