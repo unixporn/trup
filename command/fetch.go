@@ -148,8 +148,13 @@ func doFetch(ctx *ctx.MessageContext, user *discordgo.User) {
 	const inline = true
 	embed := discordgo.MessageEmbed{
 		Title:  "Fetch " + user.Username + "#" + user.Discriminator,
+		Color:  ctx.Session.State.UserColor(user.ID, ctx.Message.ChannelID),
 		Fields: []*discordgo.MessageEmbedField{},
 		Footer: &discordgo.MessageEmbedFooter{},
+	}
+
+	if embed.Color == 0 {
+		embed.Color = 1
 	}
 
 	profile, err := db.GetProfile(user.ID)
