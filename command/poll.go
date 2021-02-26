@@ -75,7 +75,7 @@ func multiPoll(ctx *ctx.MessageContext, question string, lines []string) {
 		})
 	}
 
-	pollMessage, err := ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, embed)
+	pollMessage, err := ctx.ReplyEmbed(embed)
 	if err != nil {
 		ctx.ReportError("Failed to post the poll", err)
 		return
@@ -103,7 +103,7 @@ func yesNoPoll(ctx *ctx.MessageContext, question string) {
 		ctx.Reply(err.Error())
 		return
 	}
-	pollMessage, err := ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, embed)
+	pollMessage, err := ctx.ReplyEmbed(embed)
 	if err != nil {
 		ctx.ReportError("Failed to post the poll", err)
 		return

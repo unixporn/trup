@@ -31,6 +31,18 @@ func (ctx *MessageContext) ReportError(msg string, err error) {
 	ctx.Reply(msg)
 }
 
+func (ctx *MessageContext) ReplyEmbed(embed *discordgo.MessageEmbed) (*discordgo.Message, error) {
+	if embed.Color == 0 {
+		embed.Color = ctx.UserColor()
+	}
+
+	return ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, embed)
+}
+
+func (ctx *MessageContext) UserColor() int {
+	return ctx.Session.State.UserColor(ctx.Message.Author.ID, ctx.Message.ChannelID)
+}
+
 func (ctx *MessageContext) IsModerator() bool {
 	for _, r := range ctx.Message.Member.Roles {
 		if r == ctx.Env.RoleMod {

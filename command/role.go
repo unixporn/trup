@@ -20,7 +20,7 @@ func role(ctx *ctx.MessageContext, args []string) {
 			roles.WriteString("<@&" + role.ID + ">\n")
 		}
 
-		if _, err := ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &discordgo.MessageEmbed{
+		if _, err := ctx.ReplyEmbed(&discordgo.MessageEmbed{
 			Title:       "Color List",
 			Description: roles.String(),
 			Footer: &discordgo.MessageEmbedFooter{

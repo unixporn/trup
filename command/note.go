@@ -72,7 +72,7 @@ func getNotes(ctx *ctx.MessageContext, aboutUser *discordgo.User) {
 		})
 	}
 
-	if _, err = ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed); err != nil {
+	if _, err = ctx.ReplyEmbed(&embed); err != nil {
 		log.Println("Failed to send note embed: " + err.Error())
 	}
 }

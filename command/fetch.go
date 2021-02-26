@@ -193,7 +193,6 @@ func doFetch(ctx *ctx.MessageContext, user *discordgo.User) {
 		return
 	}
 
-	embed.Color = ctx.Session.State.UserColor(user.ID, ctx.Message.ChannelID)
 	if info.Info.Distro != "" {
 		embed.Thumbnail = &discordgo.MessageEmbedThumbnail{
 			URL: getDistroImage(info.Info.Distro),
@@ -334,7 +333,7 @@ sysinfoEnd:
 		return
 	}
 
-	_, err = ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed)
+	_, err = ctx.ReplyEmbed(&embed)
 	if err != nil {
 		var retry bool
 		if restErr, ok := err.(*discordgo.RESTError); ok {
@@ -352,7 +351,7 @@ sysinfoEnd:
 		}
 
 		if retry {
-			if _, err = ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed); err != nil {
+			if _, err = ctx.ReplyEmbed(&embed); err != nil {
 				log.Println("Failed to send channel embed: " + err.Error())
 			}
 		}

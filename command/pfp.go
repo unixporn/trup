@@ -17,7 +17,7 @@ const (
 func pfp(ctx *ctx.MessageContext, args []string) {
 	callback := func(user *discordgo.User) error {
 		avatar := user.AvatarURL("2048")
-		if _, err := ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &discordgo.MessageEmbed{
+		if _, err := ctx.ReplyEmbed(&discordgo.MessageEmbed{
 			Title: fmt.Sprintf("%s#%s's profile picture", user.Username, user.Discriminator),
 			Image: &discordgo.MessageEmbedImage{
 				URL: avatar,

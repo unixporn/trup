@@ -42,7 +42,7 @@ func Help(ctx *ctx.MessageContext, args []string) {
 
 	sort.Slice(embed.Fields, func(i, j int) bool { return embed.Fields[i].Name < embed.Fields[j].Name })
 
-	if _, err := ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed); err != nil {
+	if _, err := ctx.ReplyEmbed(&embed); err != nil {
 		log.Println("Failed to send help embed: " + err.Error())
 	}
 }

@@ -34,12 +34,12 @@ func top(ctx *ctx.MessageContext, args []string) {
 	if !success {
 		return
 	}
-	_, err := ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &discordgo.MessageEmbed{
+	_, err := ctx.ReplyEmbed(&discordgo.MessageEmbed{
 		Title:       title,
 		Description: description,
 	})
 	if err != nil {
-		log.Println("Failed on ChannelMessageSendEmbed in !top", err)
+		log.Println("Failed on ReplyEmbed in !top", err)
 	}
 }
 

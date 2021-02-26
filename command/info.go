@@ -16,11 +16,6 @@ const (
 	infoHelp  = "displays additional user info"
 )
 
-type discordRole struct {
-	ID    string `json:"id"`
-	Color string `json:"color"`
-}
-
 func info(ctx *ctx.MessageContext, args []string) {
 	callback := func(member *discordgo.Member) error {
 		accountCreateDate, err := discordgo.SnowflakeTimestamp(member.User.ID)
@@ -37,6 +32,10 @@ func info(ctx *ctx.MessageContext, args []string) {
 		// no error handling here because for Non-Boosters premiumDate would always give error
 		premiumDate, _ := member.PremiumSince.Parse()
 
+		type discordRole struct {
+			ID    string `json:"id"`
+			Color string `json:"color"`
+		}
 		var discordRoles []discordRole
 		for _, role := range member.Roles {
 			role, err := ctx.Session.State.Role(ctx.Message.GuildID, role)
@@ -111,7 +110,7 @@ func info(ctx *ctx.MessageContext, args []string) {
 			})
 		}
 
-		_, err = ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed)
+		_, err = ctx.ReplyEmbed(&embed)
 		return err
 	}
 
