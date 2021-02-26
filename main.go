@@ -47,7 +47,8 @@ func main() {
 		return ctx.NewContext(&env, session, cache)
 	}
 
-	go routine.CleanupLoop(newContext(discord))
+	go routine.PruneAttachmentsCacheLoop()
+	go routine.UnmuteUsersLoop(newContext(discord))
 	go routine.SyncUsersLoop(newContext(discord))
 
 	discord.AddHandlerOnce(func(s *discordgo.Session, r *discordgo.Ready) {

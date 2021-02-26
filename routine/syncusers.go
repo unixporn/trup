@@ -15,7 +15,7 @@ func SyncUsersLoop(ctx *ctx.Context) {
 		func() {
 			defer func() {
 				if err := recover(); err != nil {
-					log.Printf("Panicked in syncUsersInDatabase with error: %v; Stack: %s\n", err, debug.Stack())
+					log.Printf("Panicked in SyncUsersLoop with error: %v; Stack: %s\n", err, debug.Stack())
 				}
 			}()
 

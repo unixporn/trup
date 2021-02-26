@@ -1,54 +1,14 @@
 package command
 
 import (
-	"fmt"
-	"log"
 	"strings"
 	"time"
 	"trup/ctx"
-	"trup/db"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/dustin/go-humanize"
 )
 
 const muteUsage = "mute <@user> <duration> [reason]"
-
-func MuteMember(env *ctx.Env, session *discordgo.Session, moderator *discordgo.User, userId string, duration time.Duration, reason string) error {
-	w := db.NewMute(env.Guild, moderator.ID, userId, reason, time.Now(), time.Now().Add(duration))
-	err := w.Save()
-	if err != nil {
-		return fmt.Errorf("Failed to save your mute. Error: %w", err)
-	}
-
-	err = session.GuildMemberRoleAdd(env.Guild, userId, env.RoleMute)
-	if err != nil {
-		return fmt.Errorf("Error adding role %w", err)
-	}
-
-	reasonText := ""
-	if reason != "" {
-		reasonText = " with reason: " + reason
-	}
-	durationText := humanize.RelTime(time.Now(), time.Now().Add(duration), "", "")
-	err = db.NewNote(moderator.ID, userId, "User was muted for "+durationText+reasonText, db.ManualNote).Save()
-	if err != nil {
-		return fmt.Errorf("Failed to set note about the user %w", err)
-	}
-
-	r := ""
-	if reason != "" {
-		r = " with reason: " + reason
-	}
-	if _, err = session.ChannelMessageSend(
-		env.ChannelModlog,
-		fmt.Sprintf("User <@%s> was muted by %s for %s%s.", userId, moderator.Username, durationText, r),
-	); err != nil {
-		log.Println("Failed to send mute message: " + err.Error())
-	}
-
-	return nil
-}
 
 func mute(ctx *ctx.MessageContext, args []string) {
 	if len(args) < 3 {
@@ -72,7 +32,7 @@ func mute(ctx *ctx.MessageContext, args []string) {
 			return nil
 		}
 
-		if err := MuteMember(ctx.Env, ctx.Session, ctx.Message.Author, user, i, reason); err != nil {
+		if err := ctx.MuteMember(ctx.Message.Author, user, i, reason); err != nil {
 			ctx.ReportUserError("Failed to mute user. Error: " + err.Error())
 			return nil
 		}

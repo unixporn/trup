@@ -3,7 +3,6 @@ package routine
 import (
 	"log"
 	"time"
-	"trup/command"
 	"trup/ctx"
 
 	"github.com/bwmarrin/discordgo"
@@ -42,7 +41,7 @@ func SpamProtection(ctx *ctx.Context, m *discordgo.Message) (deleted bool) {
 	}
 
 	if len(sameMessages) == 3 {
-		err := command.MuteMember(ctx.Env, ctx.Session, ctx.Session.State.User, m.Author.ID, time.Minute*30, "Spam")
+		err := ctx.MuteMember(ctx.Session.State.User, m.Author.ID, time.Minute*30, "Spam")
 		if err != nil {
 			log.Printf("Failed to mute spammer(ID: %s). Error: %v\n", m.Author.ID, err)
 			return false

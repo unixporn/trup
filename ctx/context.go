@@ -3,9 +3,12 @@ package ctx
 import (
 	"fmt"
 	"log"
+	"time"
+	"trup/db"
 	"trup/misc"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/dustin/go-humanize"
 )
 
 var (
@@ -95,4 +98,40 @@ func (ctx *Context) SetStatus(name string) {
 	if err := ctx.Session.UpdateStatusComplex(update); err != nil {
 		log.Println("Failed to update status: " + err.Error())
 	}
+}
+
+func (ctx *Context) MuteMember(moderator *discordgo.User, userId string, duration time.Duration, reason string) error {
+	w := db.NewMute(ctx.Env.Guild, moderator.ID, userId, reason, time.Now(), time.Now().Add(duration))
+	err := w.Save()
+	if err != nil {
+		return fmt.Errorf("Failed to save your mute. Error: %w", err)
+	}
+
+	err = ctx.Session.GuildMemberRoleAdd(ctx.Env.Guild, userId, ctx.Env.RoleMute)
+	if err != nil {
+		return fmt.Errorf("Error adding role %w", err)
+	}
+
+	reasonText := ""
+	if reason != "" {
+		reasonText = " with reason: " + reason
+	}
+	durationText := humanize.RelTime(time.Now(), time.Now().Add(duration), "", "")
+	err = db.NewNote(moderator.ID, userId, "User was muted for "+durationText+reasonText, db.ManualNote).Save()
+	if err != nil {
+		return fmt.Errorf("Failed to set note about the user %w", err)
+	}
+
+	r := ""
+	if reason != "" {
+		r = " with reason: " + reason
+	}
+	if _, err = ctx.Session.ChannelMessageSend(
+		ctx.Env.ChannelModlog,
+		fmt.Sprintf("User <@%s> was muted by %s for %s%s.", userId, moderator.Username, durationText, r),
+	); err != nil {
+		log.Println("Failed to send mute message: " + err.Error())
+	}
+
+	return nil
 }
