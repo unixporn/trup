@@ -13,5 +13,5 @@ func say(ctx *ctx.MessageContext, args []string) {
 	if err != nil {
 		return
 	}
-	ctx.Reply(reply)
+	ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, reply)
 }
