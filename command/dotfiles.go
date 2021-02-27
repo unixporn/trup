@@ -37,7 +37,7 @@ func dotfiles(ctx *ctx.MessageContext, args []string) {
 			return
 		}
 
-		ctx.ReportUserError(profile.Dotfiles)
+		_, _ = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, profile.Dotfiles)
 		return
 	}
 

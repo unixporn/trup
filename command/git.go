@@ -34,7 +34,7 @@ func git(ctx *ctx.MessageContext, args []string) {
 			return
 		}
 
-		ctx.Reply(profile.Git)
+		_, _ = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, profile.Git)
 		return
 	}
 
