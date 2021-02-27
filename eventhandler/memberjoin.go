@@ -7,7 +7,6 @@ import (
 	"time"
 	"trup/ctx"
 	"trup/db"
-	"trup/misc"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -29,11 +28,11 @@ func MemberJoin(ctx *ctx.Context, m *discordgo.GuildMemberAdd) {
 		Fields: []*discordgo.MessageEmbedField{
 			{
 				Name:  "Account Creation Date",
-				Value: accountCreateDate.UTC().Format(misc.DiscordDateFormat),
+				Value: accountCreateDate.UTC().String(),
 			},
 			{
 				Name:  "Join Date",
-				Value: time.Now().UTC().Format(misc.DiscordDateFormat),
+				Value: time.Now().UTC().String(),
 			},
 		},
 	}

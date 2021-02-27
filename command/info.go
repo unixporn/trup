@@ -5,7 +5,6 @@ import (
 	"log"
 	"strings"
 	"trup/ctx"
-	"trup/misc"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/dustin/go-humanize"
@@ -86,19 +85,19 @@ func info(ctx *ctx.MessageContext, args []string) {
 
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
 			Name:   "Account Creation Date",
-			Value:  accountCreateDate.UTC().Format(misc.DiscordDateFormat) + " (" + humanize.Time((accountCreateDate)) + ")",
+			Value:  accountCreateDate.UTC().String() + " (" + humanize.Time((accountCreateDate)) + ")",
 			Inline: inline,
 		})
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
 			Name:   "Join Date",
-			Value:  joinDate.UTC().Format(misc.DiscordDateFormat) + " (" + humanize.Time((joinDate)) + ")",
+			Value:  joinDate.UTC().String() + " (" + humanize.Time((joinDate)) + ")",
 			Inline: inline,
 		})
 
 		if !premiumDate.IsZero() {
 			embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
 				Name:   "Booster Since",
-				Value:  premiumDate.UTC().Format(misc.DiscordDateFormat) + " (" + humanize.Time((premiumDate)) + ")",
+				Value:  premiumDate.UTC().String() + " (" + humanize.Time((premiumDate)) + ")",
 				Inline: inline,
 			})
 		}

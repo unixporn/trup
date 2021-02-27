@@ -6,7 +6,6 @@ import (
 	"runtime/debug"
 	"time"
 	"trup/ctx"
-	"trup/misc"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -27,7 +26,7 @@ func MemberLeave(ctx *ctx.Context, m *discordgo.GuildMemberRemove) {
 		Fields: []*discordgo.MessageEmbedField{
 			{
 				Name:  "Leave Date",
-				Value: time.Now().UTC().Format(misc.DiscordDateFormat),
+				Value: time.Now().UTC().String(),
 			},
 		},
 	}
