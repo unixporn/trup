@@ -42,6 +42,7 @@ func (ctx *MessageContext) ReportError(msg string, err error) {
 		msg,
 		err,
 	)
+
 	_, _ = ctx.ReplyEmbed(&discordgo.MessageEmbed{
 		Title:       "Error",
 		Description: msg,
@@ -56,13 +57,12 @@ func (ctx *MessageContext) ReplyEmbed(embed *discordgo.MessageEmbed) (*discordgo
 	if embed.Timestamp == "" {
 		embed.Timestamp = time.Now().Format(misc.DiscordDateFormat)
 	}
-	if embed.Footer == nil {
-		embed.Footer = &discordgo.MessageEmbedFooter{
-			Text: "Response to " + ctx.Message.Author.String() + "'s message",
-		}
-	}
 
-	return ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, embed)
+	return ctx.Session.ChannelMessageSendComplex(ctx.Message.ChannelID, &discordgo.MessageSend{
+		Embed:           embed,
+		Reference:       ctx.Message.Reference(),
+		AllowedMentions: &discordgo.MessageAllowedMentions{},
+	})
 }
 
 func (ctx *MessageContext) ReplyEmbedSimple(title string, description string) (*discordgo.Message, error) {
