@@ -86,6 +86,12 @@ var Commands = map[string]Command{
 		Usage:        pollUsage,
 		IsAuthorized: allowAnyone,
 	},
+	"latency": {
+		Exec:         latency,
+		Usage:        latencyUsage,
+		Help:         latencyHelp,
+		IsAuthorized: allowAnyone,
+	},
 	"mute": {
 		Exec:         mute,
 		Usage:        muteUsage,
