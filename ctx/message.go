@@ -57,6 +57,12 @@ func (ctx *MessageContext) ReplyEmbed(embed *discordgo.MessageEmbed) (*discordgo
 	if embed.Timestamp == "" {
 		embed.Timestamp = time.Now().Format(misc.DiscordDateFormat)
 	}
+	if embed.Footer == nil {
+		embed.Footer = &discordgo.MessageEmbedFooter{
+			Text:    "\u200b",
+			IconURL: ctx.randomStareEmojiURL(),
+		}
+	}
 
 	return ctx.Session.ChannelMessageSendComplex(ctx.Message.ChannelID, &discordgo.MessageSend{
 		Embed:           embed,

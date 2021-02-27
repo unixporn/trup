@@ -3,6 +3,8 @@ package ctx
 import (
 	"fmt"
 	"log"
+	"math/rand"
+	"strings"
 	"time"
 	"trup/db"
 	"trup/misc"
@@ -134,4 +136,30 @@ func (ctx *Context) MuteMember(moderator *discordgo.User, userId string, duratio
 	}
 
 	return nil
+}
+
+func (ctx *MessageContext) stareEmojis() []*discordgo.Emoji {
+	guild, err := ctx.Session.State.Guild(ctx.Message.GuildID)
+	if err != nil {
+		return nil
+	}
+
+	var stareEmojis []*discordgo.Emoji
+	for _, emoji := range guild.Emojis {
+		if strings.HasPrefix(emoji.Name, "stare") {
+			stareEmojis = append(stareEmojis, emoji)
+		}
+	}
+
+	return stareEmojis
+}
+
+func (ctx *MessageContext) randomStareEmojiURL() string {
+	emojis := ctx.stareEmojis()
+	emoji := emojis[rand.Intn(len(emojis))]
+
+	if emoji.Animated {
+		return discordgo.EndpointEmojiAnimated(emoji.ID)
+	}
+	return discordgo.EndpointEmoji(emoji.ID)
 }
