@@ -19,6 +19,7 @@ func pfp(ctx *ctx.MessageContext, args []string) {
 		avatar := user.AvatarURL("2048")
 		if _, err := ctx.ReplyEmbed(&discordgo.MessageEmbed{
 			Title: fmt.Sprintf("%s#%s's profile picture", user.Username, user.Discriminator),
+			Color: ctx.Session.State.UserColor(user.ID, ctx.Message.ChannelID),
 			Image: &discordgo.MessageEmbedImage{
 				URL: avatar,
 			},
