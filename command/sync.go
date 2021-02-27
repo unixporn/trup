@@ -6,18 +6,18 @@ import (
 )
 
 const (
-	showcaseUsage = "showcase sync"
+	syncUsage = "sync <showcase>"
 )
 
-func showcase(ctx *ctx.MessageContext, args []string) {
+func sync(ctx *ctx.MessageContext, args []string) {
 	_ = ctx.Session.ChannelTyping(ctx.Message.ChannelID)
 
 	if len(args) < 1 {
-		ctx.ReportUserError("Usage: " + showcaseUsage)
+		ctx.ReportUserError("Usage: " + syncUsage)
 		return
 	}
 
-	if args[1] == "sync" {
+	if args[1] == "showcase" {
 		ctx.Reply("Syncing... This may take a while")
 
 		var entries []db.ShowcaseEntry
@@ -69,5 +69,5 @@ func showcase(ctx *ctx.MessageContext, args []string) {
 		return
 	}
 
-	ctx.ReportUserError("Usage: " + showcaseUsage)
+	ctx.ReportUserError("Usage: " + syncUsage)
 }

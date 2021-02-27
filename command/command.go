@@ -133,9 +133,9 @@ var Commands = map[string]Command{
 		Usage:        sayUsage,
 		IsAuthorized: moderatorOnly,
 	},
-	"showcase": {
-		Exec:         showcase,
-		Usage:        showcaseUsage,
+	"sync": {
+		Exec:         sync,
+		Usage:        syncUsage,
 		IsAuthorized: moderatorOnly,
 	},
 	"blocklist": {
