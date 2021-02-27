@@ -3,7 +3,7 @@ module trup
 go 1.13
 
 require (
-	github.com/bwmarrin/discordgo v0.22.0
+	github.com/bwmarrin/discordgo v0.23.1
 	github.com/dustin/go-humanize v1.0.0
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect

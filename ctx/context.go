@@ -93,8 +93,8 @@ func (ctx *Context) Members() ([]*discordgo.Member, error) {
 }
 
 func (ctx *Context) SetStatus(name string) {
-	game := discordgo.Game{Type: discordgo.GameTypeWatching, Name: name}
-	update := discordgo.UpdateStatusData{Game: &game}
+	game := discordgo.Activity{Name: name, Type: discordgo.ActivityTypeGame}
+	update := discordgo.UpdateStatusData{Activities: []*discordgo.Activity{&game}}
 	if err := ctx.Session.UpdateStatusComplex(update); err != nil {
 		log.Println("Failed to update status: " + err.Error())
 	}
