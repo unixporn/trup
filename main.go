@@ -89,4 +89,3 @@ func main() {
 
 	discord.Close()
 }
-
