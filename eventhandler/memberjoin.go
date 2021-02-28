@@ -9,6 +9,7 @@ import (
 	"trup/db"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/dustin/go-humanize"
 )
 
 func MemberJoin(ctx *ctx.Context, m *discordgo.GuildMemberAdd) {
@@ -28,11 +29,11 @@ func MemberJoin(ctx *ctx.Context, m *discordgo.GuildMemberAdd) {
 		Fields: []*discordgo.MessageEmbedField{
 			{
 				Name:  "Account Creation Date",
-				Value: accountCreateDate.UTC().String(),
+				Value: accountCreateDate.UTC().Format("2006-01-02 15:04") + " (" + humanize.Time(accountCreateDate) + ")",
 			},
 			{
 				Name:  "Join Date",
-				Value: time.Now().UTC().String(),
+				Value: accountCreateDate.UTC().Format("2006-01-02 15:04"),
 			},
 		},
 	}
