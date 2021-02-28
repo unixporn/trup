@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"runtime/debug"
-	"time"
 	"trup/ctx"
 	"trup/db"
 
