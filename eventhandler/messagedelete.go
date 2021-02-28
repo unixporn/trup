@@ -5,6 +5,7 @@ import (
 	"log"
 	"runtime/debug"
 	"strings"
+	"time"
 	"trup/ctx"
 	"trup/db"
 	"trup/misc"
@@ -12,7 +13,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-var lastAuditId string
+var lastAuditEntry *discordgo.AuditLogEntry
 
 func MessageDelete(ctx *ctx.Context, m *discordgo.MessageDelete) {
 	defer func() {
@@ -21,6 +22,15 @@ func MessageDelete(ctx *ctx.Context, m *discordgo.MessageDelete) {
 		}
 	}()
 
+	message, inCache := ctx.MessageCache.GetById(m.ID)
+	if !inCache {
+		messageCreationDate, _ := discordgo.SnowflakeTimestamp(m.ID)
+		log.Printf("Unknown user deleted message %s(not in cache), message creation date: %s\n", m.ID, messageCreationDate.UTC().String())
+		return
+	}
+
+	// wait a bit before requesting Audit Log, to give Discord time to log it
+	time.Sleep(time.Millisecond * 500)
 	auditLog, err := ctx.Session.GuildAuditLog(m.GuildID, "", "", int(discordgo.AuditLogActionMessageDelete), 1)
 	if err != nil {
 		log.Printf("Failed to get audit log: %v\n", err.Error())
@@ -29,21 +39,17 @@ func MessageDelete(ctx *ctx.Context, m *discordgo.MessageDelete) {
 
 	lastEntry := auditLog.AuditLogEntries[0]
 	var deleter string
-	if lastAuditId != lastEntry.ID && *lastEntry.ActionType == discordgo.AuditLogActionMessageDelete && lastEntry.Options.MessageID == m.ID {
+	if (lastAuditEntry == nil || lastAuditEntry.ID != lastEntry.ID || lastEntry.Options.Count > lastAuditEntry.Options.Count) &&
+		*lastEntry.ActionType == discordgo.AuditLogActionMessageDelete &&
+		lastEntry.Options.ChannelID == message.ChannelID &&
+		lastEntry.TargetID == message.Author.ID {
 		for _, u := range auditLog.Users {
 			if u.ID == lastEntry.UserID {
 				deleter = u.Username + "#" + u.Discriminator
 			}
 		}
 	}
-	lastAuditId = lastEntry.ID
-
-	message, inCache := ctx.MessageCache.GetById(m.ID)
-	if !inCache {
-		messageCreationDate, _ := discordgo.SnowflakeTimestamp(m.ID)
-		log.Printf("Unknown user deleted message %s(not in cache), message creation date: %s\n", m.ID, messageCreationDate.UTC().String())
-		return
-	}
+	lastAuditEntry = lastEntry
 
 	var footer *discordgo.MessageEmbedFooter
 	if channel, err := ctx.Session.State.Channel(message.ChannelID); err == nil {
