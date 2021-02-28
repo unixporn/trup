@@ -2,6 +2,7 @@ package ctx
 
 import (
 	"log"
+	"strings"
 	"time"
 	"trup/misc"
 
@@ -18,7 +19,12 @@ type MessageContext struct {
 }
 
 func (ctx *MessageContext) Reply(msg string) {
-	_, err := ctx.ReplyEmbedSimple("", msg)
+	var title string
+	if len(msg) < 256 && !strings.Contains(msg, "\n") {
+		title = msg
+		msg = ""
+	}
+	_, err := ctx.ReplyEmbedSimple(title, msg)
 	if err != nil {
 		log.Printf("Failed to reply to message %s; Error: %s\n", ctx.Message.ID, err)
 	}

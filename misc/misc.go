@@ -15,7 +15,7 @@ const (
 
 var (
 	NumberEmojis              = []string{"1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"}
-	EmojiRegex                = regexp.MustCompile(`<((@!?\d+)|(:.+?:\d+))>`)
+	EmojiRegex                = regexp.MustCompile(`(?i)<(a)?:(.+):(\d+)>`)
 	UrlRegex                  = regexp.MustCompile(`(?i)(https?|ftp)://[^\s/$.?#].[^\s]*`)
 	DiscordDateFormat         = "2006-01-02T15:04:05.0000Z"
 	parseMentionRegexp        = regexp.MustCompile(`<@!?(\d+)>`)
