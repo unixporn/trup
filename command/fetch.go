@@ -3,20 +3,26 @@ package command
 import (
 	"encoding/json"
 	"log"
+	"sort"
 	"strings"
+	"trup/ctx"
 	"trup/db"
+	"trup/misc"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/dustin/go-humanize"
 	"github.com/jackc/pgx"
 )
 
-const setFetchHelp = "Run without arguments to see instructions."
+const (
+	setFetchHelp  = "Run without arguments to see instructions."
+	setFetchUsage = "setfetch [update]"
+)
 
-func setFetch(ctx *Context, args []string) {
+func setFetch(ctx *ctx.MessageContext, args []string) {
 	lines := strings.Split(ctx.Message.Content, "\n")
 	if len(lines) < 2 && len(ctx.Message.Attachments) == 0 {
-		ctx.Reply("run this: `curl -s https://raw.githubusercontent.com/unixporn/trup/prod/fetcher.sh | sh` and follow the instructions. It's recommended that you download and read the script before running it, as piping curl to sh isn't always the safest practice. (<https://blog.dijit.sh/don-t-pipe-curl-to-bash>)\n > NOTE: use `!setfetch update` to update individual values (including the image!) without overwriting everything.\n > NOTE: If you're trying to manually change a value, it needs a newline after !setfetch (update).\n > NOTE: !git, !dotfiles, and !desc are different commands.")
+		ctx.Reply("Run this: `curl -s https://raw.githubusercontent.com/unixporn/trup/prod/fetcher.sh | sh` and follow the instructions. It's recommended that you download and read the script before running it, as piping curl to sh isn't always the safest practice. (<https://blog.dijit.sh/don-t-pipe-curl-to-bash>)\n > NOTE: use `!setfetch update` to update individual values (including the image!) without overwriting everything.\n > NOTE: If you're trying to manually change a value, it needs a newline after !setfetch (update).\n > NOTE: !git, !dotfiles, and !desc are different commands")
 
 		return
 	}
@@ -27,7 +33,7 @@ func setFetch(ctx *Context, args []string) {
 		sysinfo, err := db.GetSysinfo(ctx.Message.Author.ID)
 		if err != nil {
 			if err.Error() == pgx.ErrNoRows.Error() {
-				ctx.Reply("Cannot update fetch; No existing fetch data found")
+				ctx.ReportUserError("Cannot update fetch; No existing fetch data found")
 			} else {
 				ctx.ReportError("Failed to get existing fetch data", err)
 			}
@@ -53,6 +59,12 @@ func setFetch(ctx *Context, args []string) {
 		"GPU":              &data.Gpu,
 	}
 
+	allowedKeys := []string{"Memory"}
+	for key := range m {
+		allowedKeys = append(allowedKeys, key)
+	}
+	sort.Strings(allowedKeys)
+
 	for i := 1; i < len(lines); i++ {
 		kI := strings.Index(lines[i], ":")
 		if kI == -1 {
@@ -62,7 +74,7 @@ func setFetch(ctx *Context, args []string) {
 		key := lines[i][:kI]
 		value := strings.TrimSpace(lines[i][kI+1:])
 
-		if isValidURL(lines[i]) {
+		if misc.IsValidURL(lines[i]) {
 			data.Image = lines[i]
 
 			continue
@@ -78,13 +90,13 @@ func setFetch(ctx *Context, args []string) {
 		case "Memory":
 			b, err := humanize.ParseBytes(value)
 			if err != nil {
-				ctx.Reply("Failed to parse Max RAM")
+				ctx.ReportUserError("Failed to parse Max RAM")
 				return
 			}
 
 			data.Memory = b
 		default:
-			ctx.Reply("key '" + key + "' is not valid")
+			ctx.ReportUserError("Field '" + key + "' is not valid. The allowed fields are: " + strings.Join(allowedKeys, ", "))
 
 			return
 		}
@@ -107,31 +119,42 @@ func setFetch(ctx *Context, args []string) {
 	info := db.NewSysinfo(ctx.Message.Author.ID, data)
 	err := info.Save()
 	if err != nil {
-		ctx.Reply("Failed to save. Error: " + err.Error())
+		ctx.ReportUserError("Failed to save. Error: " + err.Error())
 		return
 	}
-	ctx.Reply("success. You can now run !fetch")
+	ctx.Reply("Success. You can now run !fetch")
 }
 
 const fetchUsage = "fetch [user]"
 
-func askUserToSetfetch(ctx *Context, himself bool) {
-	message := "that user hasn't set their fetch information. You can ask them to run !setfetch"
+func askUserToSetfetch(ctx *ctx.MessageContext, user *discordgo.User, himself bool) {
+	message := "That user hasn't set their fetch information. You can ask them to run **!setfetch**"
+	if user != nil {
+		message = strings.Replace(message, "That user", user.String(), 1)
+	}
 	if himself {
-		message = "you first need to set your information with !setfetch"
+		message = "You first need to set your information with !setfetch"
 	}
 
-	ctx.Reply(message)
+	ctx.ReportUserError(message)
 }
 
-func askUserToSetfetchSomeone(ctx *Context) { askUserToSetfetch(ctx, false) }
-func askUserToSetfetchHimself(ctx *Context) { askUserToSetfetch(ctx, true) }
+func askUserToSetfetchSomeone(ctx *ctx.MessageContext, user *discordgo.User) {
+	askUserToSetfetch(ctx, user, false)
+}
+func askUserToSetfetchHimself(ctx *ctx.MessageContext) { askUserToSetfetch(ctx, nil, true) }
 
-func doFetch(ctx *Context, user *discordgo.User) {
+func doFetch(ctx *ctx.MessageContext, user *discordgo.User) {
 	const inline = true
 	embed := discordgo.MessageEmbed{
 		Title:  "Fetch " + user.Username + "#" + user.Discriminator,
+		Color:  ctx.Session.State.UserColor(user.ID, ctx.Message.ChannelID),
 		Fields: []*discordgo.MessageEmbedField{},
+		Footer: &discordgo.MessageEmbedFooter{},
+	}
+
+	if embed.Color == 0 {
+		embed.Color = 1
 	}
 
 	profile, err := db.GetProfile(user.ID)
@@ -179,16 +202,15 @@ func doFetch(ctx *Context, user *discordgo.User) {
 			if user.ID == ctx.Message.Author.ID {
 				askUserToSetfetchHimself(ctx)
 			} else {
-				askUserToSetfetchSomeone(ctx)
+				askUserToSetfetchSomeone(ctx, user)
 			}
 			return
 		}
 
-		ctx.Reply("failed to find the user's info. Error: " + err.Error())
+		ctx.ReportUserError("Failed to find the user's info. Error: " + err.Error())
 		return
 	}
 
-	embed.Color = ctx.Session.State.UserColor(user.ID, ctx.Message.ChannelID)
 	if info.Info.Distro != "" {
 		embed.Thumbnail = &discordgo.MessageEmbedThumbnail{
 			URL: getDistroImage(info.Info.Distro),
@@ -314,8 +336,7 @@ func doFetch(ctx *Context, user *discordgo.User) {
 	}
 
 	if !info.ModifyDate.IsZero() {
-		const dateFormat = "2006-01-02T15:04:05.0000Z"
-		embed.Timestamp = info.ModifyDate.UTC().Format(dateFormat)
+		embed.Timestamp = info.ModifyDate.UTC().Format(misc.DiscordDateFormat)
 	}
 
 sysinfoEnd:
@@ -325,12 +346,12 @@ sysinfoEnd:
 		if user.ID == ctx.Message.Author.ID {
 			askUserToSetfetchHimself(ctx)
 		} else {
-			askUserToSetfetchSomeone(ctx)
+			askUserToSetfetchSomeone(ctx, user)
 		}
 		return
 	}
 
-	_, err = ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed)
+	_, err = ctx.ReplyEmbed(&embed)
 	if err != nil {
 		var retry bool
 		if restErr, ok := err.(*discordgo.RESTError); ok {
@@ -348,18 +369,18 @@ sysinfoEnd:
 		}
 
 		if retry {
-			if _, err = ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed); err != nil {
+			if _, err = ctx.ReplyEmbed(&embed); err != nil {
 				log.Println("Failed to send channel embed: " + err.Error())
 			}
 		}
 	}
 }
 
-func fetch(ctx *Context, args []string) {
+func fetch(ctx *ctx.MessageContext, args []string) {
 	if len(args) < 2 {
 		doFetch(ctx, ctx.Message.Author)
 	} else {
-		err := ctx.requestUserByName(false, strings.Join(args[1:], " "), func(member *discordgo.Member) error {
+		err := ctx.RequestUserByName(false, strings.Join(args[1:], " "), func(member *discordgo.Member) error {
 			doFetch(ctx, member.User)
 			return nil
 		})

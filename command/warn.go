@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"trup/ctx"
 	"trup/db"
+	"trup/misc"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/dustin/go-humanize"
@@ -12,22 +14,22 @@ import (
 
 const warnUsage = "warn <@user> <reason>"
 
-func warn(ctx *Context, args []string) {
+func warn(ctx *ctx.MessageContext, args []string) {
 	if len(args) < 3 {
-		ctx.Reply("Usage: " + warnUsage)
+		ctx.ReportUserError("Usage: " + warnUsage)
 		return
 	}
 
-	user := parseUser(args[1])
+	user := misc.ParseUser(args[1])
 	if user == "" {
-		ctx.Reply("The first argument must be a user mention.")
+		ctx.ReportUserError("The first argument must be a user mention")
 		return
 	}
 
 	reason := strings.Join(args[2:], " ")
 	warningMessageLink := fmt.Sprintf("[(warning)](%s)", makeMessageLink(ctx.Message.GuildID, ctx.Message))
 
-	err := ctx.requestUserByName(true, args[1], func(m *discordgo.Member) error {
+	err := ctx.RequestUserByName(true, args[1], func(m *discordgo.Member) error {
 		user := m.User.ID
 
 		w := db.NewWarn(ctx.Message.Author.ID, user, reason)
@@ -60,7 +62,7 @@ func warn(ctx *Context, args []string) {
 
 		_, err = ctx.Session.ChannelMessageSend(
 			ctx.Env.ChannelModlog,
-			fmt.Sprintf("<@%s> was warned by moderator %s%s. They've been warned%s.", user, taker.Username, r, nth),
+			fmt.Sprintf("<@%s> was warned by moderator %s%s. They've been warned%s", user, taker.Username, r, nth),
 		)
 		if err != nil {
 			log.Printf("Error sending warning notice into modlog: %s\n", err)

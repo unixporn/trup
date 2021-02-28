@@ -1,24 +1,24 @@
 package command
 
 import (
-	"log"
+	"trup/ctx"
 	"trup/db"
 )
 
 const (
-	showcaseUsage = "showcase sync"
+	syncUsage = "sync <showcase>"
 )
 
-func showcase(ctx *Context, args []string) {
+func sync(ctx *ctx.MessageContext, args []string) {
 	_ = ctx.Session.ChannelTyping(ctx.Message.ChannelID)
 
 	if len(args) < 1 {
-		ctx.Reply("Usage: " + showcaseUsage)
+		ctx.ReportUserError("Usage: " + syncUsage)
 		return
 	}
 
-	if args[1] == "sync" {
-		ctx.Reply("Syncing... This may take a while.")
+	if args[1] == "showcase" {
+		ctx.Reply("Syncing... This may take a while")
 
 		var entries []db.ShowcaseEntry
 
@@ -28,7 +28,6 @@ func showcase(ctx *Context, args []string) {
 			if err != nil {
 				panic(err)
 			}
-			log.Printf("msgs: %#v\n", msgs)
 
 			if len(msgs) == 0 {
 				break
@@ -70,5 +69,5 @@ func showcase(ctx *Context, args []string) {
 		return
 	}
 
-	ctx.Reply("Usage: " + showcaseUsage)
+	ctx.ReportUserError("Usage: " + syncUsage)
 }

@@ -1,7 +1,9 @@
 package command
 
 import (
+	"trup/ctx"
 	"trup/db"
+	"trup/misc"
 
 	"github.com/jackc/pgx"
 )
@@ -11,7 +13,7 @@ const (
 	gitHelp  = "Adds a git link to your fetch."
 )
 
-func git(ctx *Context, args []string) {
+func git(ctx *ctx.MessageContext, args []string) {
 	user := ctx.Message.Author.ID
 
 	if len(args) == 1 {
@@ -19,7 +21,7 @@ func git(ctx *Context, args []string) {
 		profile, err := db.GetProfile(user)
 		if err != nil {
 			if err.Error() == pgx.ErrNoRows.Error() {
-				ctx.Reply(setItFirstMsg)
+				ctx.ReportUserError(setItFirstMsg)
 				return
 			} else {
 				ctx.ReportError("Failed to fetch your profile", err)
@@ -28,18 +30,18 @@ func git(ctx *Context, args []string) {
 		}
 
 		if profile.Git == "" {
-			ctx.Reply(setItFirstMsg)
+			ctx.ReportUserError(setItFirstMsg)
 			return
 		}
 
-		ctx.Reply(profile.Git)
+		_, _ = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, profile.Git)
 		return
 	}
 
 	url := args[1]
 
-	if !isValidURL(url) {
-		ctx.Reply("provide a valid url")
+	if !misc.IsValidURL(url) {
+		ctx.ReportUserError("You need to provide a valid url")
 		return
 	}
 

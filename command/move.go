@@ -3,25 +3,27 @@ package command
 import (
 	"fmt"
 	"strings"
+	"trup/ctx"
+	"trup/misc"
 )
 
 const moveUsage = "move <#channel> [<@user> ...]"
 
-func move(ctx *Context, args []string) {
+func move(ctx *ctx.MessageContext, args []string) {
 	if len(args) < 2 {
-		ctx.Reply("Usage: " + moveUsage)
+		ctx.ReportUserError("Usage: " + moveUsage)
 		return
 	}
 
-	target := parseChannelMention(args[1])
+	target := misc.ParseChannelMention(args[1])
 	if target == "" {
-		ctx.Reply("invalid channel")
+		ctx.ReportUserError("Invalid channel")
 		return
 	}
 
 	var mentions []string
 	for _, a := range args[2:] {
-		if mention := parseMention(a); mention != "" {
+		if mention := misc.ParseMention(a); mention != "" {
 			mentions = append(mentions, fmt.Sprintf("<@!%s>", mention))
 		}
 	}
@@ -30,7 +32,7 @@ func move(ctx *Context, args []string) {
 	link := fmt.Sprintf("<https://discord.com/channels/%s/%s/%s>", ctx.Message.GuildID, ctx.Message.ChannelID, ctx.Message.ID)
 	m, err := ctx.Session.ChannelMessageSend(target, fmt.Sprintf("Continuation from <#%s> - %s (%s)", ctx.Message.ChannelID, mentionsString, link))
 	if err != nil {
-		ctx.ReportError("error sending to channel (might not exist or no access)", err)
+		ctx.ReportError("Error sending to channel (might not exist or no access)", err)
 		return
 	}
 
