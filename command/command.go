@@ -100,7 +100,7 @@ var Commands = map[string]Command{
 	"ban": {
 		Exec:         ban,
 		Usage:        banUsage,
-		IsAuthorized: moderatorOnly,
+		IsAuthorized: moderatorAndHelperOnly,
 	},
 	"delban": {
 		Exec:         delban,
