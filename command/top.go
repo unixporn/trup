@@ -5,6 +5,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"trup/ctx"
 	"trup/db"
 
 	"github.com/bwmarrin/discordgo"
@@ -15,7 +16,7 @@ const (
 	topUsage = "!top [Distro OR DeWm OR Terminal etc.] [Search Query, e.g. arch]"
 )
 
-func top(ctx *Context, args []string) {
+func top(ctx *ctx.MessageContext, args []string) {
 	var title, description string
 	var success bool
 	if len(args) == 2 {
@@ -33,16 +34,16 @@ func top(ctx *Context, args []string) {
 	if !success {
 		return
 	}
-	_, err := ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &discordgo.MessageEmbed{
+	_, err := ctx.ReplyEmbed(&discordgo.MessageEmbed{
 		Title:       title,
 		Description: description,
 	})
 	if err != nil {
-		log.Println("Failed on ChannelMessageSendEmbed in !top", err)
+		log.Println("Failed on ReplyEmbed in !top", err)
 	}
 }
 
-func topAll(ctx *Context) (description string, success bool) {
+func topAll(ctx *ctx.MessageContext) (description string, success bool) {
 	topFields, err := db.TopSysinfoFields()
 	if err != nil {
 		ctx.ReportError("Failed to get top fields", err)
@@ -57,14 +58,14 @@ func topAll(ctx *Context) (description string, success bool) {
 	return descriptionBuilder.String(), true
 }
 
-func topSpecific(ctx *Context, field string) (description string, success bool) {
+func topSpecific(ctx *ctx.MessageContext, field string) (description string, success bool) {
 	topFields, err := db.TopFieldValues(field)
 	if err != nil {
 		ctx.ReportError("Failed to get top entries", err)
 		return "", false
 	}
 	if len(topFields) == 0 {
-		ctx.Reply("No entries were found. Check if your field name is correct(capitalization matters). Usage: " + topUsage)
+		ctx.ReportUserError("No entries were found. Check if your field name is correct(capitalization matters). Usage: " + topUsage)
 		return "", false
 	}
 	var descriptionBuilder strings.Builder
@@ -75,7 +76,7 @@ func topSpecific(ctx *Context, field string) (description string, success bool) 
 	return descriptionBuilder.String(), true
 }
 
-func topUsers(ctx *Context, field string, value string) {
+func topUsers(ctx *ctx.MessageContext, field string, value string) {
 	stat, err := db.FetchFieldValueStat(field, value)
 	if err != nil {
 		ctx.ReportError("Failed to fetch the number of users", err)

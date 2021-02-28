@@ -64,6 +64,24 @@ CREATE TABLE IF NOT EXISTS attachment_log_cache (
     primary key (attachment_id)
 );
 
+CREATE TABLE IF NOT EXISTS users (
+    id text not null, -- discord id
+    username text not null,
+    tag char(4) not null,
+    nickname text not null, -- empty string means no nickname
+    account_create_date timestamptz not null,
+    server_join_date timestamptz, -- first known join date
+    primary key (id)
+);
+
+CREATE TABLE IF NOT EXISTS showcase_entries (
+    message_id text not null,
+    user_id text not null,
+    score integer not null,
+    create_date timestamptz not null,
+    primary key (message_id)
+);
+
 CREATE OR REPLACE PROCEDURE sysinfo_set(_usr varchar, _info jsonb, _modify_date timestamptz, _create_date timestamptz)
 language plpgsql
 AS $$

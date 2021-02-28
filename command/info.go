@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"trup/ctx"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/dustin/go-humanize"
@@ -14,12 +15,7 @@ const (
 	infoHelp  = "displays additional user info"
 )
 
-type discordRole struct {
-	ID    string `json:"id"`
-	Color string `json:"color"`
-}
-
-func info(ctx *Context, args []string) {
+func info(ctx *ctx.MessageContext, args []string) {
 	callback := func(member *discordgo.Member) error {
 		accountCreateDate, err := discordgo.SnowflakeTimestamp(member.User.ID)
 		if err != nil {
@@ -35,6 +31,10 @@ func info(ctx *Context, args []string) {
 		// no error handling here because for Non-Boosters premiumDate would always give error
 		premiumDate, _ := member.PremiumSince.Parse()
 
+		type discordRole struct {
+			ID    string `json:"id"`
+			Color string `json:"color"`
+		}
 		var discordRoles []discordRole
 		for _, role := range member.Roles {
 			role, err := ctx.Session.State.Role(ctx.Message.GuildID, role)
@@ -85,19 +85,19 @@ func info(ctx *Context, args []string) {
 
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
 			Name:   "Account Creation Date",
-			Value:  accountCreateDate.UTC().Format("2006-01-02 15:04") + " (" + humanize.Time((accountCreateDate)) + ")",
+			Value:  accountCreateDate.UTC().String() + " (" + humanize.Time((accountCreateDate)) + ")",
 			Inline: inline,
 		})
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
 			Name:   "Join Date",
-			Value:  joinDate.UTC().Format("2006-01-02 15:04") + " (" + humanize.Time((joinDate)) + ")",
+			Value:  joinDate.UTC().String() + " (" + humanize.Time((joinDate)) + ")",
 			Inline: inline,
 		})
 
 		if !premiumDate.IsZero() {
 			embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
 				Name:   "Booster Since",
-				Value:  premiumDate.UTC().Format("2006-01-02 15:04") + " (" + humanize.Time((premiumDate)) + ")",
+				Value:  premiumDate.UTC().String() + " (" + humanize.Time((premiumDate)) + ")",
 				Inline: inline,
 			})
 		}
@@ -109,7 +109,7 @@ func info(ctx *Context, args []string) {
 			})
 		}
 
-		_, err = ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed)
+		_, err = ctx.ReplyEmbed(&embed)
 		return err
 	}
 
@@ -125,7 +125,7 @@ func info(ctx *Context, args []string) {
 		}
 
 	} else {
-		if err := ctx.requestUserByName(false, strings.Join(args[1:], " "), callback); err != nil {
+		if err := ctx.RequestUserByName(false, strings.Join(args[1:], " "), callback); err != nil {
 			ctx.ReportError("Failed to request user by name.", err)
 		}
 	}

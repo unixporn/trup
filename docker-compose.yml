@@ -2,8 +2,14 @@ version: "2.1"
 services:
   trup:
     image: trup
-    build: ./
+    build:
+      context: .
+      args:
+        ENABLE_AIR: "1"
     container_name: trup
+    command: air
+    volumes:
+      - ./:/app
     env_file:
       - .env
     environment:

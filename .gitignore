@@ -5,3 +5,4 @@ trup
 pglogs
 postgres/
 postgres_data/
+tmp/

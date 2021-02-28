@@ -3,20 +3,26 @@ package command
 import (
 	"encoding/json"
 	"log"
+	"sort"
 	"strings"
+	"trup/ctx"
 	"trup/db"
+	"trup/misc"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/dustin/go-humanize"
 	"github.com/jackc/pgx"
 )
 
-const setFetchHelp = "Run without arguments to see instructions."
+const (
+	setFetchHelp  = "Run without arguments to see instructions."
+	setFetchUsage = "setfetch [update]"
+)
 
-func setFetch(ctx *Context, args []string) {
+func setFetch(ctx *ctx.MessageContext, args []string) {
 	lines := strings.Split(ctx.Message.Content, "\n")
 	if len(lines) < 2 && len(ctx.Message.Attachments) == 0 {
-		ctx.Reply("run this: `curl -s https://raw.githubusercontent.com/unixporn/trup/prod/fetcher.sh | sh` and follow the instructions. It's recommended that you download and read the script before running it, as piping curl to sh isn't always the safest practice. (<https://blog.dijit.sh/don-t-pipe-curl-to-bash>)\n > NOTE: use `!setfetch update` to update individual values (including the image!) without overwriting everything.\n > NOTE: If you're trying to manually change a value, it needs a newline after !setfetch (update).\n > NOTE: !git, !dotfiles, and !desc are different commands.")
+		ctx.Reply("Run this: `curl -s https://raw.githubusercontent.com/unixporn/trup/prod/fetcher.sh | sh` and follow the instructions. It's recommended that you download and read the script before running it, as piping curl to sh isn't always the safest practice. (<https://blog.dijit.sh/don-t-pipe-curl-to-bash>)\n > NOTE: use `!setfetch update` to update individual values (including the image!) without overwriting everything.\n > NOTE: If you're trying to manually change a value, it needs a newline after !setfetch (update).\n > NOTE: !git, !dotfiles, and !desc are different commands")
 
 		return
 	}
@@ -27,7 +33,7 @@ func setFetch(ctx *Context, args []string) {
 		sysinfo, err := db.GetSysinfo(ctx.Message.Author.ID)
 		if err != nil {
 			if err.Error() == pgx.ErrNoRows.Error() {
-				ctx.Reply("Cannot update fetch; No existing fetch data found")
+				ctx.ReportUserError("Cannot update fetch; No existing fetch data found")
 			} else {
 				ctx.ReportError("Failed to get existing fetch data", err)
 			}
@@ -53,6 +59,12 @@ func setFetch(ctx *Context, args []string) {
 		"GPU":              &data.Gpu,
 	}
 
+	allowedKeys := []string{"Memory"}
+	for key := range m {
+		allowedKeys = append(allowedKeys, key)
+	}
+	sort.Strings(allowedKeys)
+
 	for i := 1; i < len(lines); i++ {
 		kI := strings.Index(lines[i], ":")
 		if kI == -1 {
@@ -62,7 +74,7 @@ func setFetch(ctx *Context, args []string) {
 		key := lines[i][:kI]
 		value := strings.TrimSpace(lines[i][kI+1:])
 
-		if isValidURL(lines[i]) {
+		if misc.IsValidURL(lines[i]) {
 			data.Image = lines[i]
 
 			continue
@@ -78,13 +90,13 @@ func setFetch(ctx *Context, args []string) {
 		case "Memory":
 			b, err := humanize.ParseBytes(value)
 			if err != nil {
-				ctx.Reply("Failed to parse Max RAM")
+				ctx.ReportUserError("Failed to parse Max RAM")
 				return
 			}
 
 			data.Memory = b
 		default:
-			ctx.Reply("key '" + key + "' is not valid")
+			ctx.ReportUserError("Field '" + key + "' is not valid. The allowed fields are: " + strings.Join(allowedKeys, ", "))
 
 			return
 		}
@@ -107,31 +119,42 @@ func setFetch(ctx *Context, args []string) {
 	info := db.NewSysinfo(ctx.Message.Author.ID, data)
 	err := info.Save()
 	if err != nil {
-		ctx.Reply("Failed to save. Error: " + err.Error())
+		ctx.ReportUserError("Failed to save. Error: " + err.Error())
 		return
 	}
-	ctx.Reply("success. You can now run !fetch")
+	ctx.Reply("Success. You can now run !fetch")
 }
 
 const fetchUsage = "fetch [user]"
 
-func askUserToSetfetch(ctx *Context, himself bool) {
-	message := "that user hasn't set their fetch information. You can ask them to run !setfetch"
+func askUserToSetfetch(ctx *ctx.MessageContext, user *discordgo.User, himself bool) {
+	message := "That user hasn't set their fetch information. You can ask them to run **!setfetch**"
+	if user != nil {
+		message = strings.Replace(message, "That user", user.String(), 1)
+	}
 	if himself {
-		message = "you first need to set your information with !setfetch"
+		message = "You first need to set your information with !setfetch"
 	}
 
-	ctx.Reply(message)
+	ctx.ReportUserError(message)
 }
 
-func askUserToSetfetchSomeone(ctx *Context) { askUserToSetfetch(ctx, false) }
-func askUserToSetfetchHimself(ctx *Context) { askUserToSetfetch(ctx, true) }
+func askUserToSetfetchSomeone(ctx *ctx.MessageContext, user *discordgo.User) {
+	askUserToSetfetch(ctx, user, false)
+}
+func askUserToSetfetchHimself(ctx *ctx.MessageContext) { askUserToSetfetch(ctx, nil, true) }
 
-func doFetch(ctx *Context, user *discordgo.User) {
+func doFetch(ctx *ctx.MessageContext, user *discordgo.User) {
 	const inline = true
 	embed := discordgo.MessageEmbed{
 		Title:  "Fetch " + user.Username + "#" + user.Discriminator,
+		Color:  ctx.Session.State.UserColor(user.ID, ctx.Message.ChannelID),
 		Fields: []*discordgo.MessageEmbedField{},
+		Footer: &discordgo.MessageEmbedFooter{},
+	}
+
+	if embed.Color == 0 {
+		embed.Color = 1
 	}
 
 	profile, err := db.GetProfile(user.ID)
@@ -179,16 +202,15 @@ func doFetch(ctx *Context, user *discordgo.User) {
 			if user.ID == ctx.Message.Author.ID {
 				askUserToSetfetchHimself(ctx)
 			} else {
-				askUserToSetfetchSomeone(ctx)
+				askUserToSetfetchSomeone(ctx, user)
 			}
 			return
 		}
 
-		ctx.Reply("failed to find the user's info. Error: " + err.Error())
+		ctx.ReportUserError("Failed to find the user's info. Error: " + err.Error())
 		return
 	}
 
-	embed.Color = ctx.Session.State.UserColor(user.ID, ctx.Message.ChannelID)
 	if info.Info.Distro != "" {
 		embed.Thumbnail = &discordgo.MessageEmbedThumbnail{
 			URL: getDistroImage(info.Info.Distro),
@@ -314,8 +336,7 @@ func doFetch(ctx *Context, user *discordgo.User) {
 	}
 
 	if !info.ModifyDate.IsZero() {
-		const dateFormat = "2006-01-02T15:04:05.0000Z"
-		embed.Timestamp = info.ModifyDate.UTC().Format(dateFormat)
+		embed.Timestamp = info.ModifyDate.UTC().Format(misc.DiscordDateFormat)
 	}
 
 sysinfoEnd:
@@ -325,12 +346,12 @@ sysinfoEnd:
 		if user.ID == ctx.Message.Author.ID {
 			askUserToSetfetchHimself(ctx)
 		} else {
-			askUserToSetfetchSomeone(ctx)
+			askUserToSetfetchSomeone(ctx, user)
 		}
 		return
 	}
 
-	_, err = ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed)
+	_, err = ctx.ReplyEmbed(&embed)
 	if err != nil {
 		var retry bool
 		if restErr, ok := err.(*discordgo.RESTError); ok {
@@ -348,18 +369,18 @@ sysinfoEnd:
 		}
 
 		if retry {
-			if _, err = ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed); err != nil {
+			if _, err = ctx.ReplyEmbed(&embed); err != nil {
 				log.Println("Failed to send channel embed: " + err.Error())
 			}
 		}
 	}
 }
 
-func fetch(ctx *Context, args []string) {
+func fetch(ctx *ctx.MessageContext, args []string) {
 	if len(args) < 2 {
 		doFetch(ctx, ctx.Message.Author)
 	} else {
-		err := ctx.requestUserByName(false, strings.Join(args[1:], " "), func(member *discordgo.Member) error {
+		err := ctx.RequestUserByName(false, strings.Join(args[1:], " "), func(member *discordgo.Member) error {
 			doFetch(ctx, member.User)
 			return nil
 		})
@@ -387,6 +408,8 @@ var distroImages = []struct {
 	image string
 }{
 	{name: "nixos", image: "https://nixos.org/logo/nixos-hires.png"},
+	{name: "android", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Android_new_logo_2019.svg/320px-Android_new_logo_2019.svg.png"},
+	{name: "antix", image: "https://antixlinux.com/wp-content/uploads/2017/03/logo_antiX.png"},
 	{name: "arch", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Arch_Linux_logo.svg/250px-Arch_Linux_logo.svg.png"},
 	{name: "archbang", image: "https://upload.wikimedia.org/wikipedia/commons/2/2c/ArchBangLogo.png"},
 	{name: "archlabs", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Default_desktop.png/300px-Default_desktop.png"},
@@ -403,14 +426,17 @@ var distroImages = []struct {
 	{name: "cub", image: "https://upload.wikimedia.org/wikipedia/commons/d/d8/CubLinux100.png"},
 	{name: "debian", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Debian-OpenLogo.svg/100px-Debian-OpenLogo.svg.png"},
 	{name: "deepin", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Deepin_logo.svg/60px-Deepin_logo.svg.png"},
+	{name: "devuan", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Devuan-logo.svg/320px-Devuan-logo.svg.png"},
 	{name: "elementary", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Elementary_OS_logo.svg/300px-Elementary_OS_logo.svg.png"},
 	{name: "emmabuntüs", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Emmabuntus_DE3_En.png/150px-Emmabuntus_DE3_En.png"},
+	{name: "endeavouros", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Endeavouros_Logo.svg/211px-Endeavouros_Logo.svg.png"},
 	{name: "engarde", image: "https://upload.wikimedia.org/wikipedia/en/7/74/Engarde_Logo.png"},
 	{name: "euleros", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Operating_system_placement.svg/24px-Operating_system_placement.svg.png"},
 	{name: "fedora", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Fedora_logo_and_wordmark.svg/250px-Fedora_logo_and_wordmark.svg.png"},
 	{name: "fermi", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Fermi_Linux_logo.svg/80px-Fermi_Linux_logo.svg.png"},
 	{name: "finnix", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Finnix-72pt-72dpi.png/100px-Finnix-72pt-72dpi.png"},
 	{name: "foresight", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Foresight_Linux_Logo_2.png/200px-Foresight_Linux_Logo_2.png"},
+	{name: "freebsd", image: "https://upload.wikimedia.org/wikipedia/en/thumb/d/df/Freebsd_logo.svg/320px-Freebsd_logo.svg.png"},
 	{name: "frugalware", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Frugalware_linux_logo.svg/250px-Frugalware_linux_logo.svg.png"},
 	{name: "fuduntu", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Fuduntu-logo.png/100px-Fuduntu-logo.png"},
 	{name: "geckolinux", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Tux.svg/35px-Tux.svg.png"},
@@ -433,6 +459,8 @@ var distroImages = []struct {
 	{name: "manjaro", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Manjaro_logo_text.png/250px-Manjaro_logo_text.png"},
 	{name: "simplymepis", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/MEPIS_logo.svg/100px-MEPIS_logo.svg.png"},
 	{name: "mx linux", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/MX_Linux_logo.svg/100px-MX_Linux_logo.svg.png"},
+	{name: "netbsd", image: "https://upload.wikimedia.org/wikipedia/en/thumb/5/5c/NetBSD.svg/307px-NetBSD.svg.png"},
+	{name: "openbsd", image: "https://upload.wikimedia.org/wikipedia/en/thumb/8/83/OpenBSD_Logo_-_Cartoon_Puffy_with_textual_logo_below.svg/320px-OpenBSD_Logo_-_Cartoon_Puffy_with_textual_logo_below.svg.png"},
 	{name: "openmandriva lx", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Oma-logo-22042013_300pp.png/70px-Oma-logo-22042013_300pp.png"},
 	{name: "opensuse", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/OpenSUSE_Logo.svg/128px-OpenSUSE_Logo.svg.png"},
 	{name: "oracle", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Oracle_logo.svg/200px-Oracle_logo.svg.png"},
@@ -441,6 +469,7 @@ var distroImages = []struct {
 	{name: "pinguy os", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/Pinguy-os-desktop-12-04.png/300px-Pinguy-os-desktop-12-04.png"},
 	{name: "pop!_os", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Pop_OS-Logo-nobg.png/125px-Pop_OS-Logo-nobg.png"},
 	{name: "qubes os", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/Qubes_OS_Logo.svg/120px-Qubes_OS_Logo.svg.png"},
+	{name: "raspberry pi os", image: "https://upload.wikimedia.org/wikipedia/en/thumb/c/cb/Raspberry_Pi_Logo.svg/188px-Raspberry_Pi_Logo.svg.png"},
 	{name: "red flag", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/RedFlag_Linux-Logo.jpg/180px-RedFlag_Linux-Logo.jpg"},
 	{name: "red hat enterprise", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/RHEL_8_Desktop.png/300px-RHEL_8_Desktop.png"},
 	{name: "rosa linux", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Logo_ROSA.jpg/250px-Logo_ROSA.jpg"},
@@ -454,6 +483,7 @@ var distroImages = []struct {
 	{name: "sparkylinux", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/SparkyLinux-logo-200px.png/110px-SparkyLinux-logo-200px.png"},
 	{name: "suse linux enterprise desktop", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/SLED_15_Default_Desktop.png/300px-SLED_15_Default_Desktop.png"},
 	{name: "suse linux enterprise server", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/SUSE_Linux_Enterprise_Server_11_installation_DVD_20100429.jpg/300px-SUSE_Linux_Enterprise_Server_11_installation_DVD_20100429.jpg"},
+	{name: "tiny core linux", image: "https://upload.wikimedia.org/wikipedia/commons/0/02/Tcl_logo.png"},
 	{name: "turbolinux", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Turbolinux.png/250px-Turbolinux.png"},
 	{name: "turnkey linux virtual appliance library", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Image-webmin3.png/300px-Image-webmin3.png"},
 	{name: "ubuntu budgie", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/UbuntuBudgie-Wordmark.svg/250px-UbuntuBudgie-Wordmark.svg.png"},
@@ -466,4 +496,5 @@ var distroImages = []struct {
 	{name: "void", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Void_Linux_logo.svg/200px-Void_Linux_logo.svg.png"},
 	{name: "whonix", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Whonix_Logo.png/200px-Whonix_Logo.png"},
 	{name: "xubuntu", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Xubuntu_logo_and_wordmark.svg/200px-Xubuntu_logo_and_wordmark.svg.png"},
+	{name: "zorin", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Zorin_Logomark.svg/277px-Zorin_Logomark.svg.png"},
 }
