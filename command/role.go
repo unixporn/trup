@@ -3,6 +3,7 @@ package command
 import (
 	"log"
 	"strings"
+	"trup/ctx"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -12,14 +13,14 @@ const (
 	roleHelp  = "Use without arguments to see available roles"
 )
 
-func role(ctx *Context, args []string) {
+func role(ctx *ctx.MessageContext, args []string) {
 	if len(args) < 2 {
 		var roles strings.Builder
 		for _, role := range ctx.Env.RoleColors {
 			roles.WriteString("<@&" + role.ID + ">\n")
 		}
 
-		if _, err := ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &discordgo.MessageEmbed{
+		if _, err := ctx.ReplyEmbed(&discordgo.MessageEmbed{
 			Title:       "Color List",
 			Description: roles.String(),
 			Footer: &discordgo.MessageEmbedFooter{
@@ -41,10 +42,10 @@ func role(ctx *Context, args []string) {
 		}
 	}
 	if len(possibleRoles) == 0 {
-		ctx.Reply("Invalid role name")
+		ctx.ReportUserError("Invalid role name")
 		return
 	} else if len(possibleRoles) > 1 {
-		ctx.Reply("Found more than 1 roles, try a more descriptive name")
+		ctx.ReportUserError("Found more than 1 roles, try a more descriptive name")
 		return
 	}
 	roleID = possibleRoles[0]
@@ -72,5 +73,5 @@ func role(ctx *Context, args []string) {
 		}
 	}
 
-	ctx.Reply("Success.")
+	ctx.Reply("Success")
 }

@@ -1,28 +1,25 @@
 package command
 
 import (
-	"fmt"
-	"log"
 	"strings"
 	"time"
-	"trup/db"
+	"trup/ctx"
 
 	"github.com/bwmarrin/discordgo"
 )
 
 const muteUsage = "mute <@user> <duration> [reason]"
 
-func mute(ctx *Context, args []string) {
+func mute(ctx *ctx.MessageContext, args []string) {
 	if len(args) < 3 {
-		ctx.Reply("Usage: " + muteUsage)
+		ctx.ReportUserError("Usage: " + muteUsage)
 		return
 	}
 
-	err := ctx.requestUserByName(true, args[1], func(m *discordgo.Member) error {
+	err := ctx.RequestUserByName(true, args[1], func(m *discordgo.Member) error {
 		user := m.User.ID
 		var (
 			duration = args[2]
-			start    = time.Now()
 			reason   = ""
 		)
 		if len(args) > 3 {
@@ -35,41 +32,12 @@ func mute(ctx *Context, args []string) {
 			return nil
 		}
 
-		end := start.Add(i)
-		w := db.NewMute(ctx.Message.GuildID, ctx.Message.Author.ID, user, reason, start, end)
-		err = w.Save()
-		if err != nil {
-			ctx.ReportError("Failed to save your mute", err)
+		if err := ctx.MuteMember(ctx.Message.Author, user, i, reason); err != nil {
+			ctx.ReportUserError("Failed to mute user. Error: " + err.Error())
 			return nil
 		}
 
-		err = ctx.Session.GuildMemberRoleAdd(ctx.Message.GuildID, user, ctx.Env.RoleMute)
-		if err != nil {
-			ctx.ReportError("Error adding role", err)
-			return nil
-		}
-
-		reasonText := ""
-		if reason != "" {
-			reasonText = " with reason: " + reason
-		}
-		err = db.NewNote(ctx.Message.Author.ID, user, "User was muted for "+duration+reasonText, db.ManualNote).Save()
-		if err != nil {
-			ctx.ReportError("Failed to set note about the user", err)
-		}
 		ctx.Reply("User successfully muted. <a:police:749871644071165974>")
-
-		r := ""
-		if reason != "" {
-			r = " with reason: " + reason
-		}
-
-		if _, err = ctx.Session.ChannelMessageSend(
-			ctx.Env.ChannelModlog,
-			fmt.Sprintf("User <@%s> was muted by %s for %s%s.", user, ctx.Message.Author.Username, duration, r),
-		); err != nil {
-			log.Println("Failed to send mute message: " + err.Error())
-		}
 		return nil
 	})
 	if err != nil {

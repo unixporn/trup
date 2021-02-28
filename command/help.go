@@ -2,21 +2,22 @@ package command
 
 import (
 	"log"
+	"sort"
+	"trup/ctx"
 
 	"github.com/bwmarrin/discordgo"
 )
 
-func Help(ctx *Context, args []string) {
+func Help(ctx *ctx.MessageContext, args []string) {
 	const inline = false
 	embed := discordgo.MessageEmbed{
 		Title:  "Help",
 		Fields: []*discordgo.MessageEmbedField{},
 		Color:  ctx.Session.State.UserColor(ctx.Message.Author.ID, ctx.Message.ChannelID),
 	}
-	isCallerModerator := ctx.isModerator()
 
 	for name, cmd := range Commands {
-		if cmd.ModeratorOnly && !isCallerModerator {
+		if !cmd.IsAuthorized(ctx) {
 			continue
 		}
 
@@ -39,7 +40,9 @@ func Help(ctx *Context, args []string) {
 		})
 	}
 
-	if _, err := ctx.Session.ChannelMessageSendEmbed(ctx.Message.ChannelID, &embed); err != nil {
+	sort.Slice(embed.Fields, func(i, j int) bool { return embed.Fields[i].Name < embed.Fields[j].Name })
+
+	if _, err := ctx.ReplyEmbed(&embed); err != nil {
 		log.Println("Failed to send help embed: " + err.Error())
 	}
 }

@@ -17,6 +17,13 @@ type User struct {
 	ServerJoinDate    time.Time `json:"server_join_date"`
 }
 
+type UserShort struct {
+	ID       string `json:"id"`
+	Username string `json:"username"`
+	Tag      string `json:"tag"`
+	Nickname string `json:"nickname"`
+}
+
 func AddUsers(discordMembers []*discordgo.Member) error {
 	users := make([]User, 0, len(discordMembers))
 	for _, member := range discordMembers {
@@ -55,10 +62,36 @@ func AddUsers(discordMembers []*discordgo.Member) error {
 			username text,
 			tag smallint,
 			nickname text,
-			account_create_date date,
-			server_join_date date
+			account_create_date timestamptz,
+			server_join_date timestamptz
 		)
-	ON CONFLICT (id) DO UPDATE SET nickname = EXCLUDED.nickname, username = EXCLUDED.username, tag = EXCLUDED.tag
+	ON CONFLICT (id) DO UPDATE SET nickname = EXCLUDED.nickname, username = EXCLUDED.username, tag = EXCLUDED.tag, account_create_date = EXCLUDED.account_create_date, server_join_date = EXCLUDED.server_join_date
 	`, &users)
 	return err
+}
+
+func GetUsersShortByName(name string, limit int) ([]*UserShort, error) {
+	res, err := db.Query(context.Background(), `
+	SELECT id, username, tag, nickname
+	FROM users
+	WHERE
+		username ILIKE '%' || $1 || '%'
+	OR
+		nickname ILIKE '%' || $1 || '%'
+	LIMIT $2
+	`, &name, &limit)
+	if err != nil {
+		return nil, err
+	}
+
+	users := []*UserShort{}
+	for res.Next() {
+		var user UserShort
+		if err := res.Scan(&user.ID, &user.Username, &user.Tag, &user.Nickname); err != nil {
+			return nil, err
+		}
+		users = append(users, &user)
+	}
+
+	return users, nil
 }

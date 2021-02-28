@@ -2,6 +2,7 @@ package command
 
 import (
 	"strings"
+	"trup/ctx"
 	"trup/db"
 
 	"github.com/jackc/pgx"
@@ -12,9 +13,9 @@ const (
 	descHelp  = "Sets or clears your description, displays it with fetch"
 )
 
-func desc(ctx *Context, args []string) {
+func desc(ctx *ctx.MessageContext, args []string) {
 	if len(args) < 2 {
-		ctx.Reply("Usage: " + descUsage)
+		ctx.ReportUserError("Usage: " + descUsage)
 
 		return
 	}
@@ -25,7 +26,7 @@ func desc(ctx *Context, args []string) {
 	)
 
 	if len(desc) > 256 {
-		ctx.Reply("your description cannot be longer than 256 characters")
+		ctx.ReportUserError("Your description cannot be longer than 256 characters")
 
 		return
 	}
@@ -39,7 +40,7 @@ func desc(ctx *Context, args []string) {
 		if err.Error() == pgx.ErrNoRows.Error() {
 			profile = db.NewProfile(user, "", "", desc)
 		} else {
-			ctx.ReportError("failed to fetch your profile", err)
+			ctx.ReportError("Failed to fetch your profile", err)
 
 			return
 		}
@@ -49,13 +50,13 @@ func desc(ctx *Context, args []string) {
 
 	err = profile.Save()
 	if err != nil {
-		ctx.ReportError("failed to save description", err)
+		ctx.ReportError("Failed to save description", err)
 
 		return
 	}
 
 	if desc == "" {
-		ctx.Reply("cleared your description")
+		ctx.Reply("Your description has been cleared")
 
 		return
 	}

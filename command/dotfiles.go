@@ -1,7 +1,9 @@
 package command
 
 import (
+	"trup/ctx"
 	"trup/db"
+	"trup/misc"
 
 	"github.com/jackc/pgx"
 )
@@ -11,7 +13,7 @@ const (
 	dotfilesHelp  = "Adds a dotfiles link to your fetch."
 )
 
-func dotfiles(ctx *Context, args []string) {
+func dotfiles(ctx *ctx.MessageContext, args []string) {
 	user := ctx.Message.Author.ID
 
 	if len(args) == 1 {
@@ -19,7 +21,7 @@ func dotfiles(ctx *Context, args []string) {
 		profile, err := db.GetProfile(user)
 		if err != nil {
 			if err.Error() == pgx.ErrNoRows.Error() {
-				ctx.Reply(setItFirstMsg)
+				ctx.ReportUserError(setItFirstMsg)
 
 				return
 			} else {
@@ -30,19 +32,19 @@ func dotfiles(ctx *Context, args []string) {
 		}
 
 		if profile.Dotfiles == "" {
-			ctx.Reply(setItFirstMsg)
+			ctx.ReportUserError(setItFirstMsg)
 
 			return
 		}
 
-		ctx.Reply(profile.Dotfiles)
+		_, _ = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, profile.Dotfiles)
 		return
 	}
 
 	url := args[1]
 
-	if !isValidURL(url) {
-		ctx.Reply("provide a valid url")
+	if !misc.IsValidURL(url) {
+		ctx.ReportUserError("Provide a valid url")
 
 		return
 	}
@@ -56,7 +58,7 @@ func dotfiles(ctx *Context, args []string) {
 
 	err = profile.Save()
 	if err != nil {
-		ctx.ReportError("failed to save dotfiles url", err)
+		ctx.ReportError("Failed to save dotfiles url", err)
 
 		return
 	}

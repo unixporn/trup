@@ -3,6 +3,7 @@ package command
 import (
 	"log"
 	"strings"
+	"trup/ctx"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -12,16 +13,21 @@ const (
 	modpingHelp  = "Pings online mods. Don't abuse."
 )
 
-func modping(ctx *Context, args []string) {
+func modping(ctx *ctx.MessageContext, args []string) {
 	if len(args) < 2 {
-		ctx.Reply("Usage: " + modpingUsage)
+		ctx.ReportUserError("Usage: " + modpingUsage)
 		return
 	}
 
 	reason := strings.Join(args[1:], " ")
 
 	mods := []string{}
-	for _, mem := range ctx.members() {
+	members, err := ctx.Members()
+	if err != nil {
+		ctx.ReportError("Failed to get member list", err)
+		return
+	}
+	for _, mem := range members {
 		for _, r := range mem.Roles {
 			if r == ctx.Env.RoleMod {
 				p, err := ctx.Session.State.Presence(ctx.Message.GuildID, mem.User.ID)
@@ -47,5 +53,5 @@ func modping(ctx *Context, args []string) {
 		reasonText = " for reason: " + reason
 	}
 
-	ctx.Reply(ctx.Message.Author.Mention() + " pinged moderators " + strings.Join(mods, " ") + reasonText)
+	_, _ = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, ctx.Message.Author.Mention()+" pinged moderators "+strings.Join(mods, " ")+reasonText)
 }
