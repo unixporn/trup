@@ -33,11 +33,11 @@ func MemberJoin(ctx *ctx.Context, m *discordgo.GuildMemberAdd) {
 		Fields: []*discordgo.MessageEmbedField{
 			{
 				Name:  "Account Creation Date",
-				Value: accountCreateDate.UTC().String() + " (" + humanize.Time(accountCreateDate) + ")",
+				Value: accountCreateDate.UTC().Format("2006-01-02 15:04:05.000") + " (" + humanize.Time(accountCreateDate) + ")",
 			},
 			{
 				Name:  "Join Date",
-				Value: joinDate.String(),
+				Value: joinDate.Format("2006-01-02 15:04:05.000"),
 			},
 		},
 	}
