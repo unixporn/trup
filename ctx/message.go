@@ -20,7 +20,7 @@ type MessageContext struct {
 
 func (ctx *MessageContext) Reply(msg string) {
 	var title string
-	if len(msg) < 256 && !strings.Contains(msg, "\n") && !misc.ParseChannelMentionRegexp.MatchString(msg) {
+	if len(msg) < 256 && !strings.Contains(msg, "\n") && !misc.ParseChannelMentionRegexp.MatchString(msg) && !misc.ParseMentionRegexp.MatchString(msg) {
 		title = msg
 		msg = ""
 	}

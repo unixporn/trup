@@ -19,7 +19,7 @@ var (
 	UrlRegex                  = regexp.MustCompile(`(?i)(https?|ftp)://[^\s/$.?#].[^\s]*`)
 	DiscordDateFormat         = "2006-01-02T15:04:05.0000Z"
 	ParseChannelMentionRegexp = regexp.MustCompile(`<#(\d+)>`)
-	parseMentionRegexp        = regexp.MustCompile(`<@!?(\d+)>`)
+	ParseMentionRegexp        = regexp.MustCompile(`<@!?(\d+)>`)
 	parseSnowflakeRegex       = regexp.MustCompile(`^\d+$`)
 )
 
@@ -35,7 +35,7 @@ func ParseUser(user string) string {
 // ParseMention takes a Discord mention string and returns the id
 // returns empty string if id was not found.
 func ParseMention(mention string) string {
-	res := parseMentionRegexp.FindStringSubmatch(mention)
+	res := ParseMentionRegexp.FindStringSubmatch(mention)
 	if len(res) < 2 {
 		return ""
 	}
