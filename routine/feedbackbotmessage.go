@@ -8,7 +8,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-// FeedbackBotMessage should be called when a new message gets sent to the feedback chnanel
+// FeedbackBotMessage should be called when a new message gets sent to the feedback channel.
 func FeedbackBotMessage(ctx *ctx.Context) {
 	defer func() {
 		if err := recover(); err != nil {
