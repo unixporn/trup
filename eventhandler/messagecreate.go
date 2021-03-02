@@ -20,6 +20,8 @@ func MessageCreate(ctx *context.Context, m *discordgo.MessageCreate) {
 		}
 	}()
 
+	ctx.MessageCache.Add(m.ID, m.Message)
+
 	if m.Author.Bot {
 		return
 	}
@@ -27,8 +29,6 @@ func MessageCreate(ctx *context.Context, m *discordgo.MessageCreate) {
 	if wasDeleted := routine.SpamProtection(ctx, m.Message); wasDeleted {
 		return
 	}
-
-	ctx.MessageCache.Add(m.ID, m.Message)
 
 	if wasDeleted := routine.BlocklistFilter(ctx, m.Message); wasDeleted {
 		return
@@ -83,6 +83,8 @@ func MessageCreate(ctx *context.Context, m *discordgo.MessageCreate) {
 	}
 
 	if m.ChannelID == ctx.Env.ChannelFeedback {
+		routine.FeedbackBotMessage(ctx)
+
 		if err := ctx.Session.MessageReactionAdd(m.ChannelID, m.ID, "👍"); err != nil {
 			log.Println("Failed to react to message with 👍: " + err.Error())
 			return
@@ -91,6 +93,7 @@ func MessageCreate(ctx *context.Context, m *discordgo.MessageCreate) {
 			log.Println("Failed to react to message with 👎: " + err.Error())
 			return
 		}
+
 		return
 	}
 

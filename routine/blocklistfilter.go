@@ -14,7 +14,7 @@ import (
 func BlocklistFilter(ctx *ctx.Context, m *discordgo.Message) (deleted bool) {
 	defer func() {
 		if err := recover(); err != nil {
-			log.Printf("Recovered from runMessageFilter; err: %s; Stack: %s\n", err, debug.Stack())
+			log.Printf("Recovered from BlocklistFilter; err: %s; Stack: %s\n", err, debug.Stack())
 			deleted = false
 		}
 	}()
@@ -109,7 +109,7 @@ func logMessageAutoDelete(ctx *ctx.Context, m *discordgo.Message, matchedString 
 	}
 
 	autoModEntryLink := misc.MakeMessageLink(m.GuildID, autoModEntry)
-	note := db.NewNote(ctx.Session.State.User.ID, m.Author.ID, fmt.Sprintf("Message deleted because of word `%s` [(source)](%s)", matchedString, autoModEntryLink), db.BlocklistViolation)
+	note := db.NewNote(ctx.BotId(), m.Author.ID, fmt.Sprintf("Message deleted because of word `%s` [(source)](%s)", matchedString, autoModEntryLink), db.BlocklistViolation)
 	err = note.Save()
 	if err != nil {
 		log.Println("Failed to save note. Error:", err)

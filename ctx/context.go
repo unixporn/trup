@@ -72,6 +72,10 @@ func NewContext(env *Env, session *discordgo.Session, messageCache *misc.Message
 	}
 }
 
+func (ctx *Context) BotId() string {
+	return ctx.Session.State.User.ID
+}
+
 // Members returns unique members from discordgo's state, because discordgo's state has duplicates.
 func (ctx *Context) Members() ([]*discordgo.Member, error) {
 	guild, err := ctx.Session.State.Guild(ctx.Env.Guild)

@@ -9,8 +9,7 @@ import (
 )
 
 func MessageReactionAdd(ctx *context.Context, m *discordgo.MessageReactionAdd) {
-	botID := ctx.Session.State.User.ID
-	if m.UserID == botID {
+	if m.UserID == ctx.BotId() {
 		return
 	}
 
@@ -35,7 +34,7 @@ func MessageReactionAdd(ctx *context.Context, m *discordgo.MessageReactionAdd) {
 		}
 	}
 
-	if !isPoll || message.Author.ID != botID {
+	if !isPoll || message.Author.ID != ctx.BotId() {
 		return
 	}
 

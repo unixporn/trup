@@ -4,12 +4,14 @@ import (
 	"log"
 	"strings"
 	"trup/ctx"
+	"trup/routine"
 
 	"github.com/bwmarrin/discordgo"
 )
 
 func Ready(ctx *ctx.Context, r *discordgo.Ready) {
 	ctx.SetStatus("for !help")
+	routine.FeedbackBotMessage(ctx)
 }
 
 func ReadyOnce(ctx *ctx.Context, r *discordgo.Ready) {
