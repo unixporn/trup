@@ -91,6 +91,11 @@ func MessageCreate(ctx *context.Context, m *discordgo.MessageCreate) {
 			log.Println("Failed to react to message with 👎: " + err.Error())
 			return
 		}
+
+		message, err := monitorFeedback(ctx.Session, m.ChannelID)
+		if len(message) != 0 {
+			log.Println(message + err.Error())
+		}
 		return
 	}
 
@@ -126,4 +131,24 @@ func MessageCreate(ctx *context.Context, m *discordgo.MessageCreate) {
 		cmd.Exec(&context, args)
 		return
 	}
+}
+
+func monitorFeedback(s *discordgo.Session, channelID string) (errorMessage string, err error) {
+	prevmessages, err := s.ChannelMessages(channelID, 10, "", "", "")
+	if err != nil {
+		return "Failed to fetch previous messages from #server-feeedback", err
+	}
+	for _, message := range prevmessages {
+		if message.Author.ID == s.State.User.ID {
+			err := s.ChannelMessageDelete(channelID, message.ID)
+			if err != nil {
+				return "Failed to delete previous PSA in #server-feedback", err
+			}
+		}
+	}
+	_, err = s.ChannelMessageSend(channelID, "Before posting, please make sure to check if your idea is a repetitive topic. (Listed in pins)\nNote that we have added a consequence for failure. The inability to delete repetitive feedback will result in an 'unsatisfactory' mark on your official testing record, followed by death. Good luck!")
+	if err != nil {
+		return "Failed to Send PSA in #server-feedback", err
+	}
+	return "", nil
 }
