@@ -40,8 +40,7 @@ func FeedbackBotMessage(ctx *ctx.Context) {
 		Title: "CONTRIBUTING.md",
 		Description: `
 		Before posting, please make sure to check if your idea is a **repetitive topic**. (Listed in pins)
-		Note that we have added a consequence for failure.
-		The inability to delete repetitive feedback will result in an 'unsatisfactory' mark on your official testing record, followed by death. Good luck!
+		Note that we have added a consequence for failure. The inability to delete repetitive feedback will result in an 'unsatisfactory' mark on your official testing record, followed by death. Good luck!
 		`,
 		Color: ctx.Session.State.UserColor(ctx.BotId(), ctx.Env.ChannelFeedback),
 	})
